@@ -1,7 +1,6 @@
 package com.soundcloud.apipublic.service.comments
 
-import com.soundcloud.apipublic.client.comments.{CommentsClient, Comment => CommentFromVAS}
-import com.soundcloud.apipublic.client.moshimoshicomments.Comment
+import com.soundcloud.apipublic.client.comments.{Comment, CommentFromVAS, CommentsClient}
 import com.soundcloud.apipublic.client.mothership.RichOkidokiClient
 import com.soundcloud.apipublic.client.tracks.TracksClient
 import com.soundcloud.apipublic.handler.comments.CreateCommentParams

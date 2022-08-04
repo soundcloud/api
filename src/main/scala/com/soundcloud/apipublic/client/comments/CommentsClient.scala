@@ -1,7 +1,5 @@
 package com.soundcloud.apipublic.client.comments
 
-import com.soundcloud.apipublic.client.comments.{Comment => CommentFromVAS}
-
 import com.soundcloud.jvmkit.module.outcome.OutcomeF
 import com.soundcloud.jvmkit.module.util.Urn
 

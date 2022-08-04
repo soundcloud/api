@@ -1,6 +1,5 @@
 package com.soundcloud.apipublic.client.comments
 
-import com.soundcloud.apipublic.client.comments.{Comment => CommentFromVAS}
 import com.soundcloud.jvmkit.module.outcome.{GoodOps, OutcomeF, UnexpectedError}
 import com.soundcloud.twinagle.TwinagleException
 import proto.soundcloud.comments.api.{CommentsClientProtobuf, GetCommentsRequest}

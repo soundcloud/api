@@ -1,15 +1,6 @@
 package com.soundcloud.apipublic.client.mothership
 
-import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
-import com.soundcloud.jvmkit.module.json.play.UrnFormat._
-import com.soundcloud.jvmkit.module.outcome.{CustomError, GoodOps, NotAllowed, NotValid, Outcome, OutcomeF}
-import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
-import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionHandler.FutureExtensions
-import com.soundcloud.jvmkit.module.util.http.Headers
-import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.apipublic.client.chrono.ChronoResponse
-import com.soundcloud.apipublic.client.moshimoshicomments.MoshimoshiCommentsComment
 import com.soundcloud.apipublic.client.mothership.response.mapper.{
   UpdatePlaylistArtworkResponseMapper,
   UserRepresentationMapper
@@ -17,13 +8,17 @@ import com.soundcloud.apipublic.client.mothership.response.mapper.{
 import com.soundcloud.apipublic.client.mothership.response.representation.{UserRepresentation, WebProfile}
 import com.soundcloud.apipublic.client.support.FetchClient
 import com.soundcloud.apipublic.client.support.ResponseHandlers.ListResponse
-import com.soundcloud.apipublic.handler.comments.CreateCommentParams
 import com.soundcloud.apipublic.service.pagination.CursorBasedPagination
+import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
+import com.soundcloud.jvmkit.module.json.play.UrnFormat._
+import com.soundcloud.jvmkit.module.outcome.OutcomeF
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
+import com.soundcloud.jvmkit.module.util.http.Headers
+import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.twitter.finagle.http.Status
-import com.twitter.util.{Future, Try}
-import play.api.libs.json.{JsNull, JsValue, Json, Writes}
-
-import scala.util.control.NonFatal
+import com.twitter.util.Future
+import play.api.libs.json.{JsValue, Json, Writes}
 
 class MoshimoshiClient(
     service: JsonClient,
@@ -69,46 +64,6 @@ class MoshimoshiClient(
           case Status.Ok => Json.parse(response.contentString).as[ChronoResponse]
           case _ => ChronoResponse.emptyResponse
         }
-      }
-  }
-
-  @deprecated(
-    "Comments are currently being extracted out of moshimoshi/mothership. Please use the new comments services (wrapped in the CommentsService) for creating.",
-    "2022.04.19"
-  )
-  def createComment(
-      session: UserSession,
-      createCommentParams: CreateCommentParams
-  ): Future[Outcome[MoshimoshiCommentsComment]] = {
-    val serviceParams = Params(
-      "track_id" -> createCommentParams.trackUrn.identifier,
-      "comment[body]" -> createCommentParams.body
-    ) ++ createCommentParams.timestamp
-      .map(ts => Params("comment[timestamp]" -> ts.toString))
-      .getOrElse(Params.empty) ++ createCommentParams.secretToken
-      .map(token => Params("secret_token" -> token))
-      .getOrElse(Params.empty)
-
-    service
-      .postWithSession(session, Path() / "comments", serviceParams, Headers.empty, None)
-      .map { response =>
-        response.status match {
-          case Status.Created => Json.parse(response.contentString).as[MoshimoshiCommentsComment].good
-          case Status.UnprocessableEntity => CustomError(UnprocessableEntity).bad
-          case Status.Unauthorized | Status.Forbidden => NotAllowed().bad
-          case Status.TooManyRequests => {
-            val rateLimitError = parseRateLimitedError(Try(Json.parse(response.contentString)).getOrElse(JsNull))
-            CustomError(
-              TooManyRequests,
-              rateLimitError.map(CustomError(_))
-            ).bad
-          }
-          case _ => NotValid("Something went wrong").bad
-        }
-      }
-      .handleAndReport(exceptionCollector) {
-        case NonFatal(_) =>
-          NotValid("Something went wrong").bad
       }
   }
 

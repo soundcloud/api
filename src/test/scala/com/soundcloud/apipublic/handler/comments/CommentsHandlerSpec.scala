@@ -1,10 +1,10 @@
 package com.soundcloud.apipublic.handler.comments
 
 import com.soundcloud.apipublic.Routing
-import com.soundcloud.apipublic.client.moshimoshicomments.Comment
+import com.soundcloud.apipublic.client.comments.Comment
 import com.soundcloud.apipublic.client.mothership.{RateLimitedError, TooManyRequests}
 import com.soundcloud.apipublic.client.tracks.CreateTrackCommentUserHasSpamWarning
-import com.soundcloud.apipublic.service.comments.{CommentService}
+import com.soundcloud.apipublic.service.comments.CommentService
 import com.soundcloud.apipublic.service.pagination.OffsetBasedPagination
 import com.soundcloud.apipublic.service.representation.collection.Collection
 import com.soundcloud.apipublic.service.users.UserBuilder

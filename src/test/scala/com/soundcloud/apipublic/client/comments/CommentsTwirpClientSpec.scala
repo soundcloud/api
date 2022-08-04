@@ -1,6 +1,5 @@
 package com.soundcloud.apipublic.client.comments
 
-import com.soundcloud.apipublic.client.comments.{Comment => CommentFromVAS}
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.twirp.proto.WellKnownOps.JodaDateTimeExt
 import com.soundcloud.jvmkit.module.util.Urn

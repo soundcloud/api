@@ -5,7 +5,6 @@ import com.soundcloud.apipublic.client.comments.CommentsTwirpClient
 import com.soundcloud.apipublic.client.followcounts.FollowCountsClient
 import com.soundcloud.apipublic.client.follows.FollowsClient
 import com.soundcloud.apipublic.client.media.TrackAccessRecorderClient
-import com.soundcloud.apipublic.client.moshimoshicomments.MoshimoshiCommentsClient
 import com.soundcloud.apipublic.client.mothership.{MoshimoshiClient, OkidokiClient, RichOkidokiClient}
 import com.soundcloud.apipublic.client.playlists.PlaylistDeletionClient
 import com.soundcloud.apipublic.client.reposts.RepostsClient
@@ -81,7 +80,6 @@ class Clients(
 
   val trackCoordinatorClient = new TrackCoordinatorClient(jsonClient("track_coordinator"))
 
-  lazy val moshimoshiCommentsClient = new MoshimoshiCommentsClient(jsonClient("moshimoshi_comments"))
   lazy val moshimoshiClient = new MoshimoshiClient(jsonClient("moshimoshi"), exceptionCollector)
 
   private val stitch4followsService = jsonClient("stitch4follows")

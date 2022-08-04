@@ -1,6 +1,6 @@
 package com.soundcloud.apipublic.handler.comments
 
-import com.soundcloud.apipublic.client.moshimoshicomments.Comment
+import com.soundcloud.apipublic.client.comments.Comment
 import com.soundcloud.apipublic.client.mothership._
 import com.soundcloud.apipublic.client.tracks.CreateTrackCommentUserHasSpamWarning
 import com.soundcloud.apipublic.service.comments.CommentService

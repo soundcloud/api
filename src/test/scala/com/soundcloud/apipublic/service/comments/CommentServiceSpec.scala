@@ -1,7 +1,6 @@
 package com.soundcloud.apipublic.service.comments
 
-import com.soundcloud.apipublic.client.comments.{CommentsClient, Comment => CommentFromVAS}
-import com.soundcloud.apipublic.client.moshimoshicomments._
+import com.soundcloud.apipublic.client.comments.{Comment, CommentFromVAS, CommentsClient}
 import com.soundcloud.apipublic.client.mothership.RichOkidokiClient
 import com.soundcloud.apipublic.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.apipublic.client.tracks.{CreateTrackCommentUserHasSpamWarning, TracksClient}
@@ -10,7 +9,6 @@ import com.soundcloud.apipublic.service.pagination.OffsetBasedPagination
 import com.soundcloud.apipublic.service.representation.collection.Collection
 import com.soundcloud.apipublic.service.users.UserBuilder
 import com.soundcloud.apipublic.test.UnitSpecification
-import com.soundcloud.apipublic.test.fixtures.Fixtures
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.rollout.BasicRolloutFeature
 import com.soundcloud.jvmkit.module.twirp.proto.WellKnownOps.JodaDateTimeExt
@@ -33,8 +31,6 @@ class CommentServiceSpec extends UnitSpecification {
 
     val trackId = 4876
     val trackUrn = Urn("soundcloud", "tracks", trackId.toString())
-
-    val moshimoshiResponse = Fixtures.okidokiComment
 
     val someClientId = "veryrealclientid"
 
@@ -77,20 +73,6 @@ class CommentServiceSpec extends UnitSpecification {
       )
 
     val commentsFromVAS = Seq(commentFromVAS1, commentFromVAS2, commentFromVAS3)
-
-    val moshimoshiCommentsResponse: Seq[MoshimoshiCommentsComment] = commentsFromVAS
-      .map(CommentFromVAS.fromProto)
-      .map(toMoshimoshiComment)
-
-    private def toMoshimoshiComment(commentFromVAS: CommentFromVAS) =
-      MoshimoshiCommentsComment(
-        self = MoshimoshiCommentsSelf(commentFromVAS.urn),
-        created_at = commentFromVAS.createdAt.map(format).getOrElse(""),
-        user = MoshimoshiCommentsCommentUser(MoshimoshiCommentsSelf(commentFromVAS.user)),
-        track = commentFromVAS.track,
-        timestamp = toInt(commentFromVAS.timestamp),
-        body = commentFromVAS.body
-      )
 
     private def format(dateTime: DateTime): String = {
       DateTimeFormat
