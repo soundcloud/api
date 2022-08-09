@@ -2,7 +2,7 @@
 format_version: 2
 pipelines:
   api-public-memcached:
-    group: devices-team
+    group: api-team
     label_template: "${COUNT}-${git[:7]}"
     materials:
       git:

@@ -3,7 +3,7 @@ kind: Component
 spec:
   type: external_service
   lifecycle: production
-  owner: devices-team
+  owner: api-team
   dependsOn:
     - Component:api-public
   consumesApis:
@@ -22,7 +22,7 @@ metadata:
     - url: https://grafana.soundcloud.org/dashboard/db/jvmkit-generic?var-prometheus=api-public&var-system=api-public&var-job=api-public
       title: Telemetry
       link: dashboard
-    - url: https://eng-doc.soundcloud.org/runbooks/devices/api-public/
+    - url: https://eng-doc.soundcloud.org/runbooks/api/api-public/
       title: Runbook
       link: alert
   annotations:
@@ -33,7 +33,7 @@ kind: Component
 spec:
   type: external_service
   lifecycle: production
-  owner: devices-team
+  owner: api-team
   dependsOn:
     - Component:api-public
     - Component:api-public-asset-uploads
@@ -44,22 +44,22 @@ metadata:
     - url: https://grafana.soundcloud.org/dashboard/db/jvmkit-generic?var-prometheus=api-public&var-system=api-public&var-job=api-public
       title: Telemetry
       link: dashboard
-    - url: https://eng-doc.soundcloud.org/runbooks/devices/api-public/
+    - url: https://eng-doc.soundcloud.org/runbooks/api/api-public/
       title: Runbook
       link: alert
-    - url: mailto:devices-team@soundcloud.com
+    - url: mailto:api-team@soundcloud.com
       title: Contact Email
       link: help
   annotations:
     gocd.org/pipelines: api-public
-    soundcloud.com/contact-channel: devices-alerts
+    soundcloud.com/contact-channel: api-team-alerts
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component
 spec:
   type: external_service
   lifecycle: production
-  owner: devices-team
+  owner: api-team
   providesApis:
     - api-public-api-openapi
   dependsOn:
@@ -86,15 +86,15 @@ metadata:
     - url: https://grafana.soundcloud.org/dashboard/db/jvmkit-generic?var-prometheus=api-public&var-system=api-public&var-job=api-public
       title: Telemetry
       link: dashboard
-    - url: https://eng-doc.soundcloud.org/runbooks/devices/api-public/
+    - url: https://eng-doc.soundcloud.org/runbooks/api/api-public/
       title: Runbook
       link: alert
-    - url: mailto:devices-team@soundcloud.com
+    - url: mailto:api-team@soundcloud.com
       title: Contact Email
       link: help
   annotations:
     gocd.org/pipelines: api-public
-    soundcloud.com/contact-channel: devices-alerts
+    soundcloud.com/contact-channel: api-team-alerts
 ---
 apiVersion: backstage.io/v1alpha1
 kind: API
@@ -105,6 +105,6 @@ metadata:
 spec:
   type: openapi
   lifecycle: production
-  owner: devices-team
+  owner: api-team
   definition:
     $text: ./doc/api.yaml

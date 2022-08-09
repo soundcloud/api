@@ -13,7 +13,7 @@ groups:
     annotations:
       summary: "High 5xx rate"
       description: "{{ $value }}% of the incoming HTTP requests per second for system {{ $labels.system }} result in a 5xx response."
-      runbook: "https://eng-doc.soundcloud.org/runbooks/devices/api-public"
+      runbook: "https://eng-doc.soundcloud.org/runbooks/api/api-public"
 
   - alert: PublicApiHighInternal5xxRate
     expr: |2
@@ -26,7 +26,7 @@ groups:
     annotations:
       summary: "High Internal 5xx rate"
       description: "{{ $value }}% of the incoming HTTP requests per second for system {{ $labels.system }} result in a 5xx response from our system that does not map to a downstream error."
-      runbook: "https://eng-doc.soundcloud.org/runbooks/devices/api-public"
+      runbook: "https://eng-doc.soundcloud.org/runbooks/api/api-public"
 
   - alert: PublicApiHigh5xxRateByPath
     expr: |2
@@ -40,7 +40,7 @@ groups:
     annotations:
       summary: "High 5xx rate for specific endpoint"
       description: "{{ $value }}% of the incoming HTTP requests per second for path {{ $labels.method }} {{ $labels.path }} result in a 5xx response."
-      runbook: "https://eng-doc.soundcloud.org/runbooks/devices/api-public"
+      runbook: "https://eng-doc.soundcloud.org/runbooks/api/api-public"
 
   - alert: PublicApiHigh499Rate
     expr: |2
@@ -54,7 +54,7 @@ groups:
     annotations:
       summary: "High 499 rate"
       description: "Our clients are canceling {{ $value }}% of the requests due to timeouts for {{ $labels.method }} {{ $labels.path }}, which might indicate a higher latency than expected."
-      runbook: "https://eng-doc.soundcloud.org/runbooks/devices/api-public"
+      runbook: "https://eng-doc.soundcloud.org/runbooks/api/api-public"
 
   # 90th percentile @ 500ms adjusts for rarely-occurring expensive requests while still giving us a good indicator that something is wrong with the system.
   - alert: PublicApiHighRequestLatency
@@ -68,7 +68,7 @@ groups:
     annotations:
       summary: "High request latency"
       description: "The incoming HTTP request latency for system {{ $labels.system }} is {{ $value }}ms."
-      runbook: "https://eng-doc.soundcloud.org/runbooks/devices/api-public"
+      runbook: "https://eng-doc.soundcloud.org/runbooks/api/api-public"
 
   - alert: AssetUploadsAPIMisdirectedRequests
     expr: |2
@@ -80,4 +80,4 @@ groups:
     annotations:
       summary: "api-public asset-uploads-api is receiving unexpected requests"
       description: "The asset-uploads-api component of api-public is rejecting {{ $labels.method }} requests."
-      runbook: "https://eng-doc.soundcloud.org/runbooks/devices/api-public#assetuploadsapimisdirectedrequests"
+      runbook: "https://eng-doc.soundcloud.org/runbooks/api/api-public#assetuploadsapimisdirectedrequests"

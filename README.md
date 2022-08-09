@@ -63,4 +63,4 @@ In case you are introducing breaking changes or changes worth mentioning to the 
 
 Note: Markdown formatting is preserved. Check the previous [releases](https://github.com/soundcloud/api/releases). 
 
-For any questions reach out to #devices-team.
+For any questions reach out to #api-team.

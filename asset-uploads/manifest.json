@@ -1,5 +1,5 @@
 {
   "_schema": "soundcloud/applicationmanifest/v2",
   "name": "api-public-asset-uploads",
-  "owner": "devices-team"
+  "owner": "api-team"
 }
