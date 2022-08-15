@@ -13,9 +13,13 @@ See [CONTRIBUTING.md](https://github.com/soundcloud/api-public/blob/master/CONTR
 
 [CD Pipeline](https://ci.soundcloud.org/go/pipeline/activity/api-public).
 
-## Testing
+## Making requests
 
-To acquire a token use a test user provided in `/config/e2e.secrets.enc` file or reuse the existing token.<br/>
+To get a fresh OAuth token execute `scripts/sc-token <user_id>`. Example, use it with curl to make a request: 
+```shell
+curl -H  "Authorization: OAuth `scripts/sc-token <user_id>`" "https://api.soundcloud.com/me"
+```
+<br/>
 Authentication process can be found here: [API Guide](https://developers.soundcloud.com/docs/api/guide#authentication)
 
 ## Notes

@@ -1,0 +1,30 @@
+#!/usr/bin/env ruby
+# Cloned from https://github.com/soundcloud/ios/blob/master/scripts/bin/sc-token
+
+require 'json'
+
+raise 'Usage: sc-token USER_ID' unless ARGV.count == 1
+
+user_id = ARGV[0]
+
+# Get authenticator dispenser host
+
+dig_results = %x{dig +short +tcp SRV http.dispenser.prod.authenticator.srv.db.s-cloud.net}
+record = dig_results.split("\n").sample.split
+
+host = record[3]
+port = record[2]
+
+# get OAuth token
+
+data =  {
+  token_request: {
+  scope: '*',
+  client_credential: 'soundcloud:credentials:292145',
+  resource_owner: "soundcloud:users:#{user_id}"
+}}.to_json
+
+response = %x{curl -sf -H 'Content-Type: application/json' #{host}:#{port}/token-request -d '#{data}'}
+
+oauth_token = JSON.parse(response)['data'].first['attributes']['access_token']
+puts oauth_token
