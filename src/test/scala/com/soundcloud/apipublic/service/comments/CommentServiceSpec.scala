@@ -10,7 +10,6 @@ import com.soundcloud.apipublic.service.representation.collection.Collection
 import com.soundcloud.apipublic.service.users.UserBuilder
 import com.soundcloud.apipublic.test.UnitSpecification
 import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.jvmkit.module.rollout.BasicRolloutFeature
 import com.soundcloud.jvmkit.module.twirp.proto.WellKnownOps.JodaDateTimeExt
 import com.soundcloud.jvmkit.module.util.Urn
 import com.twitter.finagle.http.ParamMap
@@ -250,10 +249,6 @@ class CommentServiceSpec extends UnitSpecification {
   "#createComment" >> {
 
     trait TrackCommentsCreateContext extends Context {
-      val tracksVasCreateComment = BasicRolloutFeature(
-        "tracks-vas-create-comment"
-      )
-
       val urn = Urn("soundcloud", "comments", "1")
       val comment = CommentFromVAS.fromProto(commentFromVAS1)
       val user = UserBuilder.user(comment.user.identifier.toLong)
