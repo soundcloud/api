@@ -43,7 +43,6 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
         labelId = None,
         purchaseTitle = None,
         purchaseUrl = None,
-        cursor = None,
         ean = Some("7641825109894"),
         streamable = Some(false),
         uri = "https://api.soundcloud.com/playlists/42703821?secret_token=secret",

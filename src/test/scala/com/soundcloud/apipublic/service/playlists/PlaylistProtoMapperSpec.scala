@@ -65,7 +65,6 @@ class PlaylistProtoMapperSpec extends Specification {
       labelId = Some("123"),
       purchaseTitle = Some("purchase title"),
       purchaseUrl = Some("http://foo.bar.com"),
-      cursor = Some("cursor"),
       ean = Some("ean"),
       streamable = Some(true),
       uri = "uri",
@@ -121,7 +120,6 @@ class PlaylistProtoMapperSpec extends Specification {
       visiblePlaylist.labelId ==== Some("123")
       visiblePlaylist.purchaseTitle ==== Some("purchase title")
       visiblePlaylist.purchaseUrl ==== Some("http://foo.bar.com")
-      visiblePlaylist.cursor ==== Some("cursor")
       visiblePlaylist.ean ==== Some("ean")
       visiblePlaylist.streamable ==== Some(true)
       visiblePlaylist.uri ==== "uri"

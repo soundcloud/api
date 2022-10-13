@@ -49,7 +49,6 @@ class PlaylistProtoMapper {
       labelId = playlist.labelId,
       purchaseTitle = playlist.purchaseTitle,
       purchaseUrl = playlist.purchaseUrl,
-      cursor = playlist.cursor,
       ean = playlist.ean,
       streamable = playlist.streamable,
       uri = playlist.uri,

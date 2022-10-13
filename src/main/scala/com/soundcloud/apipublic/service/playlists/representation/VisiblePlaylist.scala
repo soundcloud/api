@@ -30,7 +30,6 @@ case class VisiblePlaylist(
     labelId: Option[String],
     purchaseTitle: Option[String],
     purchaseUrl: Option[String],
-    cursor: Option[String],
     ean: Option[String],
     streamable: Option[Boolean],
     uri: String,
