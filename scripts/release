@@ -6,7 +6,7 @@ hub api \
   -X POST \
   -H "Accept: application/vnd.github.v3+json" \
   -H "Authorization: token $GITHUB_TOKEN" \
-  /repos/{owner}/api/releases \
+  /repos/soundcloud/api/releases \
   -F tag_name=$(date "+%Y-%m-%d") \
   -F name=$(date "+%Y-%m-%d") \
   -F body=@RELEASE_NOTES.md
