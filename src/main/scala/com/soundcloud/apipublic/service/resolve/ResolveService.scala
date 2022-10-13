@@ -1,8 +1,7 @@
 package com.soundcloud.apipublic.service.resolve
 
-import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.apipublic.Routing
+import com.soundcloud.apipublic.client.firebase.DynamicClient
 import com.soundcloud.apipublic.client.mothership.MoshimoshiClient
 import com.soundcloud.apipublic.client.tracks.TrackRequest
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
@@ -10,18 +9,29 @@ import com.soundcloud.apipublic.service.TrackVisibilityService.TrackWithTranscod
 import com.soundcloud.apipublic.service.playlists.PlaylistRequest
 import com.soundcloud.apipublic.service.resolve.ResourceURLs.PermalinkURL
 import com.soundcloud.apipublic.service.{PlaylistsService, TrackVisibilityService}
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.twitter.util.Future
 
 class ResolveService(
     moshimoshiClient: MoshimoshiClient,
+    dynamicClient: DynamicClient,
     trackVisibilityService: TrackVisibilityService,
     playlistsService: PlaylistsService,
     baseUrl: String
 ) {
 
   def resolveUrl(session: UserSession, url: String): Future[Option[String]] = {
-    val maybePermalink = ResourceURLs.parsePermalinkUrl(url).toOption
-    Future.value(maybePermalink).flatMap {
+    val maybePermalink =
+      if (ResourceURLs.isRedirectUrl(url)) {
+        dynamicClient.fetchRedirectUrl(url).map {
+          case Some(redirectUrl) => ResourceURLs.parsePermalinkUrl(redirectUrl).toOption
+          case None => None
+        }
+      } else
+        Future.value(ResourceURLs.parsePermalinkUrl(url).toOption)
+
+    maybePermalink.flatMap {
       case Some(permalink) =>
         moshimoshiClient.resolveToUrn(session, permalink.normalized).flatMap {
           case Some(urn) =>

@@ -16,6 +16,7 @@ DEFAULT_REQUEST_LATENCY_BUCKETS="0.001,0.005,0.010,0.020,0.050,0.100,0.200,0.300
 # other services are made multi-zone
 
 AUTHENTICATOR_SRV_RECORD="dnssrv!http.api.prod.authenticator.srv.${ZONE}.s-cloud.net."
+DYNAMIC_HTTP_ADDRESS="https://unused.address.to.init.dynamic.client"
 FOLLOWS_SRV_RECORD="dnssrv!http.api.prod.follows.srv.${ZONE}.s-cloud.net."
 GOBBLY_SRV_RECORD="dnssrv!http.api.prod.gobbly.srv.db.s-cloud.net."
 GATEKEEPER_SRV_RECORD="dnssrv!http.api.prod.gatekeeper.srv.${ZONE}.s-cloud.net."

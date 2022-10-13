@@ -2,6 +2,7 @@ package com.soundcloud.apipublic
 
 import com.soundcloud.apipublic.client._
 import com.soundcloud.apipublic.client.comments.CommentsTwirpClient
+import com.soundcloud.apipublic.client.firebase.DynamicClient
 import com.soundcloud.apipublic.client.followcounts.FollowCountsClient
 import com.soundcloud.apipublic.client.follows.FollowsClient
 import com.soundcloud.apipublic.client.media.TrackAccessRecorderClient
@@ -28,7 +29,7 @@ import com.soundcloud.apipublic.subscriptions.SubmarineClient
 import com.soundcloud.hocuspocus.HocuspocusClientProtobuf
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.client.config.HttpClientConfig
-import com.soundcloud.jvmkit.module.http.client.{HttpClient, JsonClient}
+import com.soundcloud.jvmkit.module.http.client.{DynamicHttpClient, HttpClient, JsonClient}
 import com.soundcloud.jvmkit.module.rollout.Rollout
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
@@ -87,6 +88,10 @@ class Clients(
   val followCountsClient = new FollowCountsClient(stitch4followsService, config)
 
   val trackmetadataClient = new TrackmetadataClient(jsonClient("trackmetadata"))
+
+  lazy val firebaseClient = new DynamicClient(
+    new DynamicHttpClient(HttpClientConfig.from(ResourceName("dynamic_http"), config), telemetry)
+  )
 
   val tracksMediaTwirpClient = TwirpClient(
     ResourceName("tracks"),
@@ -252,5 +257,6 @@ class Clients(
   )
   val grantExchangeService = new GrantExchangeService(oauthGrantExchangeClient)
 
-  val resolveService = new ResolveService(moshimoshiClient, trackVisibilityService, playlistService, baseUrl)
+  val resolveService =
+    new ResolveService(moshimoshiClient, firebaseClient, trackVisibilityService, playlistService, baseUrl)
 }

@@ -30,6 +30,7 @@ ZOOKEEPER_ADDRESS=zookeeper:2181
 
 AUTHENTICATOR_SRV_RECORD=dnssrv!_first16.http.api.prod.authenticator.srv.db.s-cloud.net.
 AUTHENTICATOR_CLIENT_REQUEST_TIMEOUT_MILLIS=10000
+DYNAMIC_HTTP_ADDRESS="https://unused.address.to.init.dynamic.client"
 FOLLOWS_SRV_RECORD=dnssrv!_first16.http.api.prod.follows.srv.db.s-cloud.net.
 GOBBLY_SRV_RECORD=dnssrv!_first16.http.api.prod.gobbly.srv.db.s-cloud.net.
 GATEKEEPER_SRV_RECORD=dnssrv!_first16.http.api.prod.gatekeeper.srv.db.s-cloud.net.

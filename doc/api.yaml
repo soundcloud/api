@@ -759,7 +759,7 @@ paths:
           $ref: '#/components/responses/NotFound'
   /resolve:
     get:
-      summary: Resolves soundcloud.com URLs to Resource URLs to use with the API.
+      summary: Resolves soundcloud.com and on.soundcloud.com URLs to Resource URLs to use with the API.
       tags:
         - miscellaneous
       security:
