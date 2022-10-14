@@ -1,3 +1,3 @@
 <!--- Remove everything below and start over --->
 
-Extend `/resolve` endpoint to handle `on.soundcloud.com` urls.
+Extend `/resolve` endpoint to resolve `on.soundcloud.com` urls.

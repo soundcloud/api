@@ -38,7 +38,7 @@ object ResourceURLs {
     override def normalized = withSecretTokenAsPathPart(WWW_ROOT / usernameSlug / "sets" / playlistSlug, secretToken)
   }
 
-  def isRedirectUrl(redirectUrl: String): Boolean =
+  def isShortLinkUrl(redirectUrl: String): Boolean =
     Url.parse(redirectUrl).hostOption match {
       case Some(Host(REDIRECT_HOST)) => true
       case _ => false

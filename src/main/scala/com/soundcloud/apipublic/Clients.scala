@@ -2,7 +2,7 @@ package com.soundcloud.apipublic
 
 import com.soundcloud.apipublic.client._
 import com.soundcloud.apipublic.client.comments.CommentsTwirpClient
-import com.soundcloud.apipublic.client.firebase.DynamicClient
+import com.soundcloud.apipublic.client.shortlinks.ShortLinksClient
 import com.soundcloud.apipublic.client.followcounts.FollowCountsClient
 import com.soundcloud.apipublic.client.follows.FollowsClient
 import com.soundcloud.apipublic.client.media.TrackAccessRecorderClient
@@ -89,7 +89,7 @@ class Clients(
 
   val trackmetadataClient = new TrackmetadataClient(jsonClient("trackmetadata"))
 
-  lazy val firebaseClient = new DynamicClient(
+  lazy val shortLinksClient = new ShortLinksClient(
     new DynamicHttpClient(HttpClientConfig.from(ResourceName("dynamic_http"), config), telemetry)
   )
 
@@ -258,5 +258,5 @@ class Clients(
   val grantExchangeService = new GrantExchangeService(oauthGrantExchangeClient)
 
   val resolveService =
-    new ResolveService(moshimoshiClient, firebaseClient, trackVisibilityService, playlistService, baseUrl)
+    new ResolveService(moshimoshiClient, shortLinksClient, trackVisibilityService, playlistService, baseUrl)
 }

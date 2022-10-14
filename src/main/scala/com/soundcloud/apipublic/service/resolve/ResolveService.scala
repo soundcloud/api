@@ -1,7 +1,7 @@
 package com.soundcloud.apipublic.service.resolve
 
 import com.soundcloud.apipublic.Routing
-import com.soundcloud.apipublic.client.firebase.DynamicClient
+import com.soundcloud.apipublic.client.shortlinks.ShortLinksClient
 import com.soundcloud.apipublic.client.mothership.MoshimoshiClient
 import com.soundcloud.apipublic.client.tracks.TrackRequest
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
@@ -15,7 +15,7 @@ import com.twitter.util.Future
 
 class ResolveService(
     moshimoshiClient: MoshimoshiClient,
-    dynamicClient: DynamicClient,
+    shortLinksClient: ShortLinksClient,
     trackVisibilityService: TrackVisibilityService,
     playlistsService: PlaylistsService,
     baseUrl: String
@@ -23,8 +23,8 @@ class ResolveService(
 
   def resolveUrl(session: UserSession, url: String): Future[Option[String]] = {
     val maybePermalink =
-      if (ResourceURLs.isRedirectUrl(url)) {
-        dynamicClient.fetchRedirectUrl(url).map {
+      if (ResourceURLs.isShortLinkUrl(url)) {
+        shortLinksClient.resolveUrl(url).map {
           case Some(redirectUrl) => ResourceURLs.parsePermalinkUrl(redirectUrl).toOption
           case None => None
         }

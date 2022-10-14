@@ -1,6 +1,6 @@
 package com.soundcloud.apipublic.service
 
-import com.soundcloud.apipublic.client.firebase.DynamicClient
+import com.soundcloud.apipublic.client.shortlinks.ShortLinksClient
 import com.soundcloud.apipublic.test.UnitSpecification
 import com.soundcloud.apipublic.service.resolve.{ResolveService, ResourceURLs}
 import com.soundcloud.apipublic.client.mothership.MoshimoshiClient
@@ -16,14 +16,14 @@ import com.soundcloud.apipublic.service.playlists.PlaylistRequest
 class ResolveServiceSpec extends UnitSpecification {
   trait Context extends Scope {
     val mockMoshimoshiClient = mock[MoshimoshiClient]
-    val dynamicClient = mock[DynamicClient]
+    val shortLinksClient = mock[ShortLinksClient]
     val mockTrackVisibilityService = mock[TrackVisibilityService]
     val mockPlaylistsService = mock[PlaylistsService]
     val baseUrl = "http://base-url"
     val resolveService =
       new ResolveService(
         mockMoshimoshiClient,
-        dynamicClient,
+        shortLinksClient,
         mockTrackVisibilityService,
         mockPlaylistsService,
         baseUrl
@@ -38,8 +38,8 @@ class ResolveServiceSpec extends UnitSpecification {
       mockMoshimoshiClient resolveToUrn (session, normalised) returns Future.value(maybeUrn)
     }
 
-    def stubFirebase(maybeRedirectUrl: Option[String]) = {
-      dynamicClient.fetchRedirectUrl(any) returns Future.value(maybeRedirectUrl)
+    def stubShortLinksClient(maybeRedirectUrl: Option[String]) = {
+      shortLinksClient.resolveUrl(any) returns Future.value(maybeRedirectUrl)
     }
   }
 
@@ -252,14 +252,14 @@ class ResolveServiceSpec extends UnitSpecification {
       "if the shortlink is valid" in new Context {
         val redirectPermalink = "https://on.soundcloud.com/abcdefg"
         override def permalink = "https://soundcloud.com/user-2-permalink"
-        stubFirebase(Some(permalink))
+        stubShortLinksClient(Some(permalink))
         stubMoshimoshi(Some(Urn("soundcloud", "users", "2")))
         Await.result(resolveService.resolveUrl(session, redirectPermalink)) ==== Some(s"$baseUrl/users/2")
       }
       "if the shortlink is invalid" in new Context {
         val redirectPermalink = "https://on.soundcloud.com/invalid_shortlink"
         override def permalink = "no permalink"
-        stubFirebase(None)
+        stubShortLinksClient(None)
         Await.result(resolveService.resolveUrl(session, redirectPermalink)) ==== None
       }
     }
