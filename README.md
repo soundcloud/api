@@ -20,6 +20,7 @@ To get a fresh OAuth token execute `scripts/sc-token <user_id>`. Example, use it
 curl -H  "Authorization: OAuth `scripts/sc-token <user_id>`" "https://api.soundcloud.com/me"
 ```
 <br/>
+
 Authentication process can be found here: [API Guide](https://developers.soundcloud.com/docs/api/guide#authentication)
 
 ## Notes
