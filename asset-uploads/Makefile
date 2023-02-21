@@ -2,6 +2,10 @@ VERSION ?= $(shell sc artifact-manager package-version)
 
 GO ?= sc crun go-1:latest -- go
 
+.PHONY: bash
+bash:
+	sc crun go-1:latest -- bash
+
 .PHONY: test
 test: test-unit test-integration
 
