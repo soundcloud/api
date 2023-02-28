@@ -4,13 +4,38 @@
   "main": "app.js",
   "author": "SoundCloud",
   "dependencies": {
-    "express": "^4.17.1",
+    "express": "^4.18.2",
     "multi-file-swagger": "^2.3.0",
-    "multi-part": "^3.0.0",
-    "swagger-ui-express": "4.1.6",
+    "multi-part": "^4.0.0",
+    "swagger-ui-express": "4.6.1",
     "yamljs": "0.3.0"
   },
   "devDependencies": {
-    "dredd": "^14.0.0"
+    "dredd": "14.0.0"
+  },
+  "overrides": {
+    "minimist": "^1.2.8",
+    "path-parse": "^1.0.7",
+    "lodash": "^4.17.21",
+    "qs": "^6.11.0",
+    "ansi-regex": "^5.0.1",
+    "cookiejar": "^2.1.4",
+    "json-schema": "0.4.0",
+    "json-pointer": "^0.6.2",
+    "minimatch": "^3.0.5",
+    "markdown-it": "^12.3.2",
+
+    "validator": "^13.9.0",
+
+    "swagger-parser": {
+      "z-schema": "^4.2.4"
+    },
+    "dredd": {
+      "async": "^3.2.2",
+      "gavel": "^9.1.5"
+    },
+    "dredd-transactions": {
+      "@apielements/openapi3-parser": "0.16.0"
+    }
   }
 }

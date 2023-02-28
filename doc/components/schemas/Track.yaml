@@ -99,8 +99,9 @@ properties:
     description: Track URI.
     type: string
   user:
-    description: User who uploaded a track
-    $ref: "#/components/schemas/User"
+    allOf:
+      - $ref: "#/components/schemas/User"
+      - description: User who uploaded a track
   user_favorite:
     description: Is user's favourite.
     type: boolean
@@ -125,7 +126,6 @@ properties:
       - playable
       - preview
       - blocked
-      - null
   download_url:
     description: URL to download a track.
     type: string

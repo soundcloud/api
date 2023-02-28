@@ -1,4 +1,4 @@
-openapi: 3.0.1
+openapi: 3.0.4
 info:
   title: SoundCloud Public API Specification
   contact:
@@ -52,9 +52,10 @@ paths:
         302:
           description: Redirect to connect portal
           headers:
-            location:
+            Location:
               description: Redirect to connect poral "https://secure.soundcloud.com/connect"
-              type: string
+              schema:
+                type: string
         401:
           $ref: '#/components/responses/Unauthorized'
   /oauth2/token:
@@ -384,19 +385,21 @@ paths:
         content:
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/TrackDataRequest'
-              required:
-                - track[title]
-                - track[asset_data]
+              allOf:
+                - $ref: '#/components/schemas/TrackDataRequest'
+                - required:
+                  - track[title]
+                  - track[asset_data]
             examples:
               default:
                 $ref: '#/components/examples/TrackDataRequest'
           multipart/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/TrackDataRequest'
-              required:
-                - track[title]
-                - track[asset_data]
+              allOf:
+                - $ref: '#/components/schemas/TrackDataRequest'
+                - required:
+                  - track[title]
+                  - track[asset_data]
       security:
         - AuthHeader: [ ]
       responses:
@@ -446,9 +449,10 @@ paths:
                 $ref: "#/components/examples/CreateUpdatePlaylistRequest"
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/CreateUpdatePlaylistFormRequest'
-              required:
-                - playlist[title]
+              allOf:
+                - $ref: '#/components/schemas/CreateUpdatePlaylistFormRequest'
+                - required:
+                  - playlist[title]
             examples:
               default:
                 $ref: "#/components/examples/CreateUpdatePlaylistFormRequest"
@@ -1171,7 +1175,8 @@ components:
           items:
             $ref: '#/components/schemas/Comment'
         next_href:
-          type: [ string, null ]
+          type: string
+          nullable: true
     Streams:
       $ref: './components/schemas/Streams.yaml'
   responses:

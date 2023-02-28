@@ -52,7 +52,8 @@ properties:
     type: integer
   locale:
     description: locale.
-    type: [ string, null ]
+    type: string
+    nullable: true
   online:
     description: online.
     type: boolean
@@ -95,7 +96,8 @@ properties:
         type: integer
       upload_seconds_left:
         description: upload seconds left.
-        type: [ integer, null ]
+        type: integer
+        nullable: true
     type: object
   reposts_count:
     description: number of reposts from user
@@ -128,7 +130,8 @@ properties:
     type: integer
   upload_seconds_left:
     description: upload seconds left.
-    type: [ integer, null ]
+    type: integer
+    nullable: true
   uri:
     description: API resource URL.
     type: string

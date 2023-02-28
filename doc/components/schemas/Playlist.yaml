@@ -105,11 +105,15 @@ properties:
     description: Count of playlist likes.
     type: integer
   label:
-    type: [ object, null ]
-    $ref: "#/components/schemas/User"
+    allOf:
+      - type: object
+        nullable: true
+      - $ref: "#/components/schemas/User"
   tracks_uri:
     description: tracks URI.
-    type: [ string, null ]
+    type: string
+    nullable: true
   tags:
     description: Tags.
-    type: [ string, null ]
+    type: string
+    nullable: true

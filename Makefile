@@ -65,7 +65,7 @@ package-assets:
 	make --directory=asset-uploads package
 
 contract-test: package package-assets stop-containers docker-up-development
-	sc crun -l nodejs-12-dev --enable-proxy --config=e2e.secrets -- make --directory=doc contract-test
+	sc crun -l nodejs-18-dev --enable-proxy --config=e2e.secrets -- make --directory=doc contract-test
 	make docker-down
 
 docker-down:

@@ -3,9 +3,12 @@ SYSTEM := $(shell sc manifest name)
 API_SYSTEM := $(shell sc manifest name --manifest=../manifest.json)
 COMPONENT := doc
 
-CRUN = sc crun nodejs-lts
+CRUN = sc crun nodejs-18
 
-.PHONY: run clean package publish promote publish-deploy deploy
+.PHONY: run clean package publish promote publish-deploy deploy bash
+
+bash:
+	$(CRUN) -- bash
 
 resolve_api: node_modules
 	./node_modules/.bin/multi-file-swagger -o yaml api.yaml > compiled_api.yaml
@@ -41,7 +44,7 @@ package:
 	sc add-files assets
 	sc add-files components
 	sc gen-wrapper-script --target="./run-swagger-ui.sh" --wrapper=$(COMPONENT)
-	sc artifact-manager package --runtime=nodejs-lts
+	sc artifact-manager package --runtime=nodejs-18
 
 publish:
 	sc artifact-manager publish

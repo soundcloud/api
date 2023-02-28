@@ -192,7 +192,7 @@ Comment:
   content:
     application/json; charset=utf-8:
       schema:
-        - $ref: '#/components/schemas/Comment'
+        $ref: '#/components/schemas/Comment'
       examples:
         default:
           $ref: "#/components/examples/Comment"
@@ -201,7 +201,7 @@ Comments:
   content:
     application/json; charset=utf-8:
       schema:
-        - $ref: '#/components/schemas/Comments'
+        $ref: '#/components/schemas/Comments'
       examples:
         default:
           $ref: "#/components/examples/Comments"

@@ -1,4 +1,5 @@
-type: [ object, null ]
+type: object
+nullable: true
 description: SoundCloud User object
 properties:
   avatar_url:
