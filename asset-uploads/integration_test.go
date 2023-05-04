@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"io"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
@@ -30,18 +29,6 @@ type fakeMediaServiceClient struct {
 }
 
 func (f fakeMediaServiceClient) createTranscoding(string, string) (string, error) { return f.uid, nil }
-
-func generateRandomText(limit int) string {
-	if limit < 0 {
-		limit = 0
-	}
-	var buffer bytes.Buffer
-	for i := 0; i < limit; i ++ {
-		n := rand.Intn(256 - 48) + 48 //random text starting numeral 0 to ascii 256
-		buffer.WriteString(string(rune(n)))
-	}
-	return buffer.String()
-}
 
 func TestControllerServiceS3Integration(t *testing.T) {
 	uploader := &uploader{
@@ -86,9 +73,11 @@ func TestControllerServiceS3Integration(t *testing.T) {
 			crlf + "My Track" +
 			crlf + "--------------------------6808b4f61ea0e5a2--" +
 			crlf)
+
+	longFileName := "0I9vCc8sKj4LzHxG7mRfN6YlPnQb2JtV1a3qOEUZDXTWgwA5pSyBhFeMuTr1aB5cD3eF7gH2iJ8kL0mN4oP6qR9sT5uV3wX1yZ7bA9dC2fE4hG6jI8lK0nMjK5b9X1cLx2dF0tP6yNzH8aVr4qE7sGhIuO3mWpAeRiSvTgDQwUoZfCnMl0I9vCc8sKj4LzHxG7mRfN6YlPnQb2JtV1a3qOEUZDXTWgwA5pSyBhFeMuTr1aB5cD3eF7gH2iJ8kL0mN4oP6qR9sT5uV3wX1yZ7bA9dC2fE4hG6jI8lK0nMjK5"
 	fileNameTooLong := []byte(
 		"--------------------------6808b4f61ea0e5a2" +
-			crlf + "Content-Disposition: form-data; name=\"track[asset_data]\"; filename=\"" + generateRandomText(300) + ".wav\"" +
+			crlf + "Content-Disposition: form-data; name=\"track[asset_data]\"; filename=\"" + longFileName + ".wav\"" +
 			crlf + "Content-Type: application/octet-stream" +
 			crlf + "" +
 			crlf + "12345" +
