@@ -15,6 +15,7 @@ spec:
     - playlists-playlists_api.proto
     - system-playlists-system_playlists_api.proto
     - tracks-tracks_api.proto
+    - search-search_api.proto
 metadata:
   name: api-public-asset-uploads
   description: Preprocessor for multipart requests (track uploads)
@@ -74,6 +75,7 @@ spec:
     - Component:okidoki
     - Component:playlists
     - Component:search-dispatcher-remix
+    - Component:search
     - Component:system-playlists
     - Component:timeline
     - Component:tracks

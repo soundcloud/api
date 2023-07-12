@@ -31,7 +31,7 @@ trait IntegrationTest extends Specification with SpinningUpAppSupport {
     def authenticatedDEHeaders =
       HeaderMap(
         "Authorization" -> s"OAuth $token",
-        "X-Real-IP" -> "104.108.160.0" // An arbitrary German IP
+        "X-Real-IP" -> "46.243.122.48" // An arbitrary German IP taken from bundestag.de
       )
   }
 }

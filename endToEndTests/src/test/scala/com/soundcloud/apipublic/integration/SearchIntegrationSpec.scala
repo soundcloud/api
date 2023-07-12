@@ -24,7 +24,7 @@ class SearchIntegrationSpec extends IntegrationTest {
 
     "should return full tracks and snippets, if access=playable,preview" in new SearchContext {
       val response = server.get(
-        searchPath(params = Map("q" -> "better", "limit" -> "30", "access" -> "playable,preview")),
+        searchPath(params = Map("q" -> "better", "limit" -> "100", "access" -> "playable,preview")),
         authenticatedDEHeaders
       )
 

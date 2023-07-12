@@ -9,7 +9,7 @@ import com.soundcloud.apipublic.client.media.TrackAccessRecorderClient
 import com.soundcloud.apipublic.client.mothership.{MoshimoshiClient, OkidokiClient, RichOkidokiClient}
 import com.soundcloud.apipublic.client.playlists.PlaylistDeletionClient
 import com.soundcloud.apipublic.client.reposts.RepostsClient
-import com.soundcloud.apipublic.client.search.SearchClient
+import com.soundcloud.apipublic.client.search.{SearchApiClient, SearchDispatcherClient}
 import com.soundcloud.apipublic.client.trackcoordinator.TrackCoordinatorClient
 import com.soundcloud.apipublic.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.apipublic.client.tracks.TracksTwirpClient
@@ -45,6 +45,7 @@ import proto.soundcloud.playlists.api.{
   WritesClientProtobuf,
   LikesClientProtobuf => PlaylistLikesClientProtobuf
 }
+import proto.soundcloud.search.api.SearchClientProtobuf
 import proto.soundcloud.tracks.api.{
   MediaClientProtobuf,
   RepostsClientProtobuf,
@@ -68,8 +69,16 @@ class Clients(
 
   val timelineClient = new TimelineJsonClient(jsonClient("timeline"))
 
-  val searchJsonClient = jsonClient("search")
-  val searchClient = new SearchClient(searchJsonClient)
+  val searchDispatcherClient = new SearchDispatcherClient(jsonClient("search"))
+
+  val searchApiClient = new SearchApiClient(
+    TwirpClient(
+      ResourceName("searchsdui"),
+      config,
+      telemetry,
+      new SearchClientProtobuf(_, _)
+    )
+  )
 
   val followsClient = new FollowsClient(jsonClient("follows"))
 
@@ -219,7 +228,14 @@ class Clients(
   val meService = new MeService(userRepresentationsService, okidokiClient, trackCoordinatorClient, exceptionCollector)
 
   val searchService =
-    new SearchService(searchClient, tracksService, playlistService, userRepresentationsService)
+    new SearchService(
+      searchDispatcherClient,
+      searchApiClient,
+      tracksService,
+      playlistService,
+      userRepresentationsService,
+      rolloutClient
+    )
 
   val timelineService = new TimelineService(timelineClient, tracksService, playlistService)
 

@@ -1,10 +1,9 @@
 package com.soundcloud.apipublic.service
 
-import com.soundcloud.jvmkit.module.http.client.Params
 import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.apipublic.client.mothership.response.mapper.UserRepresentationMapper
-import com.soundcloud.apipublic.client.search.{Doc, SearchClient, SearchResponse}
+import com.soundcloud.apipublic.client.search.{Doc, SearchClient, SearchResponse, TracksParams}
 import com.soundcloud.apipublic.client.tracks.TrackRequest
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
 import com.soundcloud.apipublic.service.pagination.OffsetBasedPagination
@@ -17,10 +16,13 @@ import com.soundcloud.apipublic.service.trackrepresentation.{
 }
 import com.soundcloud.apipublic.service.users.UserRepresentationsService
 import com.soundcloud.apipublic.test.fixtures.Fixtures
+import com.soundcloud.jvmkit.module.rollout.{BasicRolloutFeature, Rollout}
 import com.twitter.finagle.http.ParamMap
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
 import play.api.libs.json.JsObject
+import com.soundcloud.apipublic.handler.search.ParamsExtractor._
+import com.soundcloud.apipublic.handler.support.requestParser.AccessParamsExtractor
 
 class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
 
@@ -36,20 +38,28 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
     val trackPagination = mock[TrackPagination]
     val offsetBasedPagination = mock[OffsetBasedPagination]
     val userRepresentationsService = mock[UserRepresentationsService]
+    val rollout = mock[Rollout]
 
     val trackRepresentationMock = createTrackRepresentation
     val searchService = new SearchService(
       searchClient,
+      searchClient,
       trackRepresentationsService,
       playlistsService,
-      userRepresentationsService
+      userRepresentationsService,
+      rollout
     )
 
+    lazy val params = ParamMap("q" -> query)
+    lazy val accessParam: AccessParams = AccessParamsExtractor.unapply(params)
     val query = "foo"
     val queryUrn = Urn("soundcloud", "search", "foo")
     val playlistUrn = Urn("soundcloud", "playlists", playlist.id.toString)
     val userUrn = user.urn
     val access = AccessParams.defaultAccess
+
+    when(rollout.isActive(BasicRolloutFeature("use-search-sdui-api"))).thenReturn(Future.value(true))
+
   }
 
   "#searchUsers" >> {
@@ -57,8 +67,9 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
       when(
         searchClient.searchUsers(
           ===(session),
-          ===(Params("q" -> query)),
-          anyObject
+          ===(ParamMap("q" -> query).asUsersParams),
+          anyObject,
+          ===(accessParam)
         )
       ).thenReturn(
         SearchResponse(query, queryUrn, 0, 5, 1, 1000, Seq(Doc(userUrn)), None).goodF
@@ -66,7 +77,10 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
 
       when(userRepresentationsService.users(session, Seq(userUrn))).thenReturn(Future.value(List(user)))
 
-      val result = Await.result(searchService.searchUsers(session, Map("q" -> query), offsetBasedPagination).value)
+      val result =
+        Await.result(
+          searchService.searchUsers(session, params.asUsersParams, offsetBasedPagination, accessParam).value
+        )
       val usersCollection = result.getOrElse(Collection(List.empty, None))
       usersCollection.items ==== List(user)
     }
@@ -75,8 +89,9 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
       when(
         searchClient.searchUsers(
           ===(session),
-          ===(Params("q" -> query)),
-          anyObject
+          ===(ParamMap("q" -> query).asUsersParams),
+          anyObject,
+          ===(accessParam)
         )
       ).thenReturn(
         SearchResponse(query, queryUrn, 0, 5, 1, 1000, Seq.empty, None).goodF
@@ -84,7 +99,10 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
 
       when(userRepresentationsService.users(session, Seq.empty)).thenReturn(Future.value(List.empty))
 
-      val result = Await.result(searchService.searchUsers(session, Map("q" -> query), offsetBasedPagination).value)
+      val result =
+        Await.result(
+          searchService.searchUsers(session, params.asUsersParams, offsetBasedPagination, accessParam).value
+        )
 
       val usersCollection = result.getOrElse(Collection(Nil, None))
       usersCollection.items ==== List.empty
@@ -100,25 +118,28 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
       when(
         trackRepresentationsService.tracks(===(session), anyObject[List[TrackRequest]], anyObject[AccessParams])
       ).thenReturn(Future.value(tracks))
-      when(searchClient.searchTracks(===(session), anyObject, anyObject)).thenReturn(response)
+      when(searchClient.searchTracks(===(session), any[TracksParams], anyObject, ===(accessParam))).thenReturn(response)
     }
 
     "default to free tier tracks only (to support current behavior)" in new TrackContext {
-      val result = Await.result(searchService.searchTracks(session, ParamMap(("q", query)), trackPagination).value)
+      val result =
+        Await.result(searchService.searchTracks(session, params.asTracksParams, trackPagination, accessParam).value)
 
       val tracksCollection = result.getOrElse(Collection(List.empty, None))
       tracksCollection.items ==== List(trackRepresentationMock)
       there was one(searchClient).searchTracks(
         ===(session),
-        ===(Params("q" -> query, "filter.content_tier" -> "FREE", "filter.content_country" -> "--")),
-        anyObject
+        ===(ParamMap("q" -> query, "filter.content_tier" -> "FREE", "filter.content_country" -> "--").asTracksParams),
+        anyObject,
+        ===(accessParam)
       )
     }
 
     "overrides content tier when access is defined" in new TrackContext {
+      override lazy val params = ParamMap(("q", query), ("access", "playable,preview,blocked"))
       val result = Await.result(
         searchService
-          .searchTracks(session, ParamMap(("q", query), ("access", "playable,preview,blocked")), trackPagination)
+          .searchTracks(session, params.asTracksParams, trackPagination, accessParam)
           .value
       )
 
@@ -126,15 +147,17 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
       tracksCollection.items ==== List(trackRepresentationMock)
       there was one(searchClient).searchTracks(
         ===(session),
-        ===(Params("q" -> query)),
-        anyObject
+        ===(ParamMap("q" -> query).asTracksParams),
+        anyObject,
+        ===(accessParam)
       )
     }
 
     "when data is not available" in new TrackContext {
       override lazy val tracks = List.empty
       override lazy val response = SearchResponse(query, queryUrn, 0, 0, 0, 1000, Seq.empty, None).goodF
-      val result = Await.result(searchService.searchTracks(session, ParamMap(("q", query)), trackPagination).value)
+      val result =
+        Await.result(searchService.searchTracks(session, params.asTracksParams, trackPagination, accessParam).value)
 
       val tracksCollection = result.getOrElse(Collection(List.empty, None))
       tracksCollection.items ==== List.empty
@@ -155,8 +178,9 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
       when(
         searchClient.searchPlaylists(
           ===(session),
-          ===(Params("q" -> query)),
-          anyObject
+          ===(ParamMap("q" -> query).asPlaylistParams),
+          anyObject,
+          ===(accessParam)
         )
       ).thenReturn(
         SearchResponse(
@@ -172,7 +196,9 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
       )
 
       val result =
-        Await.result(searchService.searchPlaylists(session, ParamMap("q" -> query), offsetBasedPagination).value)
+        Await.result(
+          searchService.searchPlaylists(session, params.asPlaylistParams, offsetBasedPagination, accessParam).value
+        )
 
       val playlistsCollection = result.getOrElse(Collection(List.empty, None))
       playlistsCollection.items ==== List(playlist)
@@ -186,8 +212,9 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
       when(
         searchClient.searchPlaylists(
           ===(session),
-          ===(Params("q" -> query)),
-          anyObject
+          ===(ParamMap("q" -> query).asPlaylistParams),
+          anyObject,
+          ===(accessParam)
         )
       ).thenReturn(
         SearchResponse(
@@ -203,7 +230,9 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
       )
 
       val result =
-        Await.result(searchService.searchPlaylists(session, ParamMap("q" -> query), offsetBasedPagination).value)
+        Await.result(
+          searchService.searchPlaylists(session, params.asPlaylistParams, offsetBasedPagination, accessParam).value
+        )
 
       val playlistsCollection = result.getOrElse(Collection(List.empty, None))
       playlistsCollection.items ==== List.empty

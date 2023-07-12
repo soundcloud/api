@@ -1,13 +1,14 @@
 package com.soundcloud.apipublic.client.search
 
-import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
+import com.soundcloud.apipublic.client.search.SearchDurationFilter.{Long, Short, Epic, Medium}
+import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
 import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
-import com.twitter.finagle.http.Status
 import play.api.libs.json.Json
-import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import com.soundcloud.jvmkit.module.outcome._
+import com.soundcloud.jvmkit.module.json.play.UrnFormat._
+import org.joda.time.DateTime
 
 case class Doc(urn: Urn)
 
@@ -27,6 +28,29 @@ object FacetGroup {
   implicit val format = Json.format[FacetGroup]
 }
 
+sealed trait SearchDurationFilter {
+  val value: String
+}
+object SearchDurationFilter {
+  case object Long extends SearchDurationFilter { override val value: String = "LONG" }
+  case object Epic extends SearchDurationFilter { override val value: String = "EPIC" }
+  case object Short extends SearchDurationFilter { override val value: String = "SHORT" }
+  case object Medium extends SearchDurationFilter { override val value: String = "MEDIUM" }
+}
+
+object SearchDurationFilters {
+  def fromString(string: String): Option[SearchDurationFilter] = string match {
+    case Long.`value` => Some(Long)
+    case Epic.`value` => Some(Epic)
+    case Short.`value` => Some(Short)
+    case Medium.`value` => Some(Medium)
+    case _ => None
+  }
+
+  def mustFromString(string: String): SearchDurationFilter =
+    fromString(string).getOrElse(throw new IllegalArgumentException(s"Unknown search duration filter: $string"))
+}
+
 case class SearchResponse(
     query: String,
     query_urn: Urn,
@@ -42,41 +66,114 @@ object SearchResponse {
   implicit val format = Json.format[SearchResponse]
 }
 
-class SearchClient(jsonClient: JsonClient) {
+case class UsersParams(
+    q: String,
+    limit: Int,
+    offset: Option[Int] = None,
+    order: Option[String] = None,
+    createdAt: Option[String] = None,
+    createdAtFrom: Option[DateTime] = None,
+    createdAtTo: Option[DateTime] = None,
+    ids: Option[List[String]] = None,
+    clientId: Option[String] = None,
+    place: Option[String] = None
+)
 
-  def searchTracks(session: UserSession, params: Params, headers: Headers = Headers.empty): OutcomeF[SearchResponse] =
-    search(session, Path() / "search" / "tracks", params, headers)
+case class PlaylistsParams(
+    q: String,
+    limit: Int,
+    offset: Option[Int] = None,
+    order: Option[String] = None,
+    createdAt: Option[String] = None,
+    createdAtFrom: Option[DateTime] = None,
+    createdAtTo: Option[DateTime] = None,
+    ids: Option[List[String]] = None,
+    clientId: Option[String] = None,
+    genres: Option[List[String]] = None,
+    tags: Option[List[String]] = None,
+    showTracks: Option[Boolean] = None
+)
+
+case class TracksParams(
+    q: String,
+    limit: Int,
+    offset: Option[Int] = None,
+    order: Option[String] = None,
+    contentTier: Option[String] = None,
+    contentCountry: Option[String] = None,
+    createdAt: Option[String] = None,
+    createdAtFrom: Option[DateTime] = None,
+    createdAtTo: Option[DateTime] = None,
+    downloadable: Option[Boolean] = None,
+    streamable: Option[Boolean] = None,
+    bpm: Option[String] = None,
+    bpmFrom: Option[Int] = None,
+    bpmTo: Option[Int] = None,
+    duration: Option[SearchDurationFilter] = None,
+    durationFrom: Option[Int] = None,
+    durationTo: Option[Int] = None,
+    license: Option[String] = None,
+    genres: Option[List[String]] = None,
+    tags: Option[List[String]] = None,
+    ids: Option[List[String]] = None,
+    clientId: Option[String] = None,
+    place: Option[String] = None
+)
+
+case class SearchQueryParams(
+    q: String,
+    limit: Int,
+    offset: Option[Int] = None,
+    order: Option[String] = None,
+    contentTier: Option[String] = None,
+    contentCountry: Option[String] = None,
+    createdAt: Option[String] = None,
+    createdAtFrom: Option[DateTime] = None,
+    createdAtTo: Option[DateTime] = None,
+    downloadable: Option[Boolean] = None,
+    streamable: Option[Boolean] = None,
+    bpm: Option[String] = None,
+    bpmFrom: Option[Int] = None,
+    bpmTo: Option[Int] = None,
+    duration: Option[SearchDurationFilter] = None,
+    durationFrom: Option[Long] = None,
+    durationTo: Option[Long] = None,
+    license: Option[String] = None,
+    genres: Option[List[String]] = None,
+    tags: Option[List[String]] = None,
+    ids: Option[List[String]] = None,
+    clientId: Option[String] = None,
+    place: Option[String] = None
+)
+
+trait SearchClient {
+
+  def searchTracks(
+      session: UserSession,
+      params: TracksParams,
+      headers: Headers = Headers.empty,
+      access: AccessParams
+  ): OutcomeF[SearchResponse]
 
   def searchPlaylists(
       session: UserSession,
-      params: Params,
-      headers: Headers = Headers.empty
-  ): OutcomeF[SearchResponse] =
-    search(session, Path() / "search" / "playlists", params, headers)
+      params: PlaylistsParams,
+      headers: Headers = Headers.empty,
+      access: AccessParams
+  ): OutcomeF[SearchResponse]
 
   def searchUsers(
       session: UserSession,
-      params: Params,
-      headers: Headers = Headers.empty
-  ): OutcomeF[SearchResponse] =
-    search(session, Path() / "search" / "users", params, headers)
+      params: UsersParams,
+      headers: Headers = Headers.empty,
+      access: AccessParams
+  ): OutcomeF[SearchResponse]
 
   def search(
       session: UserSession,
       path: Path,
-      params: Params,
-      headers: Headers = Headers.empty
-  ): OutcomeF[SearchResponse] = {
-    jsonClient
-      .getWithSession(session, path, params, headers)
-      .map { response =>
-        response.status match {
-          case Status.Ok => Json.parse(response.contentString).as[SearchResponse].good
-          case Status.BadRequest => NotValid("invalid request").bad
-          case Status.NotFound | Status.Unauthorized => NotFound().bad
-          case _ => HttpServiceError(HttpResponseFields(response.statusCode)).bad
-        }
-      }
-      .outcomeF
-  }
+      params: SearchQueryParams,
+      headers: Headers = Headers.empty,
+      access: AccessParams
+  ): OutcomeF[SearchResponse]
 }

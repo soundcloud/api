@@ -7,7 +7,7 @@ import com.soundcloud.apipublic.support.oauth.ClientCredentialsGrant
 import com.twitter.finagle.http.Method
 
 object RateLimits {
-  private val searchParams = defaultParams ++ trackParams ++ playlistParams
+  private val searchParams = SearchRateLimits.defaultParams ++ SearchRateLimits.trackParams ++ SearchRateLimits.playlistParams
   private val searchZKBucket = "search"
 
   private def searchRequests: RateLimitClassifier.rateLimitClassifier = {

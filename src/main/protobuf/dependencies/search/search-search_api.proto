@@ -1,0 +1,557 @@
+// DO NOT EDIT
+// This file has been automatically downloaded via 'sc idl fetch' from an upstream dependency.
+
+syntax = "proto3";
+
+package proto.soundcloud.search.api;
+
+option java_package = "proto.soundcloud.search.api";
+
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/timestamp.proto";
+import "common_session.proto";
+
+//
+// Service definitions
+//
+
+service Search {
+    // Performs a search, and returns an SDUI response
+    // Receives a SearchRequest and will return a SearchResponse that holds all necessary information not only to render a set of search sections
+    // but also allows for navigation from those sections to other calls to this service to render another sets of results.
+    // For more information on the API contract, see here: https://github.com/soundcloud/search-sdui-sections
+    rpc Search (SearchRequest) returns (SearchResponse) {};
+    // Performs a search, and returns an simple response of unresolved entities for the given query
+    // Receives a SearchRequest and will return a SearchSimpleResponse that holds all necessary information to show
+    // a simple list of results
+    rpc SimpleSearch (SimpleSearchRequest) returns (SimpleSearchResponse) {};
+    // Here we mimic the the Search endpoint but instead we respond with an ExplanationResponse object
+    // with details from the resolvers executed to build the response
+    // These details might come from the ES cluster or from any place the resolver thinks is necessary to explain the results it's yielding
+    // Only used for debugging
+    rpc Explain (SearchRequest) returns (ExplanationResponse) {};
+}
+
+//
+// Requests
+//
+
+// Requests a specific layout
+// Generally only used for special cases when the response should contain particular sections
+message RequestedLayout {
+    // Requested layout urn (if blank, the API will resolve the layout based on the type of request)
+    google.protobuf.StringValue urn = 1;
+    // Requested layout version (if blank, configured default is used)
+    google.protobuf.StringValue version = 2;
+}
+
+// Request body for search requests
+message SearchRequest {
+    // You must provide a user session
+    proto.soundcloud.common.session.UserSession user_session = 1;
+    // App locale used for translations (optional)
+    google.protobuf.StringValue app_locale = 2;
+    // Query string to query for
+    string text = 3;
+    // Supplied user action with this request (eg. rejecting/accepting an autocorrect suggestion)
+    Action.Action action = 4;
+    // Enable/disable caching (optional, default: true)
+    google.protobuf.BoolValue caching_enabled = 5;
+    // Specify a query layout (optional, default: configured in config)
+    RequestedLayout layout = 6;
+    // Query pagination parameters (optional) This only paginates the results, top's is outside pagination.
+    SearchPagination pagination = 7;
+    // Query URN of this request (when making repeated requests, eg. scrolling, supply the same query URN) (optional)
+    google.protobuf.StringValue query_urn = 8;
+    // Apply filters to the query (optional)
+    SearchFilters filters = 9;
+    // Enable/disable tracking of this request (should be disabled for load testing/analysis for example) (optional, default: true)
+    google.protobuf.BoolValue tracking_enabled = 10;
+    // Query URN of the previous query that this query is linked to (for tracking) (optional)
+    google.protobuf.StringValue previous_query_urn = 11;
+    // Session URN that this query is part of (for tracking) (optional)
+    google.protobuf.StringValue session_urn = 12;
+    // Anonymous user ID - must be provided if user session is anonymous
+    google.protobuf.StringValue anonymous_id = 13;
+    // Autocomplete urn, if this query came from autocomplete (optional)
+    google.protobuf.StringValue autocomplete_urn = 15;
+    // Only return sections from this resolver within the resolved layout (optional)
+    google.protobuf.StringValue resolver = 16;
+    // By default, errors that occur in resolvers do not fail the entire request
+    // Set to true to make the request fail if any error occurs (useful for offline scripts/evaluation etc.)
+    google.protobuf.BoolValue fail_on_error = 17;
+}
+
+// Request body for search requests
+message SimpleSearchRequest {
+    // You must provide a user session
+    proto.soundcloud.common.session.UserSession user_session = 1;
+    // Query string to query for
+    string text = 3;
+    // Supplied user action with this request (eg. rejecting/accepting an autocorrect suggestion)
+    Action.Action action = 4;
+    // Enable/disable caching (optional, default: true)
+    google.protobuf.BoolValue caching_enabled = 5;
+    // Query pagination parameters (optional, default: offset = 0, size = 20)
+    SearchOffsetPagination pagination = 7;
+    // Query URN of this request (when making repeated requests, eg. scrolling, supply the same query URN) (optional)
+    google.protobuf.StringValue query_urn = 8;
+    // Apply filters to the query (optional)
+    SearchFilters filters = 9;
+    // Enable/disable tracking of this request (should be disabled for load testing/analysis for example) (optional, default: true)
+    google.protobuf.BoolValue tracking_enabled = 10;
+    // Query URN of the previous query that this query is linked to (for tracking) (optional)
+    google.protobuf.StringValue previous_query_urn = 11;
+    // Session URN that this query is part of (for tracking) (optional)
+    google.protobuf.StringValue session_urn = 12;
+    // Anonymous user ID - must be provided if user session is anonymous
+    google.protobuf.StringValue anonymous_id = 13;
+    // Autocomplete urn, if this query came from autocomplete (optional)
+    google.protobuf.StringValue autocomplete_urn = 15;
+    // Aggregations counts of the results
+    repeated Aggregation.Aggregation aggregations = 16;
+    // By default, errors that occur in resolvers do not fail the entire request
+    // Set to true to make the request fail if any error occurs (useful for offline scripts/evaluation etc.)
+    google.protobuf.BoolValue fail_on_error = 17;
+}
+
+
+// Pagination parameters
+message SearchPagination {
+    // Page of results to return (first page = 0)
+    google.protobuf.Int32Value page = 1;
+    // Scales the result size of all resolvers
+    // eg. if 2 resolvers return 5 and 10 results by default, size_scaling = 2.0 will return 10 and 20 results respectively
+    google.protobuf.DoubleValue size_scaling = 2;
+    // See all page
+    google.protobuf.Int32Value see_all_page = 3;
+}
+
+// Pagination parameters
+message SearchOffsetPagination {
+    // Amount of non-top(results) the results
+    google.protobuf.Int32Value limit = 1;
+    // Overrides the offset. Default is page * limit
+    google.protobuf.Int32Value offset = 2;
+}
+
+// Various search filters
+message SearchFilters {
+    enum ContentType {
+        ALL = 0;
+        TRACKS = 1;
+        PLAYLISTS = 2;
+        ALBUMS = 3;
+        USERS = 4;
+        TRACKS_AND_PLAYLISTS = 5;
+    }
+
+    enum ContentTier {
+        ANY_TIER = 0;
+        SUB_HIGH_TIER = 1;
+        FREE_TIER = 2;
+    }
+
+    enum CreatedAtFixedRange {
+        ANY_CREATED_AT = 0;
+        LAST_HOUR_CREATED_AT = 1;
+        LAST_DAY_CREATED_AT = 2;
+        LAST_WEEK_CREATED_AT = 3;
+        LAST_TWO_WEEKS_CREATED_AT = 4;
+        LAST_MONTH_CREATED_AT = 5;
+        LAST_THREE_MONTHS_CREATED_AT = 6;
+        LAST_SIX_MONTHS_CREATED_AT = 7;
+        LAST_YEAR_CREATED_AT = 8;
+    }
+
+    enum DurationFixedRange {
+        ANY_DURATION = 0;
+        SHORT_DURATION = 1;
+        MEDIUM_DURATION = 2;
+        LONG_DURATION = 3;
+        EPIC_DURATION = 4;
+    }
+
+    enum Downloadable {
+        ANY_DOWNLOADABLE = 0;
+        ONLY_DOWNLOADABLE = 1;
+        WITHOUT_DOWNLOADABLE = 2;
+    }
+
+    enum Streamable {
+        ANY_STREAMABLE = 0; // No streamable filter
+        ALL_STREAMABLE = 1; // Either streamable or api streamable
+        ONLY_API_STREAMABLE = 2; // just api streamable content
+        ONLY_STREAMABLE = 3; // just streamable content
+        WITHOUT_API_STREAMABLE = 4; // only content that is not api streamable
+        WITHOUT_STREAMABLE = 5; // only content that is not streamable
+        NO_STREAMABLE = 6; // no content that is either streamable or api streamable
+    }
+
+    enum License {
+        ANY_LICENSE = 0;
+        CC_BY_LICENSE = 1;
+        CC_BY_NC_ND_LICENSE = 2;
+        CC_BY_NC_ND_SA_LICENSE = 3;
+        CC_BY_NC_SA_LICENSE = 4;
+        CC_BY_NC_LICENSE = 5;
+        CC_BY_ND_LICENSE = 6;
+        CC_BY_SA_LICENSE = 7;
+        ALL_RIGHTS_RESERVED_LICENSE = 8;
+        NO_RIGHTS_RESERVED_LICENSE = 9;
+        TO_SHARE_LICENSE = 10; // -- any of cc-by, cc-by-nc-nd, cc-by-nc-sa, cc-by-nc-nd-sa
+        TO_USE_COMMERCIALLY_LICENSE = 11; // -- any of cc-by-nd, cc-by, cc-by-sa
+        TO_MODIFY_COMMERCIALLY_LICENSE = 12; // -- any of cc-by, cc-by-sa
+    }
+
+    message DurationDynamicRange {
+        google.protobuf.Int64Value from_ms = 1;
+        google.protobuf.Int64Value to_ms = 2;
+    }
+
+    message CreatedAtDynamicRange {
+        google.protobuf.Timestamp from = 1;
+        google.protobuf.Timestamp to = 2;
+    }
+
+    message BPMDynamicRange {
+        google.protobuf.Int32Value from = 1;
+        google.protobuf.Int32Value to = 2;
+    }
+
+    message DurationRange {
+        oneof entity {
+            DurationDynamicRange dynamic_range = 1;
+            DurationFixedRange fixed_range = 2;
+        }
+    }
+
+    message CreatedAtRange {
+        oneof entity {
+            CreatedAtDynamicRange dynamic_range = 1;
+            CreatedAtFixedRange fixed_range = 2;
+        }
+    }
+
+    // Filter results for a particular content type
+    ContentType content_type = 1;
+
+    // Filter results according to content tier (sub, free, any)
+    ContentTier content_tier = 2;
+
+    // Filter the results from a list of predefined created_at ranges
+    // [last_hour, last_day, last_week, last_two_weeks, last_month, last_three_months, last_six_months, last_year]
+    // Filter the results from what is created between two
+    CreatedAtRange created_at_range = 3;
+
+    // Filter the results from a list of predefined duration ranges
+    // [short(0->2min), medium(2min-10min), long(10min-30min), epic(+30min)]
+    // OR Filter the results from a list of free form duration range
+    DurationRange duration_range = 4;
+
+    // Filter the results if they can be downloadable or not
+    Downloadable downloadable = 5;
+
+    // Filter the results if they can be streamable or not
+    Streamable streamable = 6;
+
+    // Filter by genres[pop, rock, techno, etc...]
+    repeated google.protobuf.StringValue genres = 7;
+
+    // Filter by hashtags
+    repeated google.protobuf.StringValue hashtags = 8;
+
+    // Filter by a bpm range
+    BPMDynamicRange bpm = 9;
+
+    // Filter by content country (this overrides the user's country from the session)
+    // If you send "ANY" it will remove the blocked countries content filter
+    google.protobuf.StringValue content_country = 10;
+
+    // Filter by user ids
+    repeated google.protobuf.StringValue user_ids = 11;
+
+    // Filter by license
+    License license = 12;
+
+    // Filter by id
+    repeated google.protobuf.StringValue ids = 13;
+}
+
+// Request actions
+// When the user performs an action that triggers a new search, it's necessary to notify the search service
+// what action the user has taken. The response may then change accordingly
+message Action {
+    enum Action {
+        // No action
+        NONE = 0;
+        // User accepted a suggested autocorrect suggestion
+        AUTO_CORRECT_REJECTED = 1;
+        // User rejected a suggested autocorrect suggestion
+        AUTO_CORRECT_ACCEPTED = 2;
+        // User clicked on a genre pill
+        GENRE_PILL_ACCEPTED = 3;
+        // User clicked on a fans also like pill
+        FANS_ALSO_LIKE_PILL_ACCEPTED = 4;
+    }
+}
+
+// Request aggregations
+// The results can be aggregated by a number of different fields
+// allowing to get counts for each of the fields
+message Aggregation {
+    enum Aggregation {
+        // No aggregation
+        NONE = 0;
+        // Genre [pop, rock, techno, etc...]
+        GENRE = 1;
+        // Genre + Hashtags
+        GENRE_OR_TAG = 2;
+        // Models [sound, person, set, group]
+        MODEL = 3;
+    }
+
+    // The aggregation name
+    Aggregation name = 1;
+    // The different values of the aggregation with their  counts
+    map<string, int64> buckets = 2;
+}
+
+//
+// Responses
+//
+
+// Search response body
+message SearchResponse {
+    // Contains stats and metrics relating to this request/response
+    QueryStats stats = 1;
+    // Information relating to the construction of the query
+    // Using these parameters, it's possible to repeat the same request
+    QueryResponse query = 2;
+    // All UI sections generated by the resolvers that were executed on the request
+    repeated SectionView sections = 3;
+    // A map of all entities that exist in the sections view
+    repeated Entity entities = 4;
+    // A map of all links that exist in the response
+    map<string, Link> links = 5;
+}
+
+// Search simple response body
+message SimpleSearchResponse {
+    // Contains stats and metrics relating to this request/response
+    QueryStats stats = 1;
+    // Information relating to the construction of the query
+    // Using these parameters, it's possible to repeat the same request
+    SimpleQueryResponse query = 2;
+    // A list of entities of top results for this specific query
+    repeated Entity top = 4;
+    // A list of entities that match the query
+    repeated Entity results = 5;
+    // A list of entities that match the query
+    repeated Aggregation aggregations = 6;
+}
+
+// Query stats
+// Contains metrics pertaining to the query
+message QueryStats {
+    // True if the response came from cache, false if the query was executed
+    bool from_cache = 1;
+    // Total execution time of the request
+    int64 execution_time_ms = 2;
+    // Total results matched by the request
+    int64 total_results = 3;
+}
+
+// Selected layout
+// Specifies which layout was executed for the given request
+message Layout {
+    // Layout urn
+    string urn = 1;
+    // Layout version
+    string version = 2;
+}
+
+// Query response stats
+// Contains all parameters that make it possible to reconstruct a search request
+message QueryResponse {
+    // Selected layout
+    Layout layout = 1;
+    // Query urn
+    google.protobuf.StringValue query_urn = 2;
+    // Query string
+    string text = 3;
+    // Tags applied to this query
+    repeated Tag tags = 8;
+    // Filters applied to this query
+    SearchFilters filters = 9;
+    // User action
+    Action.Action action = 10;
+    // The query URN of the previous request that triggered this request (used for linking user journeys in tracking)
+    google.protobuf.StringValue previous_query_urn = 11;
+    // The assigned session URN for this set of requests (used for linking user journeys in tracking)
+    google.protobuf.StringValue session_urn = 12;
+    // The unmodified query string supplied by the user
+    string originalText = 13;
+    // Optional autocomplete urn, if this query came from autocomplete
+    google.protobuf.StringValue autocomplete_urn = 14;
+    // Selected resolver
+    google.protobuf.StringValue resolver = 15;
+    // Pagination parameters
+    SearchPagination pagination = 16;
+}
+
+
+message SimpleQueryResponse {
+    // Query urn
+    google.protobuf.StringValue query_urn = 1;
+    // Query string
+    string text = 2;
+    // Tags applied to this query
+    repeated Tag tags = 3;
+    // Filters applied to this query
+    SearchFilters filters = 4;
+    // The query URN of the previous request that triggered this request (used for linking user journeys in tracking)
+    google.protobuf.StringValue previous_query_urn = 5;
+    // The assigned session URN for this set of requests (used for linking user journeys in tracking)
+    google.protobuf.StringValue session_urn = 6;
+    // The unmodified query string supplied by the user
+    string originalText = 7;
+    // Optional autocomplete urn, if this query came from autocomplete
+    google.protobuf.StringValue autocomplete_urn = 8;
+    // Selected resolver
+    google.protobuf.StringValue resolver = 9;
+    // Pagination parameters
+    SearchOffsetPagination pagination = 10;
+    // User action
+    Action.Action action = 11;
+}
+
+// Tags
+// Tags are applied to the request by the search API based on various factors
+// They can have different behaviours, depending on the type of tag (eg. they can act like a filter, or they can modify the query in some way)
+message Tag {
+    // Urn of this tag
+    string urn = 1;
+    // Value of this tag
+    string value = 2;
+}
+
+// Represents in which part of the UI a section should be displayed
+message ContainerPosition {
+    enum ContainerPosition {
+        // Not specified
+        NONE = 0;
+        // Main container
+        MAIN = 1;
+        // Top container
+        TOP = 2;
+    }
+}
+
+// Represents how the section should be spaced/separated from other containers
+message DividerType {
+    enum DividerType {
+        // Not specified
+        NONE = 0;
+        // Padding should be applied to the bottom of this section
+        BOTTOM = 1;
+        // Padding should be applied to the top of this section
+        TOP = 2;
+        // Padding should be applied to the top and bottom of this section
+        TOP_AND_BOTTOM = 3;
+    }
+}
+
+// Specifies different app link types, to enable different UI elements for each
+message AppLinkType {
+    enum AppLinkType {
+        STATION = 0;
+        PLAYLIST = 1;
+        ALBUM = 2;
+        DEFAULT = 3;
+    }
+}
+
+// Represents a UI component that should be rendered by the client
+message SectionView {
+    // Identifier for this section
+    string urn = 1;
+    // The kind of UI component this is, eg. "simple_list" or "carousel"
+    string type = 2;
+    // Version of this section
+    string version = 3;
+    // Defines the container for this section
+    ContainerPosition.ContainerPosition container = 4;
+    // Formatted JSON containing the necessary information (eg. query results) for this section to be rendered
+    // For the API contract that defines which sections have which data fields, refer to the search-sdui-sections repo:
+    // https://github.com/soundcloud/search-sdui-sections
+    string data = 5;
+    // Defines the divider for this section
+    DividerType.DividerType divider = 6;
+}
+
+// Represents a result in the response
+// The calling service has a responsibility to:
+// - resolve all unresolved entities
+// - not modify the resolved entities
+// - merge the two into a single map for the client
+message Entity {
+    oneof entity {
+        UnresolvedEntity unresolved_entity = 1;
+        ResolvedEntity resolved_entity = 2;
+    }
+}
+
+// This entity has not been resolved, and only a URN is returned
+// The calling service then has the responsibility to call the relevant value-added-service to fetch the
+// required metadata for this entity
+message UnresolvedEntity {
+    string urn = 1;
+}
+
+// This entity has been resolved already, and does not need to be resolved up by the calling service
+// These entities are generally non-standard entities (ie. not a track, user or playlist)
+message ResolvedEntity {
+    string urn = 1;
+    oneof entity {
+        AppLinkCarouselEntity app_link_carousel_entity = 2;
+    }
+}
+
+// Represents a carousel entity with an app link (eg. for the top results carousel items)
+// Used for things such as artist stations, users' top tracks, etc.
+message AppLinkCarouselEntity {
+    // URN to track
+    // Usually this is the entity URN, eg. for artist stations it is the artist station URN, for user top tracks it's the user URN
+    string tracking_urn = 1;
+    // App link for this entity's click destination
+    string app_link = 2;
+    // Type of this app link
+    AppLinkType.AppLinkType app_link_type = 6;
+    // Title to display
+    string title = 3;
+    // Subtitle to display
+    string subtitle = 4;
+    // Image template to display
+    google.protobuf.StringValue artwork_url_template = 5; // Optional
+}
+
+// Represents an app link
+message Link {
+    // ID of this link
+    string id = 1;
+    // Data to be parsed to generate a URL for this link
+    // We use QueryResponse since it contains all fields required to construct a new request
+    QueryResponse data = 2;
+}
+
+// Debug responses
+
+message ExplanationResponse {
+    repeated Explanation explanation = 1;
+}
+
+message Explanation {
+    string urn = 1;
+    string data = 2;
+}

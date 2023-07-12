@@ -35,5 +35,8 @@ env TAG="$tag" \
 sc crun -l base-dev:latest -- \
   sc wait http asset_uploads/-/health
 
+sc crun -l base-dev:latest -- \
+  sc wait http media_service/-/health
+
 sc crun -l python-3.7:latest -- \
   python3 -m unittest -v "${tests[@]+"${tests[@]}"}"

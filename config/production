@@ -94,3 +94,7 @@ MOSHIMOSHI_SRV_RECORD=dnssrv!http.moshimoshi.prod.mothership.srv.${ZONE}.s-cloud
 COMMENTS_SRV_RECORD=dnssrv!http.api.prod.comments.srv.${ZONE}.s-cloud.net.
 
 SUBMARINE_SRV_RECORD="dnssrv!http.api.prod.submarine.srv.${ZONE}.s-cloud.net."
+
+SEARCHSDUI_CLIENT_FAILURE_ACCRUAL_MARK_DEAD_FOR_MILLIS=500
+SEARCHSDUI_CLIENT_REQUEST_TIMEOUT_MILLIS=2000
+SEARCHSDUI_SRV_RECORD=dnssrv!http.api.publicapi.search.srv.db.s-cloud.net.

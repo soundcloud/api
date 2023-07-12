@@ -6,11 +6,14 @@ import com.soundcloud.jvmkit.module.outcome.Outcome
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.apipublic.handler.representation.collection.CollectionResponse
-import com.soundcloud.apipublic.handler.search.SearchHandler._
+import com.soundcloud.apipublic.handler.search.ParamsExtractor._
+import com.soundcloud.apipublic.handler.search.SearchHandler.SearchRateLimits
+import com.soundcloud.apipublic.handler.support.requestParser.{AccessParams, AccessParamsExtractor}
 import com.soundcloud.apipublic.service.SearchService
 import com.soundcloud.apipublic.service.pagination.OffsetBasedPagination
 import com.soundcloud.apipublic.service.representation.collection.Collection
 import com.soundcloud.apipublic.service.trackrepresentation.TrackPagination
+import com.soundcloud.apipublic.support.ErrorResponse
 import com.twitter.finagle.http.{ParamMap, Response}
 import com.twitter.util.Future
 import play.api.libs.json.Writes
@@ -26,6 +29,33 @@ class SearchHandler(
     searchService: SearchService,
     telemetry: Telemetry
 ) {
+  protected val userParams: Seq[String] = Seq(
+    "q",
+    "offset",
+    "limit",
+    "order",
+    "created_at",
+    "created_at[from]",
+    "created_at[to]",
+    "ids",
+    "client_id",
+    "place"
+  )
+
+  protected val playlistParams = Seq(
+    "q",
+    "offset",
+    "limit",
+    "order",
+    "created_at",
+    "ids",
+    "client_id",
+    "genres",
+    "tags",
+    "show_tracks",
+    "access"
+  )
+
   private val incompleteResponsesCounter = telemetry.counter(
     "incomplete_paginated_results_total",
     "Number of requests that get fewer results than requested, even when more are available"
@@ -43,24 +73,39 @@ class SearchHandler(
   )
 
   def searchUsers(req: HandlerRequest): Future[Response] =
-    addWildcardIfNoSearchQuery(req, defaultParams, searchUsers)
+    addWildcardIfNoSearchQuery(req, SearchRateLimits.defaultParams, searchUsers)
 
   def searchPlaylists(req: HandlerRequest): Future[Response] =
-    addWildcardIfNoSearchQuery(req, defaultParams, searchPlaylists)
+    addWildcardIfNoSearchQuery(req, SearchRateLimits.defaultParams, searchPlaylists)
 
-  def searchTracks(req: HandlerRequest): Future[Response] = {
-    userAuthentication.withUserSession(req) { session =>
-      val hasLinkedPartitioning = req.params.contains("linked_partitioning")
-      val pagination = TrackPagination.fromRequest(req.params, new URL(baseUrl + req.uri))
+  def searchTracks(req: HandlerRequest): Future[Response] =
+    try {
+      userAuthentication.withUserSession(req) { session =>
+        val hasLinkedPartitioning = req.params.contains("linked_partitioning")
+        val pagination = TrackPagination.fromRequest(req.params, new URL(baseUrl + req.uri))
 
-      val tracksCollection = searchService
-        .searchTracks(session, req.params, pagination)
-        .value
-        .onSuccess(recordIncompleteResponses(_, pagination.limit))
+        val access: AccessParams = AccessParamsExtractor.unapply(req.params)
+        // to keep current behavior, we only fetch free tracks if no access filter defined
+        val paramsWithAccessFilters: ParamMap =
+          if (req.params.contains("access")) {
+            req.params
+          } else {
+            (req.params ++ ParamMap(
+              "content_tier" -> "FREE",
+              "content_country" -> session.getGeo.getCountryCode
+            )).asInstanceOf[ParamMap]
+          }
 
-      CollectionResponse.handleCollectionResponse(tracksCollection, hasLinkedPartitioning)
+        val tracksCollection = searchService
+          .searchTracks(session, paramsWithAccessFilters.asTracksParams, pagination, access)
+          .value
+          .onSuccess(recordIncompleteResponses(_, pagination.limit))
+
+        CollectionResponse.handleCollectionResponse(tracksCollection, hasLinkedPartitioning)
+      }
+    } catch {
+      case _: IllegalArgumentException => Future.value(ErrorResponse.badRequest())
     }
-  }
 
   private def recordIncompleteResponses[T: Writes](
       collectionResponse: Outcome[Collection[T]],
@@ -80,13 +125,14 @@ class SearchHandler(
       extraParams: Option[ParamMap]
   ): Future[Response] = {
     val hasLinkedPartitioning = req.params.contains("linked_partitioning")
-    val pagination = OffsetBasedPagination.build(req, Seq("linked_partitioning") ++ searchService.playlistParams)
+    val pagination = OffsetBasedPagination.build(req, Seq("linked_partitioning") ++ playlistParams)
+    val access: AccessParams = AccessParamsExtractor.unapply(req.params)
 
     val params = ParamMap(extraParams.map(_ ++ req.params).getOrElse(req.params))
 
     val playlistsCollection =
       searchService
-        .searchPlaylists(session, params, pagination)
+        .searchPlaylists(session, params.asPlaylistParams, pagination, access)
         .value
     CollectionResponse.handleCollectionResponse(playlistsCollection, hasLinkedPartitioning)
 
@@ -98,13 +144,15 @@ class SearchHandler(
       extraParams: Option[ParamMap]
   ): Future[Response] = {
     val hasLinkedPartitioning = req.params.contains("linked_partitioning")
-    val pagination = OffsetBasedPagination.build(req, Seq("linked_partitioning") ++ searchService.userParams)
+    val pagination = OffsetBasedPagination.build(req, Seq("linked_partitioning") ++ userParams)
+    val access: AccessParams = AccessParamsExtractor.unapply(req.params)
 
-    val params = extraParams.map(_ ++ req.params).getOrElse(req.params)
+    val params: ParamMap = ParamMap(extraParams.map(_ ++ req.params).getOrElse(req.params))
     val usersCollection =
       searchService
-        .searchUsers(session, params, pagination)
+        .searchUsers(session, params.asUsersParams, pagination, access)
         .value
+
     CollectionResponse.handleCollectionResponse(usersCollection, hasLinkedPartitioning)
   }
 
@@ -130,22 +178,9 @@ class SearchHandler(
 }
 
 object SearchHandler {
-  val defaultParams = Set("q")
-  val playlistParams = Set("q", "license")
-  val trackParams = Set("q", "genres", "tags", "license")
-  val allowedFilters = List(
-    "q",
-    "tags",
-    "filter",
-    "license",
-    "bpm[from]",
-    "bpm[to]",
-    "duration[from]",
-    "duration[to]",
-    "created_at[from]",
-    "created_at[to]",
-    "ids",
-    "genres",
-    "types"
-  )
+  object SearchRateLimits {
+    val defaultParams = Set("q")
+    val playlistParams = Set("q", "license")
+    val trackParams = Set("q", "genres", "tags", "license")
+  }
 }
