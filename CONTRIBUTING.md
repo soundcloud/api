@@ -31,3 +31,9 @@ Then, from IntelliJ go to "edit configuration" and add a "Remote" target on port
 Master should always have the version currently deployed. It is fine to commit directly to master, and make sure that the CD pipeline is always green, and that master is always deployed. Pull requests are mostly used for asking for feedback, comments and external contributions, and are not treated as a hard requirement to ship code. Deploy early and often.
 
 We aim to review the PR's as soon as possible, but please give the team at least 2 working days to review your PR. If your PR is urgent, please ping us in #integrations. To speed up the review process we recommend keeping the PRs changes below 300 lines.
+
+## E2E tests
+
+If tests start to fail without any apparent changes, check whether the test user has its email address confirmed: https://sonar.soundcloud.org/users/user-434241656
+
+If necessary ask [#comops](https://soundcloud.slack.com/archives/C025A5R3T) to confirm it.
