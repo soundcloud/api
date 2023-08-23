@@ -136,9 +136,14 @@ check-autoscale:
 	sc k8s --zone $(ZONES) --system $(APP_NAME) kubectl describe hpa $(APP_NAME)-$(API_COMPONENT)-autoscale
 
 autoscale:
-	sc k8s scale --zones $(ZONES) --system $(APP_NAME) --component $(API_COMPONENT) \
-		--autoscale.replicas.max=150 --autoscale.replicas.min=10 \
-		--autoscale.metric.name=namespace_system_env_component_track_version_pod_container:cpu_usage:rate --autoscale.metric.target-value=0.5
+	sc k8s scale --zones $(ZONES) \
+		--system $(APP_NAME) \
+		--component $(API_COMPONENT) \
+		--autoscale.replicas.max=175 \
+		--autoscale.replicas.min=10 \
+		--autoscale.metric.name=autoscale_littles_law \
+		--autoscale.metric.target-value=0.8 \
+		--slack="#api-team-deploys"
 
 CPU_REQUEST_db = 2
 CPU_REQUEST_replicas = 300m
