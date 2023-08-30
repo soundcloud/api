@@ -77,7 +77,8 @@ class Clients(
       config,
       telemetry,
       new SearchClientProtobuf(_, _)
-    )
+    ),
+    exceptionCollector
   )
 
   val followsClient = new FollowsClient(jsonClient("follows"))

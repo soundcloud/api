@@ -3,6 +3,7 @@ package com.soundcloud.apipublic.client.search
 import com.google.protobuf.timestamp.Timestamp
 import com.soundcloud.apipublic.handler.support.requestParser.{AccessParams, AccessParamsExtractor}
 import com.soundcloud.jvmkit.module.outcome.{HttpResponseFields, HttpServiceError}
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps.JvmkitSessionExt
 import com.soundcloud.jvmkit.module.util.session.{AnonymousUserSession, UserSessionBuilder}
@@ -31,7 +32,8 @@ class SearchApiClientSpec extends Specification with Mockito {
 
   trait Context extends Scope {
     val mockClient = smartMock[SearchClientProtobuf]
-    val client = new SearchApiClient(mockClient)
+    val mockExceptionCollector: ExceptionCollector = smartMock[ExceptionCollector]
+    val client = new SearchApiClient(mockClient, mockExceptionCollector)
     val userSession = (new UserSessionBuilder).build.asInstanceOf[AnonymousUserSession]
 
     lazy val access: AccessParams = AccessParamsExtractor.unapply(rawParams)

@@ -2,21 +2,23 @@ package com.soundcloud.apipublic.client.search
 
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
 import com.soundcloud.jvmkit.module.outcome._
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.http.Headers
-import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.jvmkit.module.util.{Path, Urn}
+import com.soundcloud.periskop.client.Severity
 import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
 import com.twitter.finagle.http.Status
 import com.twitter.util.{Return, Throw}
+import proto.soundcloud.search.api.Aggregation.Aggregation
 import proto.soundcloud.search.api.{
   SearchClientProtobuf,
   SimpleSearchRequest,
   SimpleSearchResponse,
   Aggregation => AggregationProto
 }
-import proto.soundcloud.search.api.Aggregation.Aggregation
 
-class SearchApiClient(client: SearchClientProtobuf) extends SearchClient {
+class SearchApiClient(client: SearchClientProtobuf, exceptionCollector: ExceptionCollector) extends SearchClient {
   import ProtoMappers._
 
   override def searchTracks(
@@ -116,8 +118,11 @@ class SearchApiClient(client: SearchClientProtobuf) extends SearchClient {
       .liftToTry
       .map {
         case Throw(e: TwinagleException) if e.code == ErrorCode.InvalidArgument =>
+          exceptionCollector.add(e, Severity.Warning, collectRequestBody = true)
           HttpServiceError(HttpResponseFields(Status.BadRequest.code, Some(e.getMessage))).bad
-        case Throw(e) => HttpServiceError(HttpResponseFields(Status.InternalServerError.code, Some(e.getMessage))).bad
+        case Throw(e) =>
+          exceptionCollector.add(e, Severity.Error, collectRequestBody = true)
+          HttpServiceError(HttpResponseFields(Status.InternalServerError.code, Some(e.getMessage))).bad
         case Return(r) => r.good
       }
       .outcomeF
