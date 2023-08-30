@@ -118,7 +118,7 @@ class SearchApiClient(client: SearchClientProtobuf, exceptionCollector: Exceptio
       .liftToTry
       .map {
         case Throw(e: TwinagleException) if e.code == ErrorCode.InvalidArgument =>
-          exceptionCollector.add(e, Severity.Warning, collectRequestBody = true)
+          exceptionCollector.addMessage("invalid-search", e.getMessage, Severity.Warning, collectRequestBody = true)
           HttpServiceError(HttpResponseFields(Status.BadRequest.code, Some(e.getMessage))).bad
         case Throw(e) =>
           exceptionCollector.add(e, Severity.Error, collectRequestBody = true)
