@@ -8,7 +8,11 @@ import org.joda.time.DateTime
 import proto.soundcloud.search.api.SearchFilters.{CreatedAtRange, DurationRange}
 import proto.soundcloud.search.api.{SearchFilters, SearchOffsetPagination, SimpleSearchRequest}
 
+import java.util.UUID
+
 object ProtoMappers {
+  private def generateAnonymousID: Option[String] = Some("fake-" + UUID.randomUUID().toString)
+
   private def mapCreatedAtFixed(f: String): SearchFilters.CreatedAtRange =
     CreatedAtRange().withFixedRange(f.toUpperCase() match {
       case "LAST_HOUR" => SearchFilters.CreatedAtFixedRange.LAST_HOUR_CREATED_AT
@@ -74,6 +78,7 @@ object ProtoMappers {
   implicit class PlaylistsParamsToProto(params: PlaylistsParams) {
     def toSimpleSearchRequest(session: UserSession, access: AccessParams): SimpleSearchRequest = SimpleSearchRequest(
       userSession = Some(session.asProtoSession),
+      anonymousId = if (session.isAnonymous) generateAnonymousID else None,
       text = params.q,
       filters = Some(
         SearchFilters(
@@ -99,6 +104,7 @@ object ProtoMappers {
   implicit class TracksParamsToProto(params: TracksParams) {
     def toSimpleSearchRequest(session: UserSession, access: AccessParams): SimpleSearchRequest = SimpleSearchRequest(
       userSession = Some(session.asProtoSession),
+      anonymousId = if (session.isAnonymous) generateAnonymousID else None,
       text = params.q,
       filters = Some(
         SearchFilters(
@@ -149,6 +155,7 @@ object ProtoMappers {
   implicit class SearchQueryParamsToProto(params: SearchQueryParams) {
     def toSimpleSearchRequest(session: UserSession, access: AccessParams): SimpleSearchRequest = SimpleSearchRequest(
       userSession = Some(session.asProtoSession),
+      anonymousId = if (session.isAnonymous) generateAnonymousID else None,
       text = params.q,
       filters = Some(
         SearchFilters(
@@ -197,6 +204,7 @@ object ProtoMappers {
   implicit class UsersParamsToProto(params: UsersParams) {
     def toSimpleSearchRequest(session: UserSession, access: AccessParams): SimpleSearchRequest = SimpleSearchRequest(
       userSession = Some(session.asProtoSession),
+      anonymousId = if (session.isAnonymous) generateAnonymousID else None,
       text = params.q,
       filters = Some(
         SearchFilters(

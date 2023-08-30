@@ -2,7 +2,7 @@ package com.soundcloud.apipublic.client.search
 
 import com.google.protobuf.timestamp.Timestamp
 import com.soundcloud.apipublic.handler.support.requestParser.{AccessParams, AccessParamsExtractor}
-import com.soundcloud.jvmkit.module.outcome.{HttpResponseFields, HttpServiceError}
+import com.soundcloud.jvmkit.module.outcome.{ApplicationError, HttpResponseFields, HttpServiceError}
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps.JvmkitSessionExt
@@ -68,22 +68,24 @@ class SearchApiClientSpec extends Specification with Mockito {
 
     lazy val results: Seq[ProtoEntity] = Seq.empty
 
-    lazy val response: SimpleSearchResponse = SimpleSearchResponse(
-      stats = Some(
-        QueryStats(
-          executionTimeMs = executionTime,
-          totalResults = results.size
-        )
-      ),
-      results = results,
-      query = Some(
-        SimpleQueryResponse(
-          queryUrn = Some(queryUrn.toString),
-          text = query,
-          pagination = pagination
-        )
-      ),
-      aggregations = responseAggregates
+    lazy val response: Future[SimpleSearchResponse] = Future.value(
+      SimpleSearchResponse(
+        stats = Some(
+          QueryStats(
+            executionTimeMs = executionTime,
+            totalResults = results.size
+          )
+        ),
+        results = results,
+        query = Some(
+          SimpleQueryResponse(
+            queryUrn = Some(queryUrn.toString),
+            text = query,
+            pagination = pagination
+          )
+        ),
+        aggregations = responseAggregates
+      )
     )
 
     lazy val filters: SearchFilters = SearchFilters()
@@ -94,22 +96,34 @@ class SearchApiClientSpec extends Specification with Mockito {
 
     lazy val request: SimpleSearchRequest = SimpleSearchRequest(
       userSession = Some(userSession.asProtoSession),
+      anonymousId = Some(any[String]()),
       text = query,
       pagination = pagination,
       filters = Some(filters),
       aggregations = aggregations
     )
+
+    mockClient.simpleSearch(request) returns response
   }
 
   trait TracksContext extends Context {
     override lazy val filters: SearchFilters = SearchFilters(
       contentType = SearchFilters.ContentType.TRACKS
     )
+
+    lazy val result: Either[ApplicationError, SearchResponse] =
+      Await.result(
+        client.searchTracks(session = userSession, params = rawParams.asTracksParams, access = access).value
+      )
   }
 
   trait PlaylistsContext extends Context {
     override lazy val filters: SearchFilters = SearchFilters(
       contentType = SearchFilters.ContentType.PLAYLISTS
+    )
+
+    lazy val result: Either[ApplicationError, SearchResponse] = Await.result(
+      client.searchPlaylists(session = userSession, params = rawParams.asPlaylistParams, access = access).value
     )
   }
 
@@ -117,16 +131,14 @@ class SearchApiClientSpec extends Specification with Mockito {
     override lazy val filters: SearchFilters = SearchFilters(
       contentType = SearchFilters.ContentType.USERS
     )
+
+    lazy val result: Either[ApplicationError, SearchResponse] = Await.result(
+      client.searchUsers(session = userSession, params = rawParams.asUsersParams, access = access).value
+    )
   }
 
   "tracks" >> {
     "should successfully search tracks" in new TracksContext {
-      mockClient.simpleSearch(request) returns Future.value(response)
-
-      val result =
-        Await.result(
-          client.searchTracks(session = userSession, params = rawParams.asTracksParams, access = access).value
-        )
       Right(expected) === result
     }
 
@@ -143,12 +155,6 @@ class SearchApiClientSpec extends Specification with Mockito {
         genres = Seq("hello", "world")
       )
 
-      mockClient.simpleSearch(request) returns Future.value(response)
-
-      val result =
-        Await.result(
-          client.searchTracks(session = userSession, params = rawParams.asTracksParams, access = access).value
-        )
       Right(expected) === result
     }
 
@@ -166,13 +172,6 @@ class SearchApiClientSpec extends Specification with Mockito {
         bpm = Some(BPMDynamicRange(Some(10), Some(20)))
       )
 
-      mockClient.simpleSearch(request) returns Future.value(response)
-
-      val result =
-        Await.result(
-          client.searchTracks(session = userSession, params = rawParams.asTracksParams, access = access).value
-        )
-
       Right(expected) === result
     }
 
@@ -189,12 +188,6 @@ class SearchApiClientSpec extends Specification with Mockito {
         hashtags = Seq("hello", "world")
       )
 
-      mockClient.simpleSearch(request) returns Future.value(response)
-
-      val result =
-        Await.result(
-          client.searchTracks(session = userSession, params = rawParams.asTracksParams, access = access).value
-        )
       Right(expected) === result
     }
 
@@ -218,12 +211,6 @@ class SearchApiClientSpec extends Specification with Mockito {
         ).asInstanceOf[Option[SearchFilters.CreatedAtRange]]
       )
 
-      mockClient.simpleSearch(request) returns Future.value(response)
-
-      val result =
-        Await.result(
-          client.searchTracks(session = userSession, params = rawParams.asTracksParams, access = access).value
-        )
       Right(expected) === result
     }
 
@@ -240,12 +227,6 @@ class SearchApiClientSpec extends Specification with Mockito {
         durationRange = Some(DurationRange().withDynamicRange(SearchFilters.DurationDynamicRange(Some(20), Some(30))))
       )
 
-      mockClient.simpleSearch(request) returns Future.value(response)
-
-      val result =
-        Await.result(
-          client.searchTracks(session = userSession, params = rawParams.asTracksParams, access = access).value
-        )
       Right(expected) === result
     }
 
@@ -261,12 +242,6 @@ class SearchApiClientSpec extends Specification with Mockito {
         durationRange = Some(DurationRange().withFixedRange(SearchFilters.DurationFixedRange.SHORT_DURATION))
       )
 
-      mockClient.simpleSearch(request) returns Future.value(response)
-
-      val result =
-        Await.result(
-          client.searchTracks(session = userSession, params = rawParams.asTracksParams, access = access).value
-        )
       Right(expected) === result
     }
 
@@ -282,23 +257,12 @@ class SearchApiClientSpec extends Specification with Mockito {
         ids = Seq("1", "2", "3")
       )
 
-      mockClient.simpleSearch(request) returns Future.value(response)
-
-      val result =
-        Await.result(
-          client.searchTracks(session = userSession, params = rawParams.asTracksParams, access = access).value
-        )
       Right(expected) === result
     }
   }
 
   "playlists" >> {
     "should search playlists" in new PlaylistsContext {
-      mockClient.simpleSearch(request) returns Future.value(response)
-
-      val result = Await.result(
-        client.searchPlaylists(session = userSession, params = rawParams.asPlaylistParams, access = access).value
-      )
       Right(expected) === result
     }
 
@@ -315,12 +279,6 @@ class SearchApiClientSpec extends Specification with Mockito {
         genres = Seq("hello", "world")
       )
 
-      mockClient.simpleSearch(request) returns Future.value(response)
-
-      val result =
-        Await.result(
-          client.searchPlaylists(session = userSession, params = rawParams.asPlaylistParams, access = access).value
-        )
       Right(expected) === result
     }
 
@@ -337,12 +295,6 @@ class SearchApiClientSpec extends Specification with Mockito {
         hashtags = Seq("hello", "world")
       )
 
-      mockClient.simpleSearch(request) returns Future.value(response)
-
-      val result =
-        Await.result(
-          client.searchPlaylists(session = userSession, params = rawParams.asPlaylistParams, access = access).value
-        )
       Right(expected) === result
     }
 
@@ -350,31 +302,23 @@ class SearchApiClientSpec extends Specification with Mockito {
 
   "users" >> {
     "should search users" in new UsersContext {
-      mockClient.simpleSearch(request) returns Future.value(response)
-
-      val result = Await.result(
-        client.searchUsers(session = userSession, params = rawParams.asUsersParams, access = access).value
-      )
       Right(expected) === result
     }
 
     "should fail with BadRequest when client returns invalid argument" in new UsersContext {
-      mockClient.simpleSearch(request) returns Future.exception(
+      override lazy val response: Future[SimpleSearchResponse] = Future.exception(
         TwinagleException(ErrorCode.InvalidArgument, "some error")
       )
-      Await.result(
-        client.searchUsers(session = userSession, params = rawParams.asUsersParams, access = access).value
-      ) must beLeft(HttpServiceError(HttpResponseFields(Status.BadRequest.code, Some("some error"))))
+
+      result must beLeft(HttpServiceError(HttpResponseFields(Status.BadRequest.code, Some("some error"))))
     }
 
     "should fail with InternalError when client returns an unhandled error" in new UsersContext {
-      mockClient.simpleSearch(request) returns Future.exception(
+      override lazy val response: Future[SimpleSearchResponse] = Future.exception(
         TwinagleException(ErrorCode.Aborted, "some error")
       )
-      Await.result(
-        client.searchUsers(session = userSession, params = rawParams.asUsersParams, access = access).value
-      ) must beLeft(HttpServiceError(HttpResponseFields(Status.InternalServerError.code, Some("some error"))))
 
+      result must beLeft(HttpServiceError(HttpResponseFields(Status.InternalServerError.code, Some("some error"))))
     }
 
     "should filter users with ids" in new UsersContext {
@@ -384,18 +328,13 @@ class SearchApiClientSpec extends Specification with Mockito {
         ("offset", offset.get.toString),
         ("ids", "1,2,3")
       )
-      mockClient.simpleSearch(request) returns Future.value(response)
 
       override lazy val filters: SearchFilters = SearchFilters(
         contentType = SearchFilters.ContentType.USERS,
         ids = Seq("1", "2", "3")
       )
 
-      val result = Await.result(
-        client.searchUsers(session = userSession, params = rawParams.asUsersParams, access = access).value
-      )
       Right(expected) === result
     }
   }
-
 }
