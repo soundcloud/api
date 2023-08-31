@@ -186,6 +186,34 @@ class SearchHandlerSpec extends UnitSpecification {
       response.statusCode ==== 200
     }
 
+    "adds wildcard q param to tracks request when not present" in new Context {
+      override lazy val params = ParamMap(
+        "q" -> "",
+        "offset" -> "10",
+        "limit" -> "5",
+        "linked_partitioning" -> "1",
+        "duration" -> "SHORT"
+      )
+      lazy val withAccessParams = ParamMap(
+        ParamMap(
+          "content_tier" -> "FREE",
+          "content_country" -> Geo.UNKNOWN_GEO.getCountryCode
+        ) ++ params ++ ParamMap("q" -> "*")
+      )
+
+      when(
+        searchService
+          .searchTracks(
+            ===(anonymousSession),
+            ===(withAccessParams.asTracksParams),
+            any[TrackPagination],
+            ===(access)
+          )
+      ).thenReturn(Good(tracksCollection).outcomeF)
+
+      response.statusCode ==== 200
+    }
+
     "returns 400 when duration filter is not valid" in new Context {
       override lazy val params = ParamMap(
         "q" -> "foo",

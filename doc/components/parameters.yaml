@@ -97,7 +97,7 @@ offset:
 q:
   in: query
   name: q
-  required: true
+  required: false
   schema:
     type: string
   description: search

@@ -42,7 +42,7 @@ class SearchHandler(
     "place"
   )
 
-  protected val playlistParams = Seq(
+  protected val playlistParams: Seq[String] = Seq(
     "q",
     "offset",
     "limit",
@@ -79,33 +79,7 @@ class SearchHandler(
     addWildcardIfNoSearchQuery(req, SearchRateLimits.defaultParams, searchPlaylists)
 
   def searchTracks(req: HandlerRequest): Future[Response] =
-    try {
-      userAuthentication.withUserSession(req) { session =>
-        val hasLinkedPartitioning = req.params.contains("linked_partitioning")
-        val pagination = TrackPagination.fromRequest(req.params, new URL(baseUrl + req.uri))
-
-        val access: AccessParams = AccessParamsExtractor.unapply(req.params)
-        // to keep current behavior, we only fetch free tracks if no access filter defined
-        val paramsWithAccessFilters: ParamMap =
-          if (req.params.contains("access")) {
-            req.params
-          } else {
-            (req.params ++ ParamMap(
-              "content_tier" -> "FREE",
-              "content_country" -> session.getGeo.getCountryCode
-            )).asInstanceOf[ParamMap]
-          }
-
-        val tracksCollection = searchService
-          .searchTracks(session, paramsWithAccessFilters.asTracksParams, pagination, access)
-          .value
-          .onSuccess(recordIncompleteResponses(_, pagination.limit))
-
-        CollectionResponse.handleCollectionResponse(tracksCollection, hasLinkedPartitioning)
-      }
-    } catch {
-      case _: IllegalArgumentException => Future.value(ErrorResponse.badRequest())
-    }
+    addWildcardIfNoSearchQuery(req, SearchRateLimits.defaultParams, searchTracks)
 
   private def recordIncompleteResponses[T: Writes](
       collectionResponse: Outcome[Collection[T]],
@@ -117,6 +91,41 @@ class SearchHandler(
         missingResultsCounter.observe(requestedLimit - coll.items.size)
       }
     })
+  }
+
+  private def searchTracks(
+      req: HandlerRequest,
+      session: UserSession,
+      extraParams: Option[ParamMap]
+  ): Future[Response] = {
+    try {
+      val hasLinkedPartitioning = req.params.contains("linked_partitioning")
+      val pagination = TrackPagination.fromRequest(req.params, new URL(baseUrl + req.uri))
+
+      val access: AccessParams = AccessParamsExtractor.unapply(req.params)
+      // to keep current behavior, we only fetch free tracks if no access filter defined
+      val paramsWithAccessFilters: ParamMap =
+        if (req.params.contains("access")) {
+          req.params
+        } else {
+          (req.params ++ ParamMap(
+            "content_tier" -> "FREE",
+            "content_country" -> session.getGeo.getCountryCode
+          )).asInstanceOf[ParamMap]
+        }
+
+      val params =
+        extraParams.map(p => paramsWithAccessFilters ++ p).map(ParamMap.apply).getOrElse(paramsWithAccessFilters)
+
+      val tracksCollection = searchService
+        .searchTracks(session, params.asTracksParams, pagination, access)
+        .value
+        .onSuccess(recordIncompleteResponses(_, pagination.limit))
+
+      CollectionResponse.handleCollectionResponse(tracksCollection, hasLinkedPartitioning)
+    } catch {
+      case _: IllegalArgumentException => Future.value(ErrorResponse.badRequest())
+    }
   }
 
   private def searchPlaylists(
@@ -135,7 +144,6 @@ class SearchHandler(
         .searchPlaylists(session, params.asPlaylistParams, pagination, access)
         .value
     CollectionResponse.handleCollectionResponse(playlistsCollection, hasLinkedPartitioning)
-
   }
 
   private def searchUsers(
