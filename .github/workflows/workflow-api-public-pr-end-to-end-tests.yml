@@ -1,0 +1,43 @@
+---
+name: api-public-pr-end-to-end-tests
+env:
+  SC_PIPELINE_GROUP: api-team
+on:
+  workflow_dispatch:
+  workflow_call:
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}-end-to-end-tests"
+jobs:
+  end-to-end-tests:
+    runs-on:
+    - self-hosted
+    - i-build-prod
+    steps:
+    - name: sc-setup
+      uses: soundcloud/sc-github-actions/sc-setup@master
+      with:
+        sc-tools: 'true'
+    - name: make package end-to-end-test
+      run: make package end-to-end-test
+  asset-uploader-integration-tests:
+    runs-on:
+    - self-hosted
+    - i-build-prod
+    steps:
+    - name: sc-setup
+      uses: soundcloud/sc-github-actions/sc-setup@master
+      with:
+        sc-tools: 'true'
+    - name: make -C asset-uploads test-integration
+      run: make -C asset-uploads test-integration
+  contract-test:
+    runs-on:
+    - self-hosted
+    - i-build-prod
+    steps:
+    - name: sc-setup
+      uses: soundcloud/sc-github-actions/sc-setup@master
+      with:
+        sc-tools: 'true'
+    - name: make contract-test
+      run: make contract-test

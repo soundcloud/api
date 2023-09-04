@@ -11,7 +11,7 @@ SoundCloud's Public API.
 
 See [CONTRIBUTING.md](https://github.com/soundcloud/api-public/blob/master/CONTRIBUTING.md#making-a-change) for development and contribution guidelines.
 
-[CD Pipeline](https://ci.soundcloud.org/go/pipeline/activity/api-public).
+[CD Pipeline](https://github.com/soundcloud/api-public/actions/workflows/workflow-api-public.yml).
 
 ## Making requests
 

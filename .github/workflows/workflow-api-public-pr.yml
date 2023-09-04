@@ -1,0 +1,19 @@
+---
+name: api-public-pr
+env:
+  SC_PIPELINE_GROUP: api-team
+on:
+  workflow_dispatch:
+  pull_request:
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}-main"
+jobs:
+  call_api_public_pr_test:
+    name: call api-public-pr-test workflow
+    uses: "./.github/workflows/workflow-api-public-pr-test.yml"
+    secrets: inherit
+  call_api_public_pr_end_to_end_tests:
+    name: call api-public-pr-end-to-end-tests workflow
+    uses: "./.github/workflows/workflow-api-public-pr-end-to-end-tests.yml"
+    secrets: inherit
+    needs: call_api_public_pr_test

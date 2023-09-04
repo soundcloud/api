@@ -1,0 +1,22 @@
+---
+name: api-public-deploy-doc
+env:
+  SC_PIPELINE_GROUP: api-team
+on:
+  workflow_dispatch:
+  workflow_call:
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}-deploy-doc"
+jobs:
+  deploy:
+    runs-on:
+    - self-hosted
+    - i-deploy-prod
+    steps:
+    - name: sc-setup
+      uses: soundcloud/sc-github-actions/sc-setup@master
+      with:
+        sc-tools: 'true'
+    - name: make package publish publish-deploy promote deploy
+      run: make package publish publish-deploy promote deploy
+      working-directory: doc

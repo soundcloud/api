@@ -1,0 +1,21 @@
+---
+name: api-public-asset-uploads-promote
+env:
+  SC_PIPELINE_GROUP: api-team
+on:
+  workflow_dispatch:
+  workflow_call:
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}-promote"
+jobs:
+  promote:
+    runs-on:
+    - self-hosted
+    - i-deploy-prod
+    steps:
+    - name: sc-setup
+      uses: soundcloud/sc-github-actions/sc-setup@master
+      with:
+        sc-tools: 'true'
+    - name: make -C asset-uploads promote-to-stable promote-to-release
+      run: make -C asset-uploads promote-to-stable promote-to-release

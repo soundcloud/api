@@ -1,0 +1,21 @@
+---
+name: api-public-publish-release
+env:
+  SC_PIPELINE_GROUP: api-team
+on:
+  workflow_dispatch:
+  workflow_call:
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}-publish-release"
+jobs:
+  publish-release:
+    runs-on:
+    - self-hosted
+    - i-build-prod
+    steps:
+    - name: sc-setup
+      uses: soundcloud/sc-github-actions/sc-setup@master
+      with:
+        sc-tools: 'true'
+    - name: make publish-changelog
+      run: make publish-changelog
