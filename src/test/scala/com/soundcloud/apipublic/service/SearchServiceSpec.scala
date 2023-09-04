@@ -16,7 +16,6 @@ import com.soundcloud.apipublic.service.trackrepresentation.{
 }
 import com.soundcloud.apipublic.service.users.UserRepresentationsService
 import com.soundcloud.apipublic.test.fixtures.Fixtures
-import com.soundcloud.jvmkit.module.rollout.{BasicRolloutFeature, Rollout}
 import com.twitter.finagle.http.ParamMap
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
@@ -38,16 +37,13 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
     val trackPagination = mock[TrackPagination]
     val offsetBasedPagination = mock[OffsetBasedPagination]
     val userRepresentationsService = mock[UserRepresentationsService]
-    val rollout = mock[Rollout]
 
     val trackRepresentationMock = createTrackRepresentation
     val searchService = new SearchService(
       searchClient,
-      searchClient,
       trackRepresentationsService,
       playlistsService,
-      userRepresentationsService,
-      rollout
+      userRepresentationsService
     )
 
     lazy val params = ParamMap("q" -> query)
@@ -57,9 +53,6 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
     val playlistUrn = Urn("soundcloud", "playlists", playlist.id.toString)
     val userUrn = user.urn
     val access = AccessParams.defaultAccess
-
-    when(rollout.isActive(BasicRolloutFeature("use-search-sdui-api"))).thenReturn(Future.value(true))
-
   }
 
   "#searchUsers" >> {

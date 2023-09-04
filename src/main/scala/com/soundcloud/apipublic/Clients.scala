@@ -2,14 +2,14 @@ package com.soundcloud.apipublic
 
 import com.soundcloud.apipublic.client._
 import com.soundcloud.apipublic.client.comments.CommentsTwirpClient
-import com.soundcloud.apipublic.client.shortlinks.ShortLinksClient
 import com.soundcloud.apipublic.client.followcounts.FollowCountsClient
 import com.soundcloud.apipublic.client.follows.FollowsClient
 import com.soundcloud.apipublic.client.media.TrackAccessRecorderClient
 import com.soundcloud.apipublic.client.mothership.{MoshimoshiClient, OkidokiClient, RichOkidokiClient}
 import com.soundcloud.apipublic.client.playlists.PlaylistDeletionClient
 import com.soundcloud.apipublic.client.reposts.RepostsClient
-import com.soundcloud.apipublic.client.search.{SearchApiClient, SearchDispatcherClient}
+import com.soundcloud.apipublic.client.search.SearchApiClient
+import com.soundcloud.apipublic.client.shortlinks.ShortLinksClient
 import com.soundcloud.apipublic.client.trackcoordinator.TrackCoordinatorClient
 import com.soundcloud.apipublic.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.apipublic.client.tracks.TracksTwirpClient
@@ -69,9 +69,7 @@ class Clients(
 
   val timelineClient = new TimelineJsonClient(jsonClient("timeline"))
 
-  val searchDispatcherClient = new SearchDispatcherClient(jsonClient("search"))
-
-  val searchApiClient = new SearchApiClient(
+  val searchClient = new SearchApiClient(
     TwirpClient(
       ResourceName("searchsdui"),
       config,
@@ -230,12 +228,10 @@ class Clients(
 
   val searchService =
     new SearchService(
-      searchDispatcherClient,
-      searchApiClient,
+      searchClient,
       tracksService,
       playlistService,
-      userRepresentationsService,
-      rolloutClient
+      userRepresentationsService
     )
 
   val timelineService = new TimelineService(timelineClient, tracksService, playlistService)

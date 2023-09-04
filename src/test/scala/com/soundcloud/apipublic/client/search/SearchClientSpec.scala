@@ -27,7 +27,7 @@ import proto.soundcloud.search.api.{
   UnresolvedEntity => ProtoUnresolvedEntity
 }
 
-class SearchApiClientSpec extends Specification with Mockito {
+class SearchClientSpec extends Specification with Mockito {
   import com.soundcloud.apipublic.handler.search.ParamsExtractor._
 
   trait Context extends Scope {
