@@ -13,11 +13,11 @@ jobs:
     - self-hosted
     - i-build-prod
     steps:
-    - name: sc-setup
-      uses: soundcloud/sc-github-actions/sc-setup@master
+    - name: checkout repo
+      uses: actions/checkout@v3
       with:
-        sc-tools: 'true'
+        fetch-depth: 0
     - name: make publish-changelog
       env:
-        GH_TOKEN: ${{ github.TOKEN }}
+        GH_TOKEN: ${{ secrets.SC_GITHUB_BOT_PAT }}
       run: make publish-changelog
