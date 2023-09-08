@@ -1,0 +1,20 @@
+name: update-dependency-graph
+on:
+  push:
+    branches:
+      - master
+jobs:
+  dependency-graph:
+    name: Update Dependency Graph
+    runs-on:
+      - self-hosted
+      - i-build-prod
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v3.12.0
+        with:
+          distribution: 'temurin'
+          java-version: 8
+      - uses: sc-actions-forks/sbt-dependency-submission@v2.2.0
