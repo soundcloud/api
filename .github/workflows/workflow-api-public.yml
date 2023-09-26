@@ -10,7 +10,7 @@ on:
     paths-ignore:
     - asset-uploads/**/*
 concurrency:
-  group: "${{ github.workflow }}-${{ github.sha }}-main"
+  group: "${{ github.workflow }}-${{ github.sha }}-${{ github.run_number }}-main"
 jobs:
   call_api_public_test:
     name: call api-public-test workflow
