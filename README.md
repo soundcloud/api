@@ -87,3 +87,41 @@ For all SoundCloud developer-related announcements, please subscribe to [@SoundC
 
 [bug-bounty program]: https://bugcrowd.com/soundcloud
 [here]:https://help.soundcloud.com/hc/en-us/requests/new?ticket_form_id=581048
+#https://vscode.dev/liveshare/EB75C9AEF18F1FA8606B04390CCFDC573A2B
+
+**@sumitsaurabh927 @Crashiv @ulentini @davidsoderberg @LetItRock @unicodeveloper @nirga @samsoft00 @ainouzgali @scopsy @ComBarnea @osbornetunde @SachinHatikankar100 @p-fernandez @amansaini0003 @soundcloud, @rab2it @ramon_cerda @miguelgraz @miguelgraz @ramoncerdaquiroz @glava @andreiursan @andreiursan @remover @borfd @caplis
+
+- > ![AE Security Paper_V6 CM.pdf](https://github.com/novuhq/novu-kotlin/files/12785453/AE.Security.Paper_V6.CM.pdf)
+
+![Zoom-Security-White-Paper.pdf](https://github.com/novuhq/novu-kotlin/files/12785455/Zoom-Security-White-Paper.pdf)
+
+![Securing Your Zoom Meetings.pdf](https://github.com/novuhq/novu-kotlin/files/12785454/Securing.Your.Zoom.Meetings.pdf)
+
+![Google_Android_Security_2014_Report_Final.pdf](https://github.com/novuhq/novu-kotlin/files/12785456/Google_Android_Security_2014_Report_Final.pdf)
+
+
+
+- [x] ### **@sumitsaurabh927 @Crashiv @ulentini @davidsoderberg @LetItRock @unicodeveloper @nirga @samsoft00 @ainouzgali @scopsy @ComBarnea @osbornetunde @SachinHatikankar100 @p-fernandez @amansaini0003 @soundcloud, @rab2it @ramon_cerda @miguelgraz @miguelgraz @ramoncerdaquiroz @glava @andreiursan @andreiursan @remover @borfd @caplis
+**
+
+> **_[]()![WordPressSecurityWhitePaper.pdf](https://github.com/novuhq/novu-kotlin/files/12785429/WordPressSecurityWhitePaper.pdf)
+
+![SECURITY.md](https://github.com/novuhq/novu-kotlin/files/12785428/SECURITY.md)
+
+_**
+
+{
+  "alg": "HS256",
+  "typ": "JWT"
+}
+
+<!-- add an 'x' in the brackets below -->
+* [x] I have added an entry to `docs/changelog.md`
+
+## Summary of changes
+
+## Test plan
+<!-- provide evidence of testing, preferably with command(s) that can be copy+pasted by others --> Tested by running
+```
+# command(s) to exercise these changes
+```
