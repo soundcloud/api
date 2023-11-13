@@ -6,6 +6,7 @@ spec:
   owner: api-team
   dependsOn:
     - Component:api-public
+    - Component:system-playlists
   consumesApis:
     - authenticator-authenticator_access_grant_exchange.proto
     - comments-comments.proto
@@ -13,7 +14,6 @@ spec:
     - hocuspocus-hocuspocus.proto
     - likes-likes_api.proto
     - playlists-playlists_api.proto
-    - system-playlists-system_playlists_api.proto
     - tracks-tracks_api.proto
     - search-search_api.proto
 metadata:
