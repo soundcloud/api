@@ -41,6 +41,11 @@ jobs:
     uses: "./.github/workflows/workflow-api-public-deploy-to-production.yml"
     secrets: inherit
     needs: call_api_public_canary
+  call_api_public_trigger_gha_workflows:
+    name: call api-public-trigger-gha-workflows workflow
+    uses: "./.github/workflows/workflow-api-public-trigger-gha-workflows.yml"
+    secrets: inherit
+    needs: call_api_public_deploy_to_production
   call_api_public_deploy_doc:
     name: call api-public-deploy-doc workflow
     uses: "./.github/workflows/workflow-api-public-deploy-doc.yml"

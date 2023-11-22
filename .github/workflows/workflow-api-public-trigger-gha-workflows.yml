@@ -1,0 +1,21 @@
+---
+name: api-public-trigger-gha-workflows
+env:
+  SC_PIPELINE_GROUP: api-team
+on:
+  workflow_dispatch:
+  workflow_call:
+concurrency:
+  group: "${{ github.workflow }}-${{ github.sha }}-trigger-gha-workflows"
+jobs:
+  repository-dispatches:
+    runs-on:
+    - self-hosted
+    - i-build-prod
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+    - name: "./.github/workflows/trigger-repos.sh"
+      env:
+        GH_TOKEN: ${{ secrets.SC_GITHUB_BOT_PAT }}
+      run: "./.github/workflows/trigger-repos.sh"
