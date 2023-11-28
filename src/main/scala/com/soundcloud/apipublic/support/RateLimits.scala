@@ -56,4 +56,14 @@ object RateLimits {
     new RateLimitClassifier(clientCredentialsExchangeBucket, clientCredentialsExchangeRequest)
 
   val dummyRateLimiter = new RateLimitClassifier(dummyBucket, dummyRequests)
+
+  private val nonClientCredentialsExchangeBucket = "non-client-credentials-exchange"
+
+  private def nonClientCredentialsExchangeRequest: RateLimitClassifier.rateLimitClassifier = {
+    case req: HandlerRequest if matchesClientCredentialsExchangeRequest(req) => false
+  }
+
+  val nonClientCredentialsExchangeRateLimiter =
+    new RateLimitClassifier(nonClientCredentialsExchangeBucket, nonClientCredentialsExchangeRequest)
+
 }

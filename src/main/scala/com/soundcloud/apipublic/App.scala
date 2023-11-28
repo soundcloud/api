@@ -58,7 +58,8 @@ object App {
             RateLimits.searchRateLimiter,
             RateLimits.repostsRateLimiter,
             RateLimits.dummyRateLimiter,
-            RateLimits.clientCredentialsExchangeRateLimiter
+            RateLimits.clientCredentialsExchangeRateLimiter,
+            RateLimits.nonClientCredentialsExchangeRateLimiter
           )
         )
       )

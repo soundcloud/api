@@ -51,5 +51,11 @@ class RateLimitsSpecs extends UnitSpecification {
         postRequest("http://api/oauth2/token?param=laksjdfalsk", Map("grant_type" -> "client_credentials"))
       ) ==== true
     }
+
+    "does not match requests for non client credential exchange with url param" in new Context {
+      clientCredentialsExchangeClassifierMatches(
+        postRequest("http://api/reposts/tracks/1327306987")
+      ) ==== false
+    }
   }
 }
