@@ -12,11 +12,20 @@ enum Plan {
     GO_PLUS_DJ = 3;
     PRO = 4;
     PRO_UNLIMITED = 5;
+    PRO_DISTRO = 6;
+}
+
+enum UpdateCacheAction {
+  ADD = 0;
+  REMOVE = 1;
 }
 
 message UpdateCachedSubscriptionRequest {
     string user_urn = 1;
     Plan plan = 2;
+
+    // Whether to add or remove the specified plan. Defaults to add.
+    UpdateCacheAction action = 3;
 }
 
 message UpdateCachedSubscriptionResponse {
@@ -26,6 +35,9 @@ message UpdateCachedSubscriptionResponse {
 service Gatekeeper {
     // UpdateCachedSubscription allows clients to write to the overlay cache to cover over replication delays after subscription purchase.
     // This endpoint is meant to be used by BFFs and Payment systems when they observe a successful purchase.
+    //
+    // This endpoint can also be used to cache the fact that a user does not have an active subscription. This feature is currently only
+    // used in integration tests, but it could be used in the future to ensure Gatekeeper properly reflects a user losing their subscription before its expected expiration time.
     //
     // returns `invalid_argument` when `UpdateCachedSubscriptionRequest` contains unrecognized `Plan` values, the DEFAULT_UNUSED Plan or malformed `user_urn`s
     rpc UpdateCachedSubscription (UpdateCachedSubscriptionRequest) returns (UpdateCachedSubscriptionResponse) {

@@ -20,23 +20,34 @@ service Comments {
   // GetTrackComments authorizes the request to fetch comment threads of the given track from track-comments service.
   rpc GetTrackCommentsThreads(GetTrackCommentsRequest) returns (GetTrackCommentsThreadsResponse) {}
 
+  // GetTrackCommentReplies authorizes the request to track comment replies for a given track from the track-comments service.
+  rpc GetTrackCommentReplies(GetTrackCommentRepliesRequest) returns (GetTrackCommentRepliesResponse) {}
+
   // GetComments authorizes the request to fetch comments for the given comments urns from track-comments service.
   rpc GetComments (GetCommentsRequest) returns (GetCommentsResponse) {}
 
   // GetUserCommentsChrono authorizes the request to fetch comments for the given user urn in a chronological order from track-comments service.
   rpc GetUserCommentsChrono(GetUserCommentsChronoRequest) returns (GetUserCommentsChronoResponse) {}
 
+  // GetCollapsedThreads returns urns for thread heads, alongside their total number of replies and optionally a preview of replies
+  rpc GetCollapsedThreads(GetCollapsedThreadsRequest) returns (GetCollapsedThreadsResponse) {}
+
   // CreateTrackComment creates a comment for the given track urn.
   rpc CreateTrackComment (CreateTrackCommentRequest) returns (CreateTrackCommentResponse) {}
 
   // DeleteTrackComment authorizes the request to delete the track comment for the given urn
   rpc DeleteTrackComment(DeleteTrackCommentRequest) returns (DeleteTrackCommentResponse) {}
+
+  // ReportTrackCommentAsSpam reports a comment as spam for the given comment urn.
+  rpc ReportTrackCommentAsSpam (ReportTrackCommentAsSpamRequest) returns (ReportTrackCommentAsSpamResponse) {}
+
+  // UnlikeTrackComment removes like from the comment.
+  rpc UnlikeTrackComment(UnlikeTrackCommentRequest) returns (UnlikeTrackCommentResponse) {}
 }
 
 message GetCommentRequest {
   string urn = 1;
 }
-
 
 message Comment {
   string urn = 1;
@@ -67,6 +78,18 @@ message GetTrackCommentsRequest {
   string track_urn = 1;
   int32 limit = 2;
   int32 offset = 3;
+  Sort sort = 4;
+}
+
+message GetTrackCommentRepliesRequest {
+  string track_urn = 1;
+  string comment_urn = 2;
+  PaginationRequest pagination = 3;
+}
+
+message GetTrackCommentRepliesResponse {
+    repeated string comment_urns = 1;
+    PaginationResponse pagination = 2;
 }
 
 message GetCommentsRequest {
@@ -79,11 +102,6 @@ message GetCommentsResponse {
 
 message GetTrackCommentsThreadsResponse {
   repeated string urns = 1;
-}
-
-enum ChronoDirection {
-    DESC = 0;
-    ASC = 1;
 }
 
 message ChronoParams {
@@ -122,26 +140,94 @@ message CreateTrackCommentRequest {
   string track_urn = 2;
   string body = 3;
   google.protobuf.Int32Value timestamp = 4;
+  google.protobuf.StringValue track_owner_urn = 5;
+  google.protobuf.BoolValue is_track_public = 6;
+  google.protobuf.StringValue referer = 7;
+  google.protobuf.StringValue correlation_id = 8;
 }
 
 message CreateTrackCommentResponse {
   string urn = 1;
 }
 
-message DeleteCommentRequest {
-  string urn = 1;
-  proto.soundcloud.common.session.UserSession user_session = 2;
-}
-
-message DeleteCommentResponse {
-  Comment comment = 1;
-}
-
 message DeleteTrackCommentRequest {
   string urn = 1;
   proto.soundcloud.common.session.UserSession user_session = 2;
+  google.protobuf.StringValue referer = 3;
 }
 
 message DeleteTrackCommentResponse {
   Comment comment = 1;
+}
+
+message ReportTrackCommentAsSpamRequest {
+  proto.soundcloud.common.session.UserSession user_session = 1;
+  string urn = 2;
+  bool should_delete = 3;
+  google.protobuf.StringValue referer = 4;
+}
+
+message ReportTrackCommentAsSpamResponse {
+}
+
+message UnlikeTrackCommentRequest {
+  proto.soundcloud.common.session.UserSession user_session = 1;
+  string urn = 2;
+}
+
+message UnlikeTrackCommentResponse {
+}
+
+/** -------- Sorting/Pagination -------- */
+
+
+enum Sort {
+  NEWEST = 0;
+  TRACK_TIMESTAMP = 1;
+  OLDEST = 2;
+}
+
+enum ChronoDirection {
+  DESC = 0;
+  ASC = 1;
+}
+
+message PaginationRequest {
+  ChronoDirection direction = 1; // optional
+  int32 limit = 2;
+  google.protobuf.StringValue cursor = 3; // optional
+}
+
+message PaginationResponse {
+  google.protobuf.StringValue cursor = 1; // optional
+  bool is_last_page = 2;
+}
+
+
+/** -------- GetCollapsedThreads -------- */
+
+
+message GetCollapsedThreadsRequest {
+  string track_urn = 1;
+  int32 replies_limit = 2;
+  ChronoDirection replies_direction = 3;
+  GetCollapsedThreadsPaginationRequest pagination = 4;
+}
+
+message CollapsedThread {
+  string urn = 1;
+  int64 replies_total = 2;
+  repeated string replies_urns = 3;
+  PaginationResponse pagination = 4;
+}
+
+message GetCollapsedThreadsResponse {
+  repeated CollapsedThread threads = 1;
+  PaginationResponse pagination = 2;
+}
+
+message GetCollapsedThreadsPaginationRequest {
+  Sort sort = 1;
+  int32 limit = 2;
+  google.protobuf.StringValue cursor = 3;
 }

@@ -113,6 +113,8 @@ message SimpleSearchRequest {
     // By default, errors that occur in resolvers do not fail the entire request
     // Set to true to make the request fail if any error occurs (useful for offline scripts/evaluation etc.)
     google.protobuf.BoolValue fail_on_error = 17;
+    // Enable/disable autocorrection (optional, default: true)
+    google.protobuf.BoolValue autocorrect_enabled = 18;
 }
 
 
@@ -143,7 +145,7 @@ message SearchFilters {
         PLAYLISTS = 2;
         ALBUMS = 3;
         USERS = 4;
-        TRACKS_AND_PLAYLISTS = 5;
+        PLAYLISTS_WITHOUT_ALBUMS = 6;
     }
 
     enum ContentTier {
@@ -233,6 +235,13 @@ message SearchFilters {
         }
     }
 
+    enum Verified {
+        VERIFIED_OR_UNVERIFIED = 0;
+        CURATED = 1;
+        VERIFIED = 2;
+        VERIFIED_OR_CURATED = 3;
+    }
+
     // Filter results for a particular content type
     ContentType content_type = 1;
 
@@ -276,6 +285,12 @@ message SearchFilters {
 
     // Filter by id
     repeated google.protobuf.StringValue ids = 13;
+
+    // Filter by places[london, berlin, paris, etc...]
+    repeated google.protobuf.StringValue places = 14;
+
+    // Filter only verified or curated content
+    Verified verified = 15;
 }
 
 // Request actions
@@ -291,8 +306,10 @@ message Action {
         AUTO_CORRECT_ACCEPTED = 2;
         // User clicked on a genre pill
         GENRE_PILL_ACCEPTED = 3;
-        // User clicked on a fans also like pill
-        FANS_ALSO_LIKE_PILL_ACCEPTED = 4;
+        // User clicked on a genre grid cell
+        GENRE_CELL_CLICKED = 5;
+        // User clicked on a filter menu choice
+        FILTERS_MENU_CLICKED = 6;
     }
 }
 
@@ -309,6 +326,8 @@ message Aggregation {
         GENRE_OR_TAG = 2;
         // Models [sound, person, set, group]
         MODEL = 3;
+        // Place [London, Berlin, Tokio, any artist city]
+        PLACE = 4;
     }
 
     // The aggregation name
@@ -424,6 +443,8 @@ message SimpleQueryResponse {
     SearchOffsetPagination pagination = 10;
     // User action
     Action.Action action = 11;
+    // Enable/disable autocorrection (optional, default: true)
+    google.protobuf.BoolValue autocorrect_enabled = 18;
 }
 
 // Tags

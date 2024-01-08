@@ -1,0 +1,32 @@
+// DO NOT EDIT
+// This file has been automatically downloaded via 'sc idl fetch' from an upstream dependency.
+
+syntax = "proto3";
+
+package proto.soundcloud.follows.api;
+import "google/protobuf/field_mask.proto";
+
+message Metrics {
+  int64 follows = 1;
+  int64 followedBy = 2;
+}
+
+// Metrics are requested only once due to the call pattern. Either we fetch both counts for all users, or only one type.
+message GetTargetCountsBatchRequest {
+  repeated string user_urns = 1;
+  google.protobuf.FieldMask metrics_field_mask = 2;
+}
+
+message GetTargetCountResponse {
+  string user_urn = 1;
+  Metrics metric = 2;
+}
+
+message GetTargetCountsBatchResponse {
+  repeated GetTargetCountResponse counts = 1;
+}
+
+service Follows {
+  // get follows & followsBy counts for users
+  rpc GetTargetCountsBatch (GetTargetCountsBatchRequest) returns (GetTargetCountsBatchResponse) {}
+}

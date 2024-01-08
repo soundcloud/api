@@ -91,8 +91,14 @@ service Comments {
     // Returns a list of comments (the head of a comment) of the given track
     rpc GetTrackCommentsOnWaveform (GetTrackCommentsRequest) returns (GetTrackCommentsResponse) {};
 
+    // Returns a list of replies for a given comment on a track
+    rpc GetReplies (GetRepliesRequest) returns (GetRepliesResponse) {};
+
     //  Creates a track comment for the given track.
     rpc CreateTrackComment (CreateTrackCommentRequest) returns (CreateTrackCommentResponse) {}
+
+    // GetCollapsedThreads returns urns for thread heads, alongside their total number of replies and optionally a preview of replies
+    rpc GetCollapsedThreads(GetCollapsedThreadsRequest) returns (GetCollapsedThreadsResponse) {}
 }
 
 message GetTrackCommentsRequest {
@@ -101,10 +107,35 @@ message GetTrackCommentsRequest {
     google.protobuf.StringValue secret_token = 3; // optional
     int32 limit = 4;
     int32 offset = 5;
+    Sort sort = 6;
 }
 
 message GetTrackCommentsResponse {
     repeated string comments_urns = 1;
+}
+
+message GetRepliesRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1;
+    string track_urn = 2;
+    string comment_urn = 3;
+    google.protobuf.StringValue secret_token = 4; // optional
+    RepliesPaginationRequest pagination = 5;
+}
+
+message RepliesPaginationRequest {
+    Direction direction = 1;
+    int32 limit = 2;
+    google.protobuf.StringValue cursor = 3; // optional
+}
+
+message GetRepliesResponse {
+    repeated string comment_urns = 1;
+    RepliesPaginationResponse pagination = 2;
+}
+
+message RepliesPaginationResponse {
+    google.protobuf.StringValue cursor = 1; // optional
+    bool is_last_page = 2;
 }
 
 message CreateTrackCommentRequest {
@@ -114,10 +145,12 @@ message CreateTrackCommentRequest {
     string body = 4;
     google.protobuf.Int32Value timestamp = 5; // optional
     google.protobuf.StringValue referer = 6; // optional
+    google.protobuf.StringValue correlation_id = 7; // optional
 }
 
 enum CreateTrackCommentErrorReasons {
     UNKNOWN_REASON = 0;
+    // TODO moving-tracks rename to USER_IS_MUTED_BY_TRACK_UPLOADER
     USER_IS_MUTED_BY_TRACK_OWNER = 1;
     USER_IS_MUTED_BY_MENTIONED_USERS = 2;
     USER_IS_NOT_CONFIRMED = 3;
@@ -184,6 +217,7 @@ message GetMediaStreamRequest {
     string protocol = 5;
     bool bypass_progressive_download_restriction = 6;
     google.protobuf.StringValue track_authorization = 7;
+    google.protobuf.StringValue application_urn = 8;
 }
 
 message GetOfflineSyncRequest {
@@ -263,6 +297,10 @@ service TrackMetadata {
     // This method behaves exactly the same as the previous one. The only difference is that
     // it substitutes provided user session by an anonymous one when calling dependencies.
     rpc GetGenerallyVisibleTracks (GetGenerallyVisibleTracksRequest) returns (GetVisibleTracksResponse) {};
+
+    // This method is for getting visible tracks that can be fully played by the clients
+    // This method behaves like GetVisibleTracks and filters out BLOCKED and SNIPPET tracks
+    rpc GetPlayableTracks (GetVisibleTracksRequest) returns (GetVisibleTracksResponse) {};
 }
 
 message GetVisibleTracksRequest {
@@ -271,6 +309,7 @@ message GetVisibleTracksRequest {
     proto.soundcloud.common.session.UserSession user_session = 3; // You must provide a UserSession
     google.protobuf.StringValue subscription_country_code = 4; // optional, will be fetched by this service is not present
     google.protobuf.FieldMask track_field_mask = 5; // required
+    DeduplicatedTopTracksRequest deduplicated_top_tracks_request = 6; // optional, include if deduplication by play count is desired
 }
 
 message TrackRequest {
@@ -336,7 +375,7 @@ message Track {
     Visuals visuals = 53; // optional
     Caption caption = 54; // optional
     AudioAnalysis audio_analysis = 55; // optional
-    google.protobuf.StringValue profile_urn = 56; // optional
+    google.protobuf.StringValue profile_urn = 56; // deprecated, optional
 }
 
 message Metadata {
@@ -383,6 +422,7 @@ message Metadata {
     google.protobuf.Int64Value labelId = 41; // deprecated, optional
     google.protobuf.StringValue fileType = 42; // optional
     google.protobuf.Int64Value contentSize = 43; // optional
+    string profileUrn = 44; //deprecated
 }
 
 message ContentAuthorization {
@@ -461,7 +501,6 @@ message Counts {
     google.protobuf.Int64Value likes = 2;
     google.protobuf.Int64Value reposts = 3;
     google.protobuf.Int64Value comments = 4;
-    QuickReactionCounts quick_reactions = 5;
 }
 
 message DownloadMetadata {
@@ -515,6 +554,15 @@ message AudioAnalysis {
     google.protobuf.DoubleValue bpm = 3; // optional
 }
 
+message TrackWithPlaycountRequest {
+    string urn = 1;
+    int32 count = 2;
+}
+
+message DeduplicatedTopTracksRequest {
+    repeated TrackWithPlaycountRequest track_with_playcount_requests = 1;
+}
+
 service FeaturedPlaylists {
     // Returns a list of playlists in which the given track is featured
     rpc GetAllFeaturedPlaylists (GetFeaturedPlaylistsRequest) returns (GetFeaturedPlaylistsResponse) {};
@@ -561,46 +609,58 @@ service Recommendations {
     rpc GetSimilarTracks (GetSimilarTracksRequest) returns (GetSimilarTracksResponse) {};
 }
 
-service QuickReactions {
-    rpc CreateOrUpdateReaction (CreateOrUpdateReactionRequest) returns (CreateOrUpdateReactionResponse) {};
+/** -------- Sorting/Pagination -------- */
 
-    rpc DeleteReaction (DeleteReactionRequest) returns (DeleteReactionResponse) {};
+
+enum Sort {
+    NEWEST = 0;
+    TRACK_TIMESTAMP = 1;
+    OLDEST = 2;
 }
 
-message QuickReaction {
-    string user_urn = 1;
-    string target_urn = 2;
-    string reaction_type = 3;
-    google.protobuf.Timestamp created_at = 4;
+enum Direction {
+    DESCENDING = 0;
+    ASCENDING = 1;
 }
 
-message CreateOrUpdateReactionRequest {
+message PaginationRequest {
+    Direction direction = 1; // optional
+    int32 limit = 2;
+    google.protobuf.StringValue cursor = 3; // optional
+}
+
+message PaginationResponse {
+    google.protobuf.StringValue cursor = 1; // optional
+    bool is_last_page = 2;
+}
+
+
+/** -------- GetCollapsedThreads -------- */
+
+
+message GetCollapsedThreadsRequest {
     proto.soundcloud.common.session.UserSession user_session = 1;
-    string target_urn = 2;
-    google.protobuf.StringValue secret_token = 3;
-    string reaction_type = 4;
+    google.protobuf.StringValue secret_token = 2; // optional
+    string track_urn = 3;
+    int32 replies_limit = 4;
+    Direction replies_direction = 5;
+    GetCollapsedThreadsPaginationRequest pagination = 6;
 }
 
-message CreateOrUpdateReactionResponse {
-    QuickReaction quick_reaction = 1;
+message CollapsedThread {
+    string urn = 1;
+    int64 replies_total = 2;
+    repeated string replies_urns = 3;
+    PaginationResponse pagination = 4;
 }
 
-message DeleteReactionRequest {
-    proto.soundcloud.common.session.UserSession user_session = 1;
-    string target_urn = 2;
-    google.protobuf.StringValue secret_token = 3;
+message GetCollapsedThreadsResponse {
+    repeated CollapsedThread threads = 1;
+    PaginationResponse pagination = 2;
 }
 
-message DeleteReactionResponse {
-    QuickReaction quick_reaction = 1;
-}
-
-message QuickReactionCounts {
-    message Count {
-        string reaction_type = 1;
-        int64 count = 2;
-    }
-
-    repeated Count counts = 1;
-    int64 total_count = 2;
+message GetCollapsedThreadsPaginationRequest {
+    Sort sort = 1;
+    int32 limit = 2;
+    google.protobuf.StringValue cursor = 3; // optional
 }

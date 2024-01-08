@@ -17,6 +17,7 @@ message AuthorizationCodeGrant {
   ClientCredential client_credential = 1;
   string code = 2;
   string redirect_uri = 3;
+  string shared_session_urn = 4; // this field is optional, will be marked as such after https://soundcloud.atlassian.net/browse/BEEP-2446
 }
 
 message AccessGrantExchangeResponse {

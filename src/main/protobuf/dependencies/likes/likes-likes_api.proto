@@ -37,25 +37,11 @@ message ChronoParams {
     SubcollectionsSelection include = 4;
 }
 
-message ChronoWarnings {
-    repeated string warnings = 1;
-}
-
-message ChronoErrors {
-    repeated string errors = 1;
-}
-
 message ChronoMeta {
     ChronoParams params = 1;
-    ChronoWarnings warnings = 2;
-    ChronoErrors errors = 3;
+    repeated string warnings = 2;
+    repeated string errors = 3;
     bool valid_for_caching = 4;
-}
-
-enum ResultType {
-    UNKNOWN = 0;
-    SUCCESS = 1;
-    EXISTING = 2;
 }
 
 message LikeRequest {
@@ -69,7 +55,6 @@ message LikeResponse {
     string target_urn = 1;
     string source_urn = 2;
     google.protobuf.Timestamp created_at = 3;
-    ResultType result_type = 4;
 }
 
 message BatchLikeRequest {
@@ -109,14 +94,6 @@ message BatchUnlikeResponse {
     repeated string target_urns = 1;
 }
 
-message GetLikesChronoRequest {
-    // Do not use index=1, it has been retired
-
-    ChronoParams chrono_request = 2;
-    proto.soundcloud.common.session.UserSession user_session = 3;
-    Collection collection = 4; // If not present fetches system-playlists for backwards compatibility
-}
-
 message GetLikesByUserChronoRequest {
     string user_urn = 1;
     ChronoParams chrono_params = 2;
@@ -142,11 +119,6 @@ message GetLikesChronoResponseItem {
     string cursor = 5;
 }
 
-message GetLikesChronoResponse {
-    repeated GetLikesChronoResponseItem items = 1;
-    ChronoMeta meta = 2;
-}
-
 message GetLikesByUserChronoResponse {
     repeated GetLikesChronoResponseItem items = 1;
     ChronoMeta meta = 2;
@@ -160,15 +132,6 @@ message GetLikesByTargetChronoResponse {
 message GetLikesByOwnerChronoResponse {
     repeated GetLikesChronoResponseItem items = 1;
     ChronoMeta meta = 2;
-}
-
-message GetSystemPlaylistLikeCountRequest {
-    string system_playlist_urn = 1;
-}
-
-message GetSystemPlaylistLikeCountResponse {
-    string system_playlist_urn = 1;
-    int64 count = 2;
 }
 
 message BatchGetTargetLikeCountRequest {
@@ -209,16 +172,27 @@ message BatchGetUserLikeCountResponse {
 }
 
 service Likes {
+    // Like a track, playlist or system-playlist.
     rpc Like (LikeRequest) returns (LikeResponse) {}
+    // Like a list of system playlists.
     rpc LikeBatch(BatchLikeRequest) returns (BatchLikeResponse) {}
+    // Unlike a track, playlist or system-playlist.
     rpc Unlike (UnlikeRequest) returns (UnlikeResponse) {}
+    // Unlike a list of system playlists.
     rpc UnlikeBatch(BatchUnlikeRequest) returns (BatchUnlikeResponse) {}
-    rpc GetLikesChrono (GetLikesChronoRequest) returns (GetLikesChronoResponse) {}
+    // A [Chronological API](https://eng-doc.soundcloud.org/standards/chronological-apis)
+    // endpoint for listing a given user's likes of system-playlists, tracks and playlists.
     rpc GetLikesByUserChrono (GetLikesByUserChronoRequest) returns (GetLikesByUserChronoResponse) {}
+    // A [Chronological API](https://eng-doc.soundcloud.org/standards/chronological-apis)
+    // endpoint for listing a given target's (track or playlist) likes.
     rpc GetLikesByTargetChrono (GetLikesByTargetChronoRequest) returns (GetLikesByTargetChronoResponse) {}
+    // A [Chronological API](https://eng-doc.soundcloud.org/standards/chronological-apis)
+    // endpoint for listing like activities on tracks or playlists owned by a user
     rpc GetLikesByOwnerChrono (GetLikesByOwnerChronoRequest) returns (GetLikesByOwnerChronoResponse) {}
-    rpc GetSystemPlaylistLikeCount (GetSystemPlaylistLikeCountRequest) returns (GetSystemPlaylistLikeCountResponse) {}
+    // Get likes count for a list of targets (tracks, playlists or system-playlists).
     rpc GetTargetLikeCountBatch (BatchGetTargetLikeCountRequest) returns (BatchGetTargetLikeCountResponse) {}
+    // Returns the tracks/playlists/system-playlists liked by the user from the ones send in the request
     rpc IsTargetLikedBatch (IsTargetLikedBatchRequest) returns (IsTargetLikedBatchResponse) {}
+    // Get likes count for a list of users. Counts tracks and playlist likes by user.
     rpc GetUserLikeCountBatch (BatchGetUserLikeCountRequest) returns (BatchGetUserLikeCountResponse) {}
 }

@@ -37,6 +37,29 @@ message Image {
   string origin_uri = 6; // like s3://bucket/image-original.jpg or gs://bucket/image-original.jpg
 }
 
+message Form {
+  string action = 1;
+  string method = 2;
+  string enctype = 3;
+  map<string,string> fields = 5;
+}
+
+message StoreImagePostFormResponse {
+  string contentType = 1;
+  string originURI   = 2;
+  Form form = 3;
+}
+
+message StoreImagePostFormRequest {
+  Kind kind = 1; 
+  // ID customizes the storage key when provided. The value should be non-guessable alphanumeric with a dash.
+  // Set this field when you can guarantee uniqueness and randomness
+  // When empty, a random ID will be generated for the `key` field.
+  string id = 2; 
+  map<string,string> metadata = 3; // Arbitrary meta data to be associated with the image. Should be unique for unique images.
+  string content_type = 4; // required
+}
+
 // Hocuspocus handles all the image magic at SoundCloud
 service Hocuspocus {
   // Stores an image.
@@ -45,6 +68,12 @@ service Hocuspocus {
   // - `invalid_argument` for bad image Kinds (shouldn't happen, that's why we've got enums)
   // - `internal` for bugs
   rpc StoreImage(Raw) returns (Image);
+
+  // Creates a signed multi-part form for the given user urn and content type using AWS Signature Version 4
+  // https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-authentication-HTTPPOST.html
+  // Error codes:
+  // - `invalid_argument` for bad image Kinds (shouldn't happen, that's why we've got enums) and missing / malformed request params
+  // - `unavailable` returned when the storage layer could not complete
+  // - `internal` for bugs
+  rpc GetStoreImagePostForm(StoreImagePostFormRequest) returns (StoreImagePostFormResponse);
 };
-
-

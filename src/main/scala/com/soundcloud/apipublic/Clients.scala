@@ -2,7 +2,7 @@ package com.soundcloud.apipublic
 
 import com.soundcloud.apipublic.client._
 import com.soundcloud.apipublic.client.comments.CommentsTwirpClient
-import com.soundcloud.apipublic.client.followcounts.FollowCountsClient
+import com.soundcloud.apipublic.client.followcounts.{FollowCountsClient, FollowsCountsTwirpClient}
 import com.soundcloud.apipublic.client.follows.FollowsClient
 import com.soundcloud.apipublic.client.media.TrackAccessRecorderClient
 import com.soundcloud.apipublic.client.mothership.{MoshimoshiClient, OkidokiClient, RichOkidokiClient}
@@ -39,6 +39,7 @@ import com.soundcloud.jvmkit.module.util.ResourceName
 import com.soundcloud.jvmkit.module.util.config.{AppConfig, DataSensitivity}
 import proto.soundcloud.authenticator.access_grant_exchange.AccessGrantExchangeClientProtobuf
 import proto.soundcloud.comments.api.CommentsClientProtobuf
+import proto.soundcloud.follows.api.FollowsClientProtobuf
 import proto.soundcloud.likes.{api => likes}
 import proto.soundcloud.playlists.api.{
   PlaylistsClientProtobuf,
@@ -67,6 +68,13 @@ class Clients(
   private val okidokiJsonClient = jsonClient("okidoki")
   val okidokiClient = new OkidokiClient(okidokiJsonClient, exceptionCollector)
 
+  val userAuthentication = UserAuthentication(config, telemetry)
+
+  val baseUrl: String = config.get("APP_BASE_URL", DataSensitivity.NON_SENSITIVE)
+
+  val rolloutClient = Rollout(config, telemetry)
+  val rollout = Some(rolloutClient)
+
   val timelineClient = new TimelineJsonClient(jsonClient("timeline"))
 
   val searchClient = new SearchApiClient(
@@ -93,7 +101,16 @@ class Clients(
 
   private val stitch4followsService = jsonClient("stitch4follows")
 
-  val followCountsClient = new FollowCountsClient(stitch4followsService, config)
+  private val followsCountsProtoClient = TwirpClient(
+    ResourceName("follows"),
+    config,
+    telemetry,
+    new FollowsClientProtobuf(_, _)
+  )
+
+  private val followsCountsTwirpClient = new FollowsCountsTwirpClient(followsCountsProtoClient)
+
+  val followCountsClient = new FollowCountsClient(stitch4followsService, followsCountsTwirpClient, rollout, config)
 
   val trackmetadataClient = new TrackmetadataClient(jsonClient("trackmetadata"))
 
@@ -160,13 +177,6 @@ class Clients(
 
   val trackAccessRecorderService =
     new TrackAccessRecorderService(new TrackAccessRecorderClient(jsonClient("track_access_recorder")))
-
-  val userAuthentication = UserAuthentication(config, telemetry)
-
-  val baseUrl: String = config.get("APP_BASE_URL", DataSensitivity.NON_SENSITIVE)
-
-  val rolloutClient = Rollout(config, telemetry)
-  val rollout = Some(rolloutClient)
 
   val richOkidokiClient = new RichOkidokiClient(okidokiJsonClient, exceptionCollector)
 

@@ -68,11 +68,9 @@ message Playlist {
     google.protobuf.StringValue secret_token = 17; // optional
     google.protobuf.Timestamp updated_at = 18; // optional
     string user_urn = 19;
-    int64 likes_count = 20; //deprecated
     bool is_album = 21;
     string set_type = 22;
     bool managed_by_feeds = 23;
-    int64 reposts_count = 24; //deprecated
     google.protobuf.Timestamp published_at = 25; // optional
     string embeddable_by = 26;
     google.protobuf.StringValue license = 27; // optional
@@ -80,17 +78,20 @@ message Playlist {
     google.protobuf.StringValue label_id = 29; // optional
     google.protobuf.StringValue purchase_title = 30; // optional
     google.protobuf.StringValue purchase_url = 31; // optional
-    google.protobuf.StringValue cursor = 32; // optional
+    reserved 32;
+    reserved "cursor";
     google.protobuf.StringValue ean = 33; // optional
     google.protobuf.BoolValue streamable = 34; // optional
     string uri = 35;
     // additional fields that are not included in the response
     // unless they are specified in the playlist field mask
     Counts counts = 36; // optional
+    string playlist_type = 37;
 }
 
 message Counts {
     google.protobuf.Int64Value likes = 1;
+    google.protobuf.Int64Value reposts = 2;
 }
 
 message TrackRequest {
