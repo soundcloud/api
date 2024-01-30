@@ -8,7 +8,7 @@ import "google/protobuf/field_mask.proto";
 
 message Metrics {
   int64 follows = 1;
-  int64 followedBy = 2;
+  int64 followed_by = 2;
 }
 
 // Metrics are requested only once due to the call pattern. Either we fetch both counts for all users, or only one type.

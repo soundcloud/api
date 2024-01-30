@@ -11,7 +11,7 @@ class FollowsCountsTwirpClient(protoClient: FollowsClientProtobuf) {
     protoClient.getTargetCountsBatch(
       GetTargetCountsBatchRequest(
         userUrns.map(_.toString),
-        FieldMaskUtil.fromFieldNumbers[Metrics](Metrics.FOLLOWS_FIELD_NUMBER, Metrics.FOLLOWEDBY_FIELD_NUMBER)
+        FieldMaskUtil.fromFieldNumbers[Metrics](Metrics.FOLLOWS_FIELD_NUMBER, Metrics.FOLLOWED_BY_FIELD_NUMBER)
       )
     )
   }

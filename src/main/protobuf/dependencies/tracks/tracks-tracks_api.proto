@@ -301,9 +301,22 @@ service TrackMetadata {
     // This method is for getting visible tracks that can be fully played by the clients
     // This method behaves like GetVisibleTracks and filters out BLOCKED and SNIPPET tracks
     rpc GetPlayableTracks (GetVisibleTracksRequest) returns (GetVisibleTracksResponse) {};
+
+    // This method filters out all tracks that are neither playable
+    // no upsellable (user can't be upselled to a hightier plan, e.g. in non-monetizable countries)
+    rpc GetPlayableOrUpsellableTracks (GetVisibleTracksRequest) returns (GetVisibleTracksResponse) {};
 }
 
 message GetVisibleTracksRequest {
+    repeated TrackRequest track_requests = 1;
+    bool bypass_progressive_download_restriction = 2;
+    proto.soundcloud.common.session.UserSession user_session = 3; // You must provide a UserSession
+    google.protobuf.StringValue subscription_country_code = 4; // optional, will be fetched by this service is not present
+    google.protobuf.FieldMask track_field_mask = 5; // required
+    DeduplicatedTopTracksRequest deduplicated_top_tracks_request = 6; // optional, include if deduplication by play count is desired
+}
+
+message GetPlayableOrUpsellableTracks {
     repeated TrackRequest track_requests = 1;
     bool bypass_progressive_download_restriction = 2;
     proto.soundcloud.common.session.UserSession user_session = 3; // You must provide a UserSession
@@ -423,6 +436,7 @@ message Metadata {
     google.protobuf.StringValue fileType = 42; // optional
     google.protobuf.Int64Value contentSize = 43; // optional
     string profileUrn = 44; //deprecated
+    google.protobuf.StringValue originalFilename = 45; // optional
 }
 
 message ContentAuthorization {
@@ -431,6 +445,7 @@ message ContentAuthorization {
     repeated string restrictions = 3;
     string monetization_model = 4;
     google.protobuf.StringValue ruleset_uuid = 5;
+    google.protobuf.BoolValue is_upsellable = 6;
 }
 
 message Transcoding {

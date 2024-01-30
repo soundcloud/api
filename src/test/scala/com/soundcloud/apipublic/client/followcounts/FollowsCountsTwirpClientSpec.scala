@@ -30,7 +30,7 @@ class FollowsCountsTwirpClientSpec extends Specification with Mockito {
       verify(protoClient, times(1)).getTargetCountsBatch(
         GetTargetCountsBatchRequest(
           urns.map(_.toString),
-          FieldMaskUtil.fromFieldNumbers[Metrics](Metrics.FOLLOWS_FIELD_NUMBER, Metrics.FOLLOWEDBY_FIELD_NUMBER)
+          FieldMaskUtil.fromFieldNumbers[Metrics](Metrics.FOLLOWS_FIELD_NUMBER, Metrics.FOLLOWED_BY_FIELD_NUMBER)
         )
       )
     }
