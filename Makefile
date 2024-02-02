@@ -1,4 +1,4 @@
-DEV_STACK := sbt-jdk-8
+DEV_STACK := sbt-jdk-17
 
 APP_NAME := $(shell sc manifest name)
 API_PUBLIC_VERSION := $(shell sc artifact-manager package-version)
@@ -6,7 +6,7 @@ API_PUBLIC_VERSION := $(shell sc artifact-manager package-version)
 API_COMPONENT := api
 API_CONFIG    := production
 
-RUNTIME_STACK := jdk-8
+RUNTIME_STACK := jdk-17
 
 ZONES ?= $(error please specify the ZONES environment variable)
 

@@ -1,6 +1,6 @@
 APP_NAME="api-public"
 
-JAVA_OPTS="-XX:+UseCompressedOops -XX:+UseConcMarkSweepGC -XX:NewRatio=1 -Xmx2G -Xms2G -XX:ParallelGCThreads=2 -Dcom.twitter.jvm.numProcs=10 -Djdk.nio.maxCachedBufferSize=262144"
+JAVA_OPTS="-XX:NewRatio=1 -Xmx2G -Xms2G -XX:ParallelGCThreads=2 -Dcom.twitter.jvm.numProcs=10 -Djdk.nio.maxCachedBufferSize=262144"
 
 APP_BASE_URL="https://api.soundcloud.com"
 
