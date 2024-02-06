@@ -154,7 +154,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
       "with follow counts flag on" in new FollowingsContext {
         override def before: Any = {
           super.before
-          followCountsClientMock.counts(session, followings.map(_.target)) returns Future.value(
+          followCountsClientMock.counts(followings.map(_.target)) returns Future.value(
             Seq(FollowCounts(followings.head.target, 1111, 2222))
           )
           repostsClientMock.getRepostCountsByUrnWithFallback(session, followings.map(_.target).toSet) returns Future
@@ -172,7 +172,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
       "cut client_id out of next_href if present" in new FollowingsContext {
         override def before: Any = {
           super.before
-          followCountsClientMock.counts(session, followings.map(_.target)) returns Future.value(
+          followCountsClientMock.counts(followings.map(_.target)) returns Future.value(
             Seq(FollowCounts(followings.head.target, 1111, 2222))
           )
           repostsClientMock.getRepostCountsByUrnWithFallback(session, followings.map(_.target).toSet) returns Future
@@ -206,7 +206,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
           Some(FollowingsPage(values, Some(pageInfo)))
         )
         okidokiMock.fetch(session, values.map(_.user).toSet) returns Future.value(okidokiUsers.as[List[JsObject]])
-        followCountsClientMock.counts(session, values.map(_.user)) returns Future.value(
+        followCountsClientMock.counts(values.map(_.user)) returns Future.value(
           Seq(FollowCounts(values.map(_.user).last, 1111, 2222))
         )
         repostsClientMock.getRepostCountsByUrnWithFallback(session, values.map(_.user).toSet) returns Future.value(
@@ -232,7 +232,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
 
       followsMock.filterFollowings(session, userUrn, Seq(candidateUser)) returns Future.value(Some(filteredUserUrns))
       okidokiMock.fetch(session, Set(candidateUser)) returns Future.value(okidokiUsers.as[List[JsObject]])
-      followCountsClientMock.counts(session, Seq(candidateUser)) returns Future.value(
+      followCountsClientMock.counts(Seq(candidateUser)) returns Future.value(
         Seq(FollowCounts(candidateUser, 1111, 2222))
       )
       repostsClientMock.getRepostCountsByUrnWithFallback(session, Set(candidateUser)) returns Future.value(
@@ -250,7 +250,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
 
       followsMock.filterFollowings(session, userUrn, Seq(candidateUser)) returns Future.value(Some(filteredUserUrns))
       okidokiMock.fetch(session, Set.empty) returns Future.value(List.empty)
-      followCountsClientMock.counts(session, Seq.empty) returns Future.value(Seq.empty)
+      followCountsClientMock.counts(Seq.empty) returns Future.value(Seq.empty)
       repostsClientMock.getRepostCountsByUrnWithFallback(session, Set.empty) returns Future.value(Map.empty[Urn, Long])
     }
   }
@@ -292,7 +292,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
 
       followsMock.filterFollowers(session, userUrn, Seq(candidateUser)) returns Future.value(Some(filteredUserUrns))
       okidokiMock.fetch(session, Set(candidateUser)) returns Future.value(okidokiUsers.as[List[JsObject]])
-      followCountsClientMock.counts(session, Seq(candidateUser)) returns Future.value(
+      followCountsClientMock.counts(Seq(candidateUser)) returns Future.value(
         Seq(FollowCounts(candidateUser, 1111, 2222))
       )
       repostsClientMock.getRepostCountsByUrnWithFallback(session, Set(candidateUser)) returns Future.value(
@@ -310,7 +310,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
 
       followsMock.filterFollowers(session, userUrn, Seq(candidateUser)) returns Future.value(Some(filteredUserUrns))
       okidokiMock.fetch(session, Set.empty) returns Future.value(List.empty)
-      followCountsClientMock.counts(session, Seq.empty) returns Future.value(Seq.empty)
+      followCountsClientMock.counts(Seq.empty) returns Future.value(Seq.empty)
       repostsClientMock.getRepostCountsByUrnWithFallback(session, Set.empty) returns Future.value(Map.empty[Urn, Long])
     }
   }
@@ -337,7 +337,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
         val following = Following("1", DateTime.now, userUrn, Urn("soundcloud", "users", "999"))
         followsMock.follow(session, userUrn) returns Future.value(FollowingCreated(following))
 
-        followCountsClientMock.counts(session, Seq(following.target)) returns Future.value(
+        followCountsClientMock.counts(Seq(following.target)) returns Future.value(
           Seq(FollowCounts(following.target, 1111, 2222))
         )
         repostsClientMock.getRepostCountsByUrnWithFallback(session, Set(following.target)) returns Future.value(

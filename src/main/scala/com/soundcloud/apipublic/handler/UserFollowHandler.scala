@@ -237,7 +237,7 @@ class UserFollowHandler(
       (users, followCountsMap, repostCountsByUrn) <- Future.join(
         okidoki.fetch(session, urns),
         followCountsClient
-          .counts(session, urns.toSeq)
+          .counts(urns.toSeq)
           .map(_.map(followCounts => (followCounts.userUrn, followCounts)).toMap),
         repostsClient.getRepostCountsByUrnWithFallback(session, urns)
       )

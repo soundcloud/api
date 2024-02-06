@@ -91,15 +91,11 @@ class Clients(
 
   val repostsClient = new RepostsClient(jsonClient("reposts"))
 
-  val gatekeeperClient = new GatekeeperClient(jsonClient("gatekeeper"))
-
   val systemPlaylistsClient = new SystemPlaylistsClient(jsonClient("system_playlists"))
 
   val trackCoordinatorClient = new TrackCoordinatorClient(jsonClient("track_coordinator"))
 
   lazy val moshimoshiClient = new MoshimoshiClient(jsonClient("moshimoshi"), exceptionCollector)
-
-  private val stitch4followsService = jsonClient("stitch4follows")
 
   private val followsCountsProtoClient = TwirpClient(
     ResourceName("follows"),
@@ -110,7 +106,7 @@ class Clients(
 
   private val followsCountsTwirpClient = new FollowsCountsTwirpClient(followsCountsProtoClient)
 
-  val followCountsClient = new FollowCountsClient(stitch4followsService, followsCountsTwirpClient, rollout, config)
+  val followCountsClient = new FollowCountsClient(followsCountsTwirpClient, config)
 
   val trackmetadataClient = new TrackmetadataClient(jsonClient("trackmetadata"))
 

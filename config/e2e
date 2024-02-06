@@ -64,8 +64,7 @@ TRACK_COORDINATOR_SRV_RECORD=dnssrv!_first16.http.coordinator.prod.tracks.srv.db
 LIKES_SRV_RECORD=dnssrv!_first16.http.api.prod.likes.srv.db.s-cloud.net.
 SYSTEM_PLAYLISTS_SRV_RECORD=dnssrv!_first16.http.api.prod.system-playlists.srv.db.s-cloud.net.
 
-STITCH4FOLLOWS_SRV_RECORD=dnssrv!_first16.http.web-follows.prod.stitch4counts.srv.db.s-cloud.net.
-FOLLOW_COUNTS_FETCH_MAX_ENTRIES=7
+FOLLOW_COUNTS_FETCH_MAX_ENTRIES=20
 
 TRACKMETADATA_SRV_RECORD=dnssrv!_first16.http.api.prod.trackmetadata.srv.db.s-cloud.net.
 

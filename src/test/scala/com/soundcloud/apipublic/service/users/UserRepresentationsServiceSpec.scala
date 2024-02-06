@@ -50,7 +50,7 @@ class UserRepresentationsServiceSpec extends UnitSpecification {
     val uploadQuota = UserUploadQuota(1, Some(2))
 
     def stubClients() = {
-      when(followCountsClient.counts(session, requestedUrns))
+      when(followCountsClient.counts(requestedUrns))
         .thenReturn(Future.value(followCounts))
       when(repostsClient.getRepostCountsByUrnWithFallback(session, requestedUrns.toSet))
         .thenReturn(Future.value(repostCounts))
@@ -111,7 +111,7 @@ class UserRepresentationsServiceSpec extends UnitSpecification {
 
     "returns moshi follow counts if follows counts client returns an empty list" in new Context {
       stubClients()
-      when(followCountsClient.counts(session, requestedUrns)).thenReturn(Future.value(List()))
+      when(followCountsClient.counts(requestedUrns)).thenReturn(Future.value(List()))
 
       val result = Await.result(userRepresentationService.users(session, requestedUrns))
 

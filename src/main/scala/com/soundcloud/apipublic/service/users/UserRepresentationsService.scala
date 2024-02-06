@@ -40,7 +40,7 @@ class UserRepresentationsService(
       (users, followCountsMap, repostsCountsMap, totalLikesCountMap, subscriptionsResponse) <- Future.join(
         okidokiClient.fetch(session, uniqueUrns),
         followCountsClient
-          .counts(session, urns)
+          .counts(urns)
           .map(_.map(followCounts => (followCounts.userUrn, followCounts)).toMap),
         repostsClient.getRepostCountsByUrnWithFallback(session, uniqueUrns),
         getTotalLikesCount(uniqueUrns),
