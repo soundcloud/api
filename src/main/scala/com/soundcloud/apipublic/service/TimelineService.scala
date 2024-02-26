@@ -1,8 +1,10 @@
 package com.soundcloud.apipublic.service
 
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.session.LoggedInUserSession
+import com.soundcloud.jvmkit.module.util.session.{LoggedInUserSession, UserSession}
+import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.apipublic.client.TimelineJsonClient
+import com.soundcloud.apipublic.client.mothership.OkidokiClient
 import com.soundcloud.apipublic.client.tracks.TrackRequest
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
 import com.soundcloud.apipublic.service.pagination.CursorBasedPagination
@@ -14,6 +16,7 @@ import com.twitter.util.Future
 
 class TimelineService(
     timelineJsonClient: TimelineJsonClient,
+    okidokiClient: OkidokiClient,
     trackRepresentationsService: TrackRepresentationsService,
     playlistsService: PlaylistsService,
     timelineResponseMapper: TimelineResponseMapper = new TimelineResponseMapper()
@@ -45,9 +48,10 @@ class TimelineService(
       timelineResponse <- fetchTimelineObjects(session, cursor, reverseCursor, limit)
       tracks <- getTrackRepresentations(session, timelineResponse.events, access)
       playlists <- getPlaylistRepresentations(session, timelineResponse.events)
+      timelineItems = createTimelineItems(timelineResponse.events, tracks, playlists)
+      filteredTimelineItems <- filterOutMutings(session, timelineItems)
     } yield {
-      val timelineItems = createTimelineItems(timelineResponse.events, tracks, playlists)
-      Timeline(timelineItems, timelineResponse.meta, pagination)
+      Timeline(filteredTimelineItems, timelineResponse.meta, pagination)
     }
   }
 
@@ -62,11 +66,28 @@ class TimelineService(
     for {
       timelineResponse <- fetchTimelineObjects(session, cursor, reverseCursor, limit)
       tracks <- getTrackRepresentations(session, timelineResponse.events, access)
-    } yield {
-      val trackTimelineItems = timelineResponse.events.flatMap(event => createTrackTimelineItem(tracks, event))
-      Timeline(trackTimelineItems, timelineResponse.meta, pagination)
-    }
+      trackTimelineItems = timelineResponse.events.flatMap(event => createTrackTimelineItem(tracks, event))
+      filteredTrackTimelineItems <- filterOutMutings(session, trackTimelineItems)
+    } yield Timeline(filteredTrackTimelineItems, timelineResponse.meta, pagination)
   }
+
+  private def filterOutMutings(session: UserSession, items: List[TimelineItem]): Future[List[TimelineItem]] =
+    if (items.isEmpty) {
+      Future.value(items)
+    } else {
+      okidokiClient.mutings(session, session.getUser).value.map {
+        case Bad(_) => items
+        case Good(mutings) =>
+          if (mutings.isEmpty)
+            items
+          else
+            items.filterNot {
+              case track: TrackTimelineItem => mutings.contains(track.track.user.urn)
+              case playlist: PlaylistTimelineItem => mutings.contains(playlist.playlist.user.urn)
+              case _ => false
+            }
+      }
+    }
 
   private def createTimelineItems(
       events: List[TimelineEvent],

@@ -3,6 +3,7 @@ package com.soundcloud.apipublic.service
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.{LoggedInUserSession, UserSession}
 import com.soundcloud.apipublic.client.TimelineJsonClient
+import com.soundcloud.apipublic.client.mothership.OkidokiClient
 import com.soundcloud.apipublic.client.tracks.TrackRequest
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
 import com.soundcloud.apipublic.service.pagination.CursorBasedPagination
@@ -13,6 +14,7 @@ import com.soundcloud.apipublic.service.trackrepresentation.{
   TrackRepresentationsService,
   TrackRepresentationsSpecificationContext
 }
+import com.soundcloud.jvmkit.module.outcome.GoodOps
 import com.twitter.finagle.http.ParamMap
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
@@ -94,29 +96,35 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
     val timelineClient = mock[TimelineJsonClient]
     val trackService = mock[TrackRepresentationsService]
     val playlistsService = mock[PlaylistsService]
+    val okidokiClient = mock[OkidokiClient]
 
-    val timelineService = new TimelineService(timelineClient, trackService, playlistsService)
+    val timelineService = new TimelineService(timelineClient, okidokiClient, trackService, playlistsService)
   }
 
   "#fetchTimelineTracksForUser" >> {
     trait SuccessCase extends Context {
-      def setupMocksForTimelineResponse(session: UserSession) = {
+      def setupMocksForTimelineResponse(session: UserSession, mutings: List[Urn] = List()) = {
         when(timelineClient.stream(session, None, 10, reverseCursor = false))
           .thenReturn(Future.value(timelineStreamMock))
 
         when(trackService.tracks(session, List(TrackRequest(trackUrn, None)), access))
           .thenReturn(Future.value(List(mockTrackRepresentation)))
+
+        okidokiClient.mutings(any(), any()) returns mutings.goodF
       }
     }
 
     trait FailureCase extends Context {
-      def setupMocksForTimelineResponse(session: UserSession) = {
+      def setupMocksForTimelineResponse(session: UserSession, mutings: List[Urn] = List()) = {
         when(timelineClient.stream(session, None, 10, reverseCursor = false))
           .thenReturn(Future.value(emptyTimelineStreamMock))
 
         when(trackService.tracks(session, List.empty, access))
           .thenReturn(Future.value(List.empty))
+
+        okidokiClient.mutings(any(), any()) returns mutings.goodF
       }
+
     }
     "returns data on successful request" in new SuccessCase {
       setupMocksForTimelineResponse(session)
@@ -140,6 +148,24 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
       response.metaInfo.previousPageCursor === Some("00000172-9b87-0a50-ffff-ffff8eec7ee8")
     }
 
+    "filters out and returns data when response contains muted users" in new SuccessCase {
+      setupMocksForTimelineResponse(session, List(trackOwner.urn))
+
+      val response = Await.result(
+        timelineService.fetchTimelineTracksForUser(
+          session.asInstanceOf[LoggedInUserSession],
+          access,
+          None,
+          reverseCursor = false,
+          10,
+          pagination
+        )
+      )
+
+      response must beAnInstanceOf[Timeline]
+      response.timelineItems.length === 0
+    }
+
     "returns empty timeline items list if no tracks found" in new FailureCase {
       setupMocksForTimelineResponse(session)
 
@@ -161,7 +187,7 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
 
   "#fetchTimelineForUser" >> {
     trait SuccessCase extends Context {
-      def setupMocksForTimelineResponse(session: UserSession) = {
+      def setupMocksForTimelineResponse(session: UserSession, mutings: List[Urn] = List()) = {
         when(timelineClient.stream(session, None, 10, reverseCursor = false))
           .thenReturn(Future.value(timelineStreamMock))
 
@@ -174,6 +200,8 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
             List(PlaylistRequest(playlistUrn1, None), PlaylistRequest(playlistUrn2, None))
           )
         ).thenReturn(Future.value(List(playlist1, playlist2)))
+
+        okidokiClient.mutings(any(), any()) returns mutings.goodF
       }
     }
 
@@ -187,6 +215,8 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
 
         when(playlistsService.fetchPlaylistsMetadataOnly(session, List.empty))
           .thenReturn(Future.value(List.empty))
+
+        okidokiClient.mutings(any(), any()) returns List().goodF
       }
     }
 
@@ -210,6 +240,29 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
       response.timelineItems.head must beAnInstanceOf[PlaylistTimelineItem]
       response.timelineItems(1) must beAnInstanceOf[PlaylistTimelineItem]
       response.timelineItems(2) must beAnInstanceOf[TrackTimelineItem]
+
+      response.metaInfo.nextPageCursor === Some("00000172-9b87-0a50-ffff-ffff8eec7ee8")
+      response.metaInfo.previousPageCursor === Some("00000172-9b87-0a50-ffff-ffff8eec7ee8")
+    }
+
+    "filters out and returns data when response contains muted users" in new SuccessCase {
+      setupMocksForTimelineResponse(session, List(playlist1.user.urn, playlist2.user.urn))
+
+      val response = Await.result(
+        timelineService.fetchTimelineForUser(
+          session.asInstanceOf[LoggedInUserSession],
+          access,
+          None,
+          reverseCursor = false,
+          10,
+          pagination
+        )
+      )
+
+      response must beAnInstanceOf[Timeline]
+      response.timelineItems.length === 1
+
+      response.timelineItems.head must beAnInstanceOf[TrackTimelineItem]
 
       response.metaInfo.nextPageCursor === Some("00000172-9b87-0a50-ffff-ffff8eec7ee8")
       response.metaInfo.previousPageCursor === Some("00000172-9b87-0a50-ffff-ffff8eec7ee8")

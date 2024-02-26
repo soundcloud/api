@@ -6,7 +6,9 @@ import com.soundcloud.jvmkit.module.util.http.Headers
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
 import com.soundcloud.apipublic.service.users.UserBuilder
 import com.soundcloud.apipublic.test.UnitSpecification
-import com.twitter.finagle.http.Status
+import com.soundcloud.jvmkit.module.http.server.ResponseBuilder
+import com.soundcloud.jvmkit.module.outcome.Good
+import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
 import play.api.libs.json.{JsNull, Json}
@@ -244,6 +246,36 @@ class RichOkidokiClientSpec extends UnitSpecification {
         .thenReturn(Future.value(jsonResponse(Status.InternalServerError, JsNull)))
 
       Await.result(client.fetchUsersMap(session, urns)) ==== Map.empty
+    }
+  }
+
+  "#fetchMutings" >> {
+    trait Mutings extends GenericContext {
+      val userUrn = Urn.parse("soundcloud:users:123").get
+      def jsonClientResponse: Future[Response]
+
+      def result = Await.result(client.mutings(session, userUrn).value)
+
+      val path = Path("/users") / userUrn / "mutings" / "urns"
+      jsonClient.getWithSession(===(session), ===(path), any[Params], any[Headers]) returns jsonClientResponse
+    }
+
+    "it returns a list of urns when successful" in new Mutings {
+      override def jsonClientResponse = Future.value(ResponseBuilder.ok("""["soundcloud:users:1"]"""))
+
+      result ==== Good(List(Urn("soundcloud", "users", "1")))
+    }
+
+    "it returns an empty list on bad results" in new Mutings {
+      override def jsonClientResponse = Future.value(ResponseBuilder.internalServerError())
+
+      result ==== Good(List.empty)
+    }
+
+    "it returns an empty list on exceptions" in new Mutings {
+      override def jsonClientResponse = Future.exception(new RuntimeException("error"))
+
+      result ==== Good(List.empty)
     }
   }
 }

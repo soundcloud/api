@@ -240,7 +240,7 @@ class Clients(
       userRepresentationsService
     )
 
-  val timelineService = new TimelineService(timelineClient, tracksService, playlistService)
+  val timelineService = new TimelineService(timelineClient, okidokiClient, tracksService, playlistService)
 
   val streamService = new StreamService(trackVisibilityService, tracksMediaTwirpClient)
   val repostsService =
