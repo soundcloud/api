@@ -26,7 +26,7 @@ class MuzookaWebhookHandler(val muzookaApiKey: String) {
       Future.value(JsonResponseBuilder.ok("OK"))
     } else {
       logger.info(s"The payload SHA is $payloadSHA, The signature SHA is $signatureSHA")
-      Future.value(JsonResponseBuilder.badRequest())
+      Future.value(JsonResponseBuilder.badRequest("Muzooka Signature Error"))
     }
   }
 }
