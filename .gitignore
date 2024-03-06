@@ -38,4 +38,5 @@ metals.sbt
 .history
 .bsp/
 config/e2e.secrets
+config/muzooka
 config/ci-credentials

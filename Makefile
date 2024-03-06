@@ -26,6 +26,11 @@ dependencies:
 run: dependencies
 	sc crun $(DEV_STACK) -l --config=development --expose-port 5000:5000,5001:5001,5005:5005 -- sbt run
 
+debug-local: dependencies
+	sc crun $(DEV_STACK) -l --config=development -i \
+        		-e SBT_JAVA_OPTS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005" \
+        		--docker-options="-p 5000:5000 -p 5001:5001 -p 5005:5005" -- sbt run
+
 run-no-docker:
 	set -o allexport; source config/development; set +o allexport; sbt run
 
@@ -94,6 +99,7 @@ prepare-package-layout:
 	sc gen-wrapper-script --target="bin/$(APP_NAME)" --wrapper=api
 	sc add-config config/development
 	sc add-config config/e2e
+	sc add-config config/muzooka.enc
 	sc add-config config/$(API_CONFIG)
 
 publish:

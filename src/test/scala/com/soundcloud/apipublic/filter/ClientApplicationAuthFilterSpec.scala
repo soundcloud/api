@@ -20,6 +20,7 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
     val router = HandlerRouterBuilder()
       .register(Method.Get, "/foo", _ => Future.value(JsonResponseBuilder.ok()))
       .register(Method.Post, Routing.grantExchangePath, _ => Future.value(JsonResponseBuilder.ok()))
+      .register(Method.Post, Routing.muzookaWebhook, _ => Future.value(JsonResponseBuilder.ok()))
       .register(Method.Get, Routing.connectPath, _ => Future.value(JsonResponseBuilder.ok()))
       .build
 
@@ -70,6 +71,30 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
 
         Await.result(filter.apply(request, service)).status ==== Status.Ok
       }
+    }
+  }
+
+  "with bypass authorization" >> {
+    "forwards the request for grant exchange path" in new Context {
+      override lazy val request = HandlerRequest(Request(Method.Post, Routing.grantExchangePath))
+
+      service.apply(request) returns Future.value(Response(Status.Ok))
+
+      Await.result(filter.apply(request, service)).status ==== Status.Ok
+    }
+
+    "forwards the request for muzooka webhook path" in new Context {
+      override lazy val request = HandlerRequest(Request(Method.Post, Routing.muzookaWebhook))
+      service.apply(request) returns Future.value(Response(Status.Ok))
+
+      Await.result(filter.apply(request, service)).status ==== Status.Ok
+    }
+
+    "does not forward the request for other requests" in new Context {
+      override lazy val request = HandlerRequest(Request(Method.Post, "requires-authorization"))
+      service.apply(request) returns Future.value(Response(Status.Unauthorized))
+
+      Await.result(filter.apply(request, service)).status ==== Status.Unauthorized
     }
   }
 

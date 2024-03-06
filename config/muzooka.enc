@@ -1,0 +1,30 @@
+Encrypted with https://shibboleth.int.s-cloud.net/encrypt
+
+Decrypt with:
+
+  curl -fsS -T THISFILE https://shibboleth.int.s-cloud.net/decrypt
+
+This file is safe to checkin to shared source control, the
+decrypted plaintext of this message is NOT safe to checkin.
+
+-----BEGIN PGP MESSAGE-----
+Version: Shibboleth
+Date: Tue, 05 Mar 2024 15:38:23 UTC
+
+wcBMA+GH2G8Ee/RHAQgAin9YyONHowaTMsYwpTiMoWPWsbTimfUTLRn3TylUoUUx
+Lam3Qmar1G8NOMGfOPwU46UR0+3R1rX/H56zLdOMKHRN6YV999agE91SspWPPf8v
+mDFyoHlH8MZM8kUhgjpzavSNs1RZWEq7uffvNKAEsfLux1OhueTwL1ZyKlZR1D5t
+uB3f88nq4XZseuKYcr1+4VsUc+fzGhqkj8nCWJKQpQ3eef6aNhK1NrPQfLweIyQK
+9xzP9DLIboAMbKxmJSAbReNGZF2St3z6Tv7CTLV86dodSkCqRpGqJGEfEAo2N2Pa
+fb8qTrjPxACwNcrUa5BIeNdve71rusaOrHVtl0eBYdLoASbBO28UG+3S6iGPDcTm
+vWOTdO7kkseZBktfvjBIf0wOvK6ThCaWTABl3VPVScIbsIiC3FNum9eTiwNC7Zc3
+Uq4Buu73svm+8VwRlZ+DA+LYT95EjjW+QWiBxDKk074X+RUL+7vY6zA8Og/1kB3L
+ImPB2FEsRGKKogO89wUPfBj+S9EMBJndxaeG+Dc0YDhVtuV8NPVxHQe76qc2kOLV
+HBKmcW8lmbJkIaQh935fihmVdZRcA5eGkP2E2hAXjhU8oz/PsMvkx1itzBtDreVW
+5xQ2NZwC6p/7COmkX72YHeAMJ0EzQEMcZLIPsrxDpo7Mh70G0qdjqiQ6ynAXmTkC
+mefbZcOuhPMnhyOm7ncQsG/PuXqoIXf/w2w7ad+DQ8yEDbLig3rwcXmNI482GcjJ
+yszPfCJkO1vc1YqZ1S9xfYc5ABqFczcfUmO6HfmhhiaaRRUtLBsPXu9Jw4GR2zIB
+0FDT/0sFqupKD5ZOeKSQwzgaxu63/3HtmOCJxDQpRmvkgOTFMG4z1c9XYixuXaXH
+IhfM42jqExZu+6N54heLUnoA
+=pjpm
+-----END PGP MESSAGE-----

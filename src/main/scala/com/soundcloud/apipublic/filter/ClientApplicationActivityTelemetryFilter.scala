@@ -24,7 +24,7 @@ class ClientApplicationActivityTelemetryFilter(
   override def apply(request: Request, next: Service[Request, Response]): Future[Response] = {
     val path = router.pathMatching(request).rawPattern
 
-    if (path == Routing.grantExchangePath) {
+    if (path == Routing.grantExchangePath || path == Routing.muzookaWebhook) {
       next(request)
     } else {
       userAuthentication.withUserSession(HandlerRequest(request)) { userSession =>

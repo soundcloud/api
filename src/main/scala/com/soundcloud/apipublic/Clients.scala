@@ -278,4 +278,6 @@ class Clients(
 
   val resolveService =
     new ResolveService(moshimoshiClient, shortLinksClient, trackVisibilityService, playlistService, baseUrl)
+
+  val muzookaApiKey = config.get("MUZOOKA_API_KEY", DataSensitivity.SENSITIVE)
 }

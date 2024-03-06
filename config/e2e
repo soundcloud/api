@@ -1,3 +1,5 @@
+source muzooka
+
 # NOTE: We're using the _first16 glimpse modifier to limit the number of DNS results
 # to avoid issues with Docker Desktop's DNS server.
 # FIXME: Remove the modifiers once the DNS issues have been resolved.

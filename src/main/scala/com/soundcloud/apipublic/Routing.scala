@@ -9,6 +9,7 @@ import com.twitter.util.Future
 
 object Routing {
   val grantExchangePath = "/oauth2/token"
+  val muzookaWebhook = "/muzooka-webhook"
   val connectPath = "/connect"
   val userIdPath = "/users/:id"
   val playlistIdPath = "/playlists/:id"
@@ -170,5 +171,9 @@ object Routing {
 
   def forDummyHandler(): List[(Method, String, Handler)] = {
     route(Method.Get, "/dummy", (_) => Future.value(JsonResponseBuilder.ok("{}")))
+  }
+
+  def forMuzookaWebhookHandler(muzookaWebhookHandler: MuzookaWebhookHandler): List[(Method, String, Handler)] = {
+    route(Method.Post, muzookaWebhook, muzookaWebhookHandler.updateAvatars)
   }
 }

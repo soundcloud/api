@@ -54,7 +54,8 @@ class ClientApplicationAuthFilter(
 
     // Token exchange accepts client ids in the request body instead of in the params for historical reasons.
     // Authenticator does not parse the body, so we need to exclude the path here to avoid returning 401.
-    if (path == Routing.grantExchangePath) {
+    // Muzooka is a webhook service to update users avatar from a third-party service
+    if (path == Routing.grantExchangePath || path == Routing.muzookaWebhook) {
       service(request)
 
       // Check that call to /connect has only allowed response_type=code + non-expiring scope isn't present

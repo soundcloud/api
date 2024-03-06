@@ -102,6 +102,7 @@ object App {
           forResolveHandler(handlers.resolveHandler),
           forConnectHandler(handlers.connectHandler),
           forWebProfilesHandler(handlers.webProfilesHandler),
+          forMuzookaWebhookHandler(handlers.muzookaWebhookHandler),
           forDummyHandler()
         )
       )
