@@ -9,7 +9,7 @@ import com.twitter.util.Future
 
 object Routing {
   val grantExchangePath = "/oauth2/token"
-  val muzookaWebhook = "/muzooka-webhook"
+  val muzookaWebhook = "/muzooka/webhook"
   val connectPath = "/connect"
   val userIdPath = "/users/:id"
   val playlistIdPath = "/playlists/:id"

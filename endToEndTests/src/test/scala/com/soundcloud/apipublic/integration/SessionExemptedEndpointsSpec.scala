@@ -61,5 +61,19 @@ class SessionExemptedEndpointsSpec extends IntegrationTest {
       private val response: IntegrationTestHttpResponse = server.executeRequest(request)
       response.status ==== Status.Ok.code
     }
+
+    "return success for Muzooka" in new IntegrationContext {
+      val request = RequestBuilder()
+        .url(
+          Request.queryString(s"http://${server.serverAddress}/muzooka/webhook")
+        )
+        .addHeader("X-Real-IP", "65.206.21.12")
+        .addHeader("X-Signature", "sha1=374355157FE3BA4B879C487AD020CD38ECAAC4E5")
+        .buildPost(Buf.Utf8("Empty Body"))
+
+      private val response: IntegrationTestHttpResponse = server.executeRequest(request)
+      response.body ==== "OK"
+      response.status ==== Status.Ok.code
+    }
   }
 }
