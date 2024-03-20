@@ -10,54 +10,11 @@ on:
     paths-ignore:
     - asset-uploads/**/*
 concurrency:
-  group: "${{ github.workflow }}-${{ github.sha }}-${{ github.run_number }}-main"
+  group: "${{ github.workflow }}-${{ github.ref }}-${{ github.run_number }}-main"
 jobs:
-  call_api_public_test:
-    name: call api-public-test workflow
-    uses: "./.github/workflows/workflow-api-public-test.yml"
+  call_api_public_common:
+    name: call api-public-common workflow
+    uses: "./.github/workflows/workflow-api-public-common.yml"
     secrets: inherit
-  call_api_public_end_to_end_tests:
-    name: call api-public-end-to-end-tests workflow
-    uses: "./.github/workflows/workflow-api-public-end-to-end-tests.yml"
-    secrets: inherit
-    needs: call_api_public_test
-  call_api_public_publish_deploy:
-    name: call api-public-publish-deploy workflow
-    uses: "./.github/workflows/workflow-api-public-publish-deploy.yml"
-    secrets: inherit
-    needs: call_api_public_end_to_end_tests
-  call_api_public_promote_to_stable:
-    name: call api-public-promote-to-stable workflow
-    uses: "./.github/workflows/workflow-api-public-promote-to-stable.yml"
-    secrets: inherit
-    needs: call_api_public_publish_deploy
-  call_api_public_canary:
-    name: call api-public-canary workflow
-    uses: "./.github/workflows/workflow-api-public-canary.yml"
-    secrets: inherit
-    needs: call_api_public_promote_to_stable
-  call_api_public_deploy_to_production:
-    name: call api-public-deploy-to-production workflow
-    uses: "./.github/workflows/workflow-api-public-deploy-to-production.yml"
-    secrets: inherit
-    needs: call_api_public_canary
-  call_api_public_trigger_gha_workflows:
-    name: call api-public-trigger-gha-workflows workflow
-    uses: "./.github/workflows/workflow-api-public-trigger-gha-workflows.yml"
-    secrets: inherit
-    needs: call_api_public_deploy_to_production
-  call_api_public_deploy_doc:
-    name: call api-public-deploy-doc workflow
-    uses: "./.github/workflows/workflow-api-public-deploy-doc.yml"
-    secrets: inherit
-    needs: call_api_public_deploy_to_production
-  call_api_public_publish_release:
-    name: call api-public-publish-release workflow
-    uses: "./.github/workflows/workflow-api-public-publish-release.yml"
-    secrets: inherit
-    needs: call_api_public_deploy_doc
-  call_api_public_deploy_prometheus:
-    name: call api-public-deploy-prometheus workflow
-    uses: "./.github/workflows/workflow-api-public-deploy-prometheus.yml"
-    secrets: inherit
-    needs: call_api_public_publish_release
+    with:
+      ref: ${{ github.ref }}
