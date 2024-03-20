@@ -12,9 +12,33 @@ on:
 concurrency:
   group: "${{ github.workflow }}-${{ github.ref }}"
 jobs:
-  call_api_public_memcached_deploy_common:
-    name: call api-public-memcached-deploy-common workflow
-    uses: "./.github/workflows/workflow-api-public-memcached-deploy-common.yml"
-    secrets: inherit
-    with:
-      ref: ${{ github.ref }}
+  deploy-db:
+    runs-on:
+    - self-hosted
+    - i-deploy-prod
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+      with:
+        repository: soundcloud/sc-k8s-memcached
+        token: "${{ secrets.SC_GIT_PROXY_AUTH_TOKEN }}"
+    - name: setup sc tools
+      uses: soundcloud/sc-github-actions/sc-tools@master
+    - name: make deploy scale ZONES=db SYSTEM=api-public CPU=0.2 STORAGE=512 REPLICAS=10
+      run: make deploy scale ZONES=db SYSTEM=api-public CPU=0.2 STORAGE=512 REPLICAS=10
+  deploy-replicas:
+    runs-on:
+    - self-hosted
+    - i-deploy-prod
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+      with:
+        repository: soundcloud/sc-k8s-memcached
+        token: "${{ secrets.SC_GIT_PROXY_AUTH_TOKEN }}"
+    - name: setup sc tools
+      uses: soundcloud/sc-github-actions/sc-tools@master
+    - name: make deploy scale ZONES=replicas SYSTEM=api-public CPU=0.2 STORAGE=512
+        REPLICAS=10
+      run: make deploy scale ZONES=replicas SYSTEM=api-public CPU=0.2 STORAGE=512
+        REPLICAS=10

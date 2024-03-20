@@ -4,18 +4,9 @@ env:
   SC_PIPELINE_GROUP: api-team
 on:
   workflow_dispatch:
-    inputs:
-      ref:
-        required: true
-        description: 'The ref that triggered the workflow'
-        type: string
   workflow_call:
-    inputs:
-      ref:
-        required: true
-        type: string
 concurrency:
-  group: "${{ github.workflow }}-${{ inputs.ref }}-deploy-prometheus"
+  group: "${{ github.workflow }}-${{ github.ref }}-deploy-prometheus"
 jobs:
   deploy-db:
     env:
@@ -25,12 +16,10 @@ jobs:
     - self-hosted
     - i-deploy-prod
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
+    - name: sc-setup
+      uses: soundcloud/sc-github-actions/sc-setup@master
       with:
-        ref: ${{ inputs.ref }}
-    - name: Set up sc-tools
-      uses: soundcloud/sc-github-actions/sc-tools@master
+        sc-tools: 'true'
     - name: make deploy-prometheus
       run: make deploy-prometheus
   deploy-replicas:
@@ -41,11 +30,9 @@ jobs:
     - self-hosted
     - i-deploy-prod
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
+    - name: sc-setup
+      uses: soundcloud/sc-github-actions/sc-setup@master
       with:
-        ref: ${{ inputs.ref }}
-    - name: Set up sc-tools
-      uses: soundcloud/sc-github-actions/sc-tools@master
+        sc-tools: 'true'
     - name: make deploy-prometheus
       run: make deploy-prometheus

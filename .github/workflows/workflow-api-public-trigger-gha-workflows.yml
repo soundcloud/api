@@ -4,18 +4,9 @@ env:
   SC_PIPELINE_GROUP: api-team
 on:
   workflow_dispatch:
-    inputs:
-      ref:
-        required: true
-        description: 'The ref that triggered the workflow'
-        type: string
   workflow_call:
-    inputs:
-      ref:
-        required: true
-        type: string
 concurrency:
-  group: "${{ github.workflow }}-${{ inputs.ref }}-trigger-gha-workflows"
+  group: "${{ github.workflow }}-${{ github.sha }}-trigger-gha-workflows"
 jobs:
   repository-dispatches:
     runs-on:
@@ -24,8 +15,6 @@ jobs:
     steps:
     - name: Checkout repo
       uses: actions/checkout@v4
-      with:
-          ref: ${{ inputs.ref }}
     - name: "./.github/workflows/trigger-repos.sh"
       env:
         GH_TOKEN: ${{ secrets.SC_GITHUB_BOT_PAT }}

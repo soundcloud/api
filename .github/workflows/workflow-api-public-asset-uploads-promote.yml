@@ -4,29 +4,18 @@ env:
   SC_PIPELINE_GROUP: api-team
 on:
   workflow_dispatch:
-    inputs:
-      ref:
-        required: true
-        description: 'The ref that triggered the workflow'
-        type: string
   workflow_call:
-    inputs:
-      ref:
-        required: true
-        type: string
 concurrency:
-  group: "${{ github.workflow }}-${{ inputs.ref }}-promote"
+  group: "${{ github.workflow }}-${{ github.ref }}-promote"
 jobs:
   promote:
     runs-on:
     - self-hosted
     - i-deploy-prod
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
+    - name: sc-setup
+      uses: soundcloud/sc-github-actions/sc-setup@master
       with:
-        ref: ${{ inputs.ref }}
-    - name: Set up sc-tools
-      uses: soundcloud/sc-github-actions/sc-tools@master
+        sc-tools: 'true'
     - name: make -C asset-uploads promote-to-stable promote-to-release
       run: make -C asset-uploads promote-to-stable promote-to-release

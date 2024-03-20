@@ -4,30 +4,19 @@ env:
   SC_PIPELINE_GROUP: api-team
 on:
   workflow_dispatch:
-    inputs:
-      ref:
-        required: true
-        description: 'The ref that triggered the workflow'
-        type: string
   workflow_call:
-    inputs:
-      ref:
-        required: true
-        type: string
 concurrency:
-  group: "${{ github.workflow }}-${{ inputs.ref }}-end-to-end-tests"
+  group: "${{ github.workflow }}-${{ github.ref }}-end-to-end-tests"
 jobs:
   end-to-end-tests:
     runs-on:
     - self-hosted
     - i-build-prod
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
+    - name: sc-setup
+      uses: soundcloud/sc-github-actions/sc-setup@master
       with:
-        ref: ${{ inputs.ref }}
-    - name: Set up sc-tools
-      uses: soundcloud/sc-github-actions/sc-tools@master
+        sc-tools: 'true'
     - name: make end-to-end-test
       run: make end-to-end-test
   contract-tests:
@@ -35,11 +24,9 @@ jobs:
     - self-hosted
     - i-build-prod
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
+    - name: sc-setup
+      uses: soundcloud/sc-github-actions/sc-setup@master
       with:
-        ref: ${{ inputs.ref }}
-    - name: Set up sc-tools
-      uses: soundcloud/sc-github-actions/sc-tools@master
+        sc-tools: 'true'
     - name: make contract-test
       run: make contract-test

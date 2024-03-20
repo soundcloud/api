@@ -4,30 +4,19 @@ env:
   SC_PIPELINE_GROUP: api-team
 on:
   workflow_dispatch:
-    inputs:
-      ref:
-        required: true
-        description: 'The ref that triggered the workflow'
-        type: string
   workflow_call:
-    inputs:
-      ref:
-        required: true
-        type: string
 concurrency:
-  group: "${{ github.workflow }}-${{ inputs.ref }}-test"
+  group: "${{ github.workflow }}-${{ github.ref }}-test"
 jobs:
   lint:
     runs-on:
     - self-hosted
     - i-build-prod
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
+    - name: sc-setup
+      uses: soundcloud/sc-github-actions/sc-setup@master
       with:
-        ref: ${{ inputs.ref }}
-    - name: Set up sc-tools
-      uses: soundcloud/sc-github-actions/sc-tools@master
+        sc-tools: 'true'
     - name: make lint
       run: make lint
   unit-test:
@@ -35,12 +24,10 @@ jobs:
     - self-hosted
     - i-build-prod
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
+    - name: sc-setup
+      uses: soundcloud/sc-github-actions/sc-setup@master
       with:
-        ref: ${{ inputs.ref }}
-    - name: Set up sc-tools
-      uses: soundcloud/sc-github-actions/sc-tools@master
+        sc-tools: 'true'
     - name: make unit-test
       run: make unit-test
   publish:
@@ -48,12 +35,10 @@ jobs:
     - self-hosted
     - i-build-prod
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
+    - name: sc-setup
+      uses: soundcloud/sc-github-actions/sc-setup@master
       with:
-        ref: ${{ inputs.ref }}
-    - name: Set up sc-tools
-      uses: soundcloud/sc-github-actions/sc-tools@master
+        sc-tools: 'true'
     - name: make package publish
       run: make package publish
   check-prometheus:
@@ -61,11 +46,9 @@ jobs:
     - self-hosted
     - i-build-prod
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
+    - name: sc-setup
+      uses: soundcloud/sc-github-actions/sc-setup@master
       with:
-        ref: ${{ inputs.ref }}
-    - name: Set up sc-tools
-      uses: soundcloud/sc-github-actions/sc-tools@master
+        sc-tools: 'true'
     - name: make check-prometheus
       run: make check-prometheus
