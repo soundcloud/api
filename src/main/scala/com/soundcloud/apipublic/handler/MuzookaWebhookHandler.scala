@@ -1,6 +1,6 @@
 package com.soundcloud.apipublic.handler
 
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
+import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest, JsonResponseBuilder}
 import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.twitter.finagle.http.Response
 import com.twitter.util.Future
@@ -16,10 +16,10 @@ with the artists data and update accordingly
 This endpoint acts as a webhook to receive updates that we subscribe to
 For more details check their documentation https://www.muzooka.com/api-docs#tag/Webhooks
 **/
-class MuzookaWebhookHandler(val muzookaApiKey: String) {
+class MuzookaWebhookHandler(val muzookaApiKey: String) extends Handler {
 
   lazy val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
-  def updateAvatars(request: HandlerRequest): Future[Response] = {
+  def apply(request: HandlerRequest): Future[Response] = {
     val payloadSHA = SignatureCalculator.calculateSignature(muzookaApiKey, request.getContentString())
     val signatureSHA = request.headerMap.get("X-Signature")
     if (signatureSHA.contains(payloadSHA)) {

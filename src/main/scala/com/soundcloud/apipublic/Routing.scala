@@ -174,6 +174,6 @@ object Routing {
   }
 
   def forMuzookaWebhookHandler(muzookaWebhookHandler: MuzookaWebhookHandler): List[(Method, String, Handler)] = {
-    route(Method.Post, muzookaWebhook, muzookaWebhookHandler.updateAvatars)
+    route(Method.Post, muzookaWebhook, muzookaWebhookHandler)
   }
 }
