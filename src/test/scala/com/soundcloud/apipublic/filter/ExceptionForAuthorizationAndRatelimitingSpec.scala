@@ -6,7 +6,7 @@ import com.twitter.finagle.http.{Method, Request, Response}
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.{Await, Future}
 
-class ExceptForTrackUploadsFilterSpec extends UnitSpecification {
+class ExceptionForAuthorizationAndRatelimitingSpec extends UnitSpecification {
   class MyFilter extends SimpleFilter[Request, Response] {
     override def apply(request: Request, next: Service[Request, Response]) =
       next(request).map(resp => ResponseBuilder().body("filtered!").build)
@@ -19,10 +19,14 @@ class ExceptForTrackUploadsFilterSpec extends UnitSpecification {
 
   trait Context extends Scope {
     val next = new StubService
-    val filter = new ExceptForTrackUploadsFilter(new MyFilter)
+    val filter = new ExceptionForAuthorizationAndRatelimiting(new MyFilter)
 
     val filteredBody = "filtered!"
     val unfilteredBody = "original!"
+  }
+
+  "it does not run filter for POST /muzooka/webhook" in new Context {
+    Await.result(filter(Request(Method.Post, "/muzooka/webhook"), next)).contentString ==== unfilteredBody
   }
 
   "it does not run filter for POST /tracks" in new Context {

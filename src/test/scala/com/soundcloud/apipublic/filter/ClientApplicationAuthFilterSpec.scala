@@ -83,13 +83,6 @@ class ClientApplicationAuthFilterSpec extends Specification with Mockito {
       Await.result(filter.apply(request, service)).status ==== Status.Ok
     }
 
-    "forwards the request for muzooka webhook path" in new Context {
-      override lazy val request = HandlerRequest(Request(Method.Post, Routing.muzookaWebhook))
-      service.apply(request) returns Future.value(Response(Status.Ok))
-
-      Await.result(filter.apply(request, service)).status ==== Status.Ok
-    }
-
     "does not forward the request for other requests" in new Context {
       override lazy val request = HandlerRequest(Request(Method.Post, "requires-authorization"))
       service.apply(request) returns Future.value(Response(Status.Unauthorized))

@@ -117,21 +117,21 @@ object App {
         CorsFilter((_, _) => true), // allow all CORS origins (for now)
         new CorsTelemetryFilter(telemetry, router),
         new StaticFilesFilter,
-        new ExceptForTrackUploadsFilter(
+        new ExceptionForAuthorizationAndRatelimiting(
           new ClientApplicationAuthFilter(
             clients.userAuthentication,
             telemetry,
             router
           )
         ),
-        new ExceptForTrackUploadsFilter(
+        new ExceptionForAuthorizationAndRatelimiting(
           new ClientApplicationActivityTelemetryFilter(clients.userAuthentication, telemetry, router)
         ),
         new AcceptOnlyJsonRequestFilter,
         new HeadRequestFilter,
         new OffsetLimitRequestFilter(limitOffsetPaths, limitOffset),
         new CookieHeaderRemovalFilter,
-        new ExceptForTrackUploadsFilter(rateLimitingFacade.filter),
+        new ExceptionForAuthorizationAndRatelimiting(rateLimitingFacade.filter),
         new DeprecatedEndpointUsageFilter(clients.userAuthentication, telemetry, router),
         new RequestTelemetryFilter(clients.userAuthentication, telemetry, router),
         new PlaylistsWithTracksTelemetryFilter(telemetry, router)
