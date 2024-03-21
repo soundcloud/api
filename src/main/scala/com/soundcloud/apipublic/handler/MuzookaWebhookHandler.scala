@@ -21,13 +21,13 @@ class MuzookaWebhookHandler(val muzookaApiKey: String) extends Handler {
   lazy val logger = SoundCloudLoggerFactory.getLogger(this.getClass)
   def apply(request: HandlerRequest): Future[Response] = {
     // remove log once this is in production to avoid too many logs
-    logger.debug(request.contentString)
+    logger.debug(s"Muzooka: Request content is\n ${request.contentString}")
     val payloadSHA = SignatureCalculator.calculateSignature(muzookaApiKey, request.getContentString())
     val signatureSHA = request.headerMap.get("X-Signature")
     if (signatureSHA.contains(payloadSHA)) {
       Future.value(JsonResponseBuilder.ok("OK"))
     } else {
-      logger.info(s"The payload SHA is $payloadSHA, The signature SHA is $signatureSHA")
+      logger.info(s"Muzooka: The payload SHA is $payloadSHA, The signature SHA is $signatureSHA")
       Future.value(JsonResponseBuilder.badRequest("Muzooka Signature Error"))
     }
   }
