@@ -1,0 +1,63 @@
+name: Manual Deployment Trigger
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch or commit SHA to deploy from"
+        required: true
+        default: "master"
+      deploy_asset_uploads:
+        description: "Deploy asset uploads"
+        required: false
+        default: "true"
+        options:
+          - "true"
+          - "false"
+      deploy_memcached:
+        description: "Deploy memcached"
+        required: false
+        default: "false"
+        options:
+        - "false"
+        - "true"
+jobs:
+  validate_ref:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        name: validate ref existence
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.ref }}
+      - name: get canonical commit ref
+        id: canonical-commit-ref
+        shell: bash
+        run: echo "::set-output name=ref::$(git log --invert-grep -n 1 --pretty='format:%H')"
+      - name: check commit ref presence in default branch
+        shell: bash
+        run: git branch --remote --contains ${{ steps.canonical-commit-ref.outputs.ref }} | grep -m 1 -q "${{ github.event.repository.default_branch }}" && echo "commit ref found in default branch ✅" || (echo "::error::Only commit refs present in default branch can be deployed to production\!" && false)
+    outputs:
+      ref: ${{ steps.canonical-commit-ref.outputs.ref }}
+  deploy:
+    name: call workflow-api-public-common workflow
+    needs: validate_ref
+    uses: "./.github/workflows/workflow-api-public-common.yml"
+    secrets: inherit
+    with:
+      ref: ${{ needs.validate_ref.outputs.ref }}
+  deploy_asset_uploads:
+    name: call workflow-api-public-common workflow
+    if: ${{ github.event.inputs.deploy_asset_uploads == 'true' }}
+    needs: validate_ref
+    uses: "./.github/workflows/workflow-api-public-asset-uploads-common.yml"
+    secrets: inherit
+    with:
+      ref: ${{ needs.validate_ref.outputs.ref }}
+  deploy_memcached:
+    name: call workflow-api-public-memcached-deploy-common workflow
+    if: ${{ github.event.inputs.deploy_memcached == 'true' }}
+    needs: validate_ref
+    uses: "./.github/workflows/workflow-api-public-memcached-deploy-common.yml"
+    secrets: inherit
+    with:
+      ref: ${{ needs.validate_ref.outputs.ref }}

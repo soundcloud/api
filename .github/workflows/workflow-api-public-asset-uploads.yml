@@ -13,22 +13,9 @@ on:
 concurrency:
   group: "${{ github.workflow }}-${{ github.ref }}-main"
 jobs:
-  call_api_public_asset_uploads_test:
-    name: call api-public-asset-uploads-test workflow
-    uses: "./.github/workflows/workflow-api-public-asset-uploads-test.yml"
+  call_api_public_asset_uploads_commons:
+    name: call api-public-asset-uploads-common workflow
+    uses: "./.github/workflows/workflow-api-public-asset-uploads-common.yml"
     secrets: inherit
-  call_api_public_asset_uploads_publish_deploy:
-    name: call api-public-asset-uploads-publish-deploy workflow
-    uses: "./.github/workflows/workflow-api-public-asset-uploads-publish-deploy.yml"
-    secrets: inherit
-    needs: call_api_public_asset_uploads_test
-  call_api_public_asset_uploads_promote:
-    name: call api-public-asset-uploads-promote workflow
-    uses: "./.github/workflows/workflow-api-public-asset-uploads-promote.yml"
-    secrets: inherit
-    needs: call_api_public_asset_uploads_publish_deploy
-  call_api_public_asset_uploads_deploy:
-    name: call api-public-asset-uploads-deploy workflow
-    uses: "./.github/workflows/workflow-api-public-asset-uploads-deploy.yml"
-    secrets: inherit
-    needs: call_api_public_asset_uploads_promote
+    with:
+      ref: ${{ github.ref }}
