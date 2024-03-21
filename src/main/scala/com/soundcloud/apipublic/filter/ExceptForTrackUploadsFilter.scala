@@ -10,6 +10,7 @@ class ExceptForTrackUploadsFilter(wrappedFilter: SimpleFilter[Request, Response]
   override def apply(request: Request, next: Service[Request, Response]) =
     (request.method, request.path) match {
       case (Method.Post, "/tracks") => next(request)
+      case (Method.Post, "/muzooka/webhook") => next(request)
       case (Method.Put, PUT_TRACKS_PATTERN()) => next(request)
       case _ => wrappedFilter(request, next)
     }
