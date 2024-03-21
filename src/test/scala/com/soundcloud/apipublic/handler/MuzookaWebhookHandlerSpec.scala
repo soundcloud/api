@@ -18,7 +18,7 @@ class MuzookaWebhookHandlerSpec extends UnitSpecification {
       trait SuccessContext extends Context {}
 
       "returns 200 when request is signed properly" in new SuccessContext {
-        val requestHeaders = Map("X-Signature" -> "sha1=49A536256524973A9D406DC7098AF123E5325A5E")
+        val requestHeaders = Map("X-Signature" -> "sha1=49a536256524973a9d406dc7098af123e5325a5e")
         val response = post("/muzooka/webhook", Map.empty, requestHeaders, "Empty Body")
         response.status.code ==== 200
         response.contentString ==== "OK"
@@ -32,7 +32,7 @@ class MuzookaWebhookHandlerSpec extends UnitSpecification {
     }
     "on request not signed with wrong signature" >> {
       "returns 400 when request is signed properly" in new Context {
-        val requestHeaders = Map("X-Signature" -> "sha1=374355157FE3BA4B879C487AD020CD38EWRONG")
+        val requestHeaders = Map("X-Signature" -> "sha1=374355157fe3ba4b879c487ad020cd38ewrong")
         val response = post("/muzooka/webhook", Map.empty, requestHeaders, "Empty Body")
         response.status.code ==== 400
       }

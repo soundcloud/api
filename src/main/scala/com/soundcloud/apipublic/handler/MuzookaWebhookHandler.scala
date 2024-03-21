@@ -45,6 +45,6 @@ object SignatureCalculator {
     mac.init(secretKey)
     val signatureBytes = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8))
     val signatureHex = signatureBytes.map("%02X" format _).mkString
-    s"sha1=$signatureHex"
+    s"sha1=$signatureHex".toLowerCase()
   }
 }
