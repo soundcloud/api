@@ -9,8 +9,6 @@ info:
 servers:
   - url: https://api.soundcloud.com
 tags:
-  - name: oauth
-    description: Authentication and Authorization Endpoints.
   - name: me
     description: Own User Endpoints.
   - name: search
