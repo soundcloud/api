@@ -9,6 +9,8 @@ info:
 servers:
   - url: https://api.soundcloud.com
 tags:
+  - name: oauth
+    description: Authentication and Authorization Endpoints.
   - name: me
     description: Own User Endpoints.
   - name: search
@@ -26,6 +28,91 @@ tags:
   - name: miscellaneous
     description: Miscellaneous Endpoints.
 paths:
+  /connect:
+    get:
+      summary: The OAuth2 authorization endpoint. Your app redirects a user to this endpoint, allowing them to delegate access to their account.
+      deprecated: true
+      description: >
+        <h3>Security Advice</h3>
+
+        * [OAuth Authorization Code flow](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-security-topics-16#section-2.1.1) (`response_type=code`)
+        is the only allowed method of authorization.
+
+        * Use the `state` parameter for [CSRF protection](https://tools.ietf.org/html/draft-ietf-oauth-security-topics-16#section-4.7). Pass a sufficient 
+        random nonce here and verify this nonce again after retrieving the token.
+      tags:
+        - oauth
+      parameters:
+        - $ref: '#/components/parameters/client_id'
+        - $ref: '#/components/parameters/redirect_uri'
+        - $ref: '#/components/parameters/response_type'
+# The scope parameter is usually empty for most of the clients. As different scopes are poorly supported, we shouldn't mention it here at all.
+#        - $ref: '#/components/parameters/scope'
+        - $ref: '#/components/parameters/state'
+      responses:
+        302:
+          description: Redirect to connect portal
+          headers:
+            Location:
+              description: Redirect to connect poral "https://secure.soundcloud.com/connect"
+              schema:
+                type: string
+        401:
+          $ref: '#/components/responses/Unauthorized'
+  /oauth2/token:
+    post:
+      summary: This endpoint accepts POST requests and is used to provision access tokens once a user has authorized your application.
+      deprecated: true
+      tags:
+        - oauth
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OAuthToken'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OAuthToken'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json; charset=utf-8:
+              examples:
+                ExpiringToken:
+                  $ref: "#/components/examples/ExpiringToken"
+        400:
+          description: 'Bad Request'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Error'
+              examples:
+                ErrorInvalidGrant:
+                  $ref: "#/components/examples/ErrorInvalidGrant"
+                ErrorUnsupportedGrant:
+                  $ref: "#/components/examples/ErrorUnsupportedGrant"
+                BadRequest:
+                  $ref: "#/components/examples/BadRequest"
+        401:
+          description: 'Unauthorized'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Error'
+              examples:
+                ErrorInvalidGrant:
+                  value:
+                    code: 401
+                    message: invalid_grant
+                    link: https://developers.soundcloud.com/docs/api/guide#authentication
+                ErrorInvalidScope:
+                  $ref: '#/components/examples/ErrorInvalidScope'
+                ErrorInvalidClient:
+                  $ref: '#/components/examples/ErrorInvalidClient'
   /me:
     get:
       summary: Returns the authenticated user’s information.
