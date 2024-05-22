@@ -51,6 +51,7 @@ object ClientApplicationActivityTelemetryFilter {
   val targetApplicationIds = Set(
     // PARTNER APPS
     "314751", // Sonos 2.0
+    "196054", // Suspected behavior app
     // APPS ALLOWLISTED IN API-V2
     "59007", // Soundiiz
     "62023", // Soundiiz local
