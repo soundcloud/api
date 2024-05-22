@@ -280,4 +280,10 @@ class Clients(
     new ResolveService(moshimoshiClient, shortLinksClient, trackVisibilityService, playlistService, baseUrl)
 
   val muzookaApiKey = config.get("MUZOOKA_API_KEY", DataSensitivity.SENSITIVE)
+
+  val tokenDispenserClient: TokenDispenserClient = {
+    val client =
+      JsonClient(HttpClientConfig.from(ResourceName("AUTHENTICATOR_DISPENSER"), config), telemetry)
+    new TokenDispenserClient(client)
+  }
 }

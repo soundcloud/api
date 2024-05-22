@@ -3,12 +3,14 @@ package com.soundcloud.apipublic.client.mothership
 import com.soundcloud.apipublic.client.chrono.ChronoResponse
 import com.soundcloud.apipublic.client.mothership.response.mapper.{
   UpdatePlaylistArtworkResponseMapper,
+  UpdateUserArtworkResponseMapper,
   UserRepresentationMapper
 }
 import com.soundcloud.apipublic.client.mothership.response.representation.{UserRepresentation, WebProfile}
 import com.soundcloud.apipublic.client.support.FetchClient
 import com.soundcloud.apipublic.client.support.ResponseHandlers.ListResponse
 import com.soundcloud.apipublic.service.pagination.CursorBasedPagination
+import com.soundcloud.hocuspocus.Image
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import com.soundcloud.jvmkit.module.outcome.OutcomeF
@@ -23,7 +25,8 @@ import play.api.libs.json.{JsValue, Json, Writes}
 class MoshimoshiClient(
     service: JsonClient,
     exceptionCollector: ExceptionCollector,
-    updatePlaylistArtworkResponseMapper: UpdatePlaylistArtworkResponseMapper = new UpdatePlaylistArtworkResponseMapper
+    updatePlaylistArtworkResponseMapper: UpdatePlaylistArtworkResponseMapper = new UpdatePlaylistArtworkResponseMapper,
+    updateUserArtworkResponseMapper: UpdateUserArtworkResponseMapper = new UpdateUserArtworkResponseMapper
 ) extends FetchClient {
 
   def resolveToUrn(session: UserSession, permalink: String): Future[Option[Urn]] =
@@ -95,6 +98,26 @@ class MoshimoshiClient(
         Some(Json.stringify(implicitly[Writes[PlaylistArtworkUpdate]].writes(requestParams)))
       )
       .map(updatePlaylistArtworkResponseMapper(_))
+      .outcomeF
+  }
+
+  def updateUserAvatar(session: UserSession, userUrn: Urn, image: Image): OutcomeF[Unit] = {
+    val userProfileAvatarUpdate = UserProfileAvatarUpdate(
+      image.contentType,
+      image.resizeUrl,
+      image.originUri,
+      image.width,
+      image.height
+    )
+    service
+      .postWithSession(
+        session,
+        Path() / "users" / userUrn.toString / "avatar",
+        Params.empty,
+        Headers.empty(),
+        Some(Json.toJson(userProfileAvatarUpdate).toString())
+      )
+      .map(updateUserArtworkResponseMapper(_))
       .outcomeF
   }
 

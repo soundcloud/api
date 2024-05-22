@@ -1,12 +1,13 @@
 package com.soundcloud.apipublic
 
-import com.soundcloud.jvmkit.module.telemetry.Telemetry
-import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.apipublic.handler._
 import com.soundcloud.apipublic.handler.comments.CommentsHandler
+import com.soundcloud.apipublic.handler.muzooka.ImageDownloader
 import com.soundcloud.apipublic.handler.search.SearchHandler
 import com.soundcloud.apipublic.service.media.DownloadService
 import com.soundcloud.apipublic.support.oauth.{GrantExchangeRequestParser, RailsLikeParamsParser}
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 
 class Handlers(
     telemetry: Telemetry,
@@ -101,5 +102,15 @@ class Handlers(
 
   val webProfilesHandler = new WebProfilesHandler(userAuthentication, moshimoshiClient)
 
-  val muzookaWebhookHandler = new MuzookaWebhookHandler(muzookaApiKey)
+  val imageDownloader = new ImageDownloader()
+
+  val muzookaWebhookHandler =
+    new MuzookaWebhookHandler(
+      muzookaApiKey,
+      hocuspocusClient,
+      moshimoshiClient,
+      userAuthentication,
+      tokenDispenserClient,
+      imageDownloader
+    )
 }

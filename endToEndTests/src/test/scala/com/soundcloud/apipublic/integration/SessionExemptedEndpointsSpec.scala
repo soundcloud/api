@@ -62,18 +62,17 @@ class SessionExemptedEndpointsSpec extends IntegrationTest {
       response.status ==== Status.Ok.code
     }
 
-    "return success for Muzooka" in new IntegrationContext {
+    "return forbidden for Muzooka when not signed properly" in new IntegrationContext {
       val request = RequestBuilder()
         .url(
           Request.queryString(s"http://${server.serverAddress}/muzooka/webhook")
         )
         .addHeader("X-Real-IP", "65.206.21.12")
-        .addHeader("X-Signature", "sha1=374355157fe3ba4b879c487ad020cd38ecaac4e5")
+        .addHeader("X-Signature", "sha1=WRONG_SIGNATURE")
         .buildPost(Buf.Utf8("Empty Body"))
 
       private val response: IntegrationTestHttpResponse = server.executeRequest(request)
-      response.body ==== "OK"
-      response.status ==== Status.Ok.code
+      response.status ==== Status.Forbidden.code
     }
   }
 }

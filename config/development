@@ -93,3 +93,5 @@ IS_DEVELOPMENT_MODE=true
 SEARCHSDUI_CLIENT_FAILURE_ACCRUAL_MARK_DEAD_FOR_MILLIS=500
 SEARCHSDUI_CLIENT_REQUEST_TIMEOUT_MILLIS=2000
 SEARCHSDUI_SRV_RECORD=dnssrv!http.api.publicapi.search.srv.db.s-cloud.net.
+
+AUTHENTICATOR_DISPENSER_SRV_RECORD="dnssrv!http.dispenser.prod.authenticator.srv.db.s-cloud.net."
