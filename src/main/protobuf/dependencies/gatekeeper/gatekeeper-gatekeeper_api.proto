@@ -13,6 +13,7 @@ enum Plan {
     PRO = 4;
     PRO_UNLIMITED = 5;
     PRO_DISTRO = 6;
+    CREATOR_MID_TIER = 7;
 }
 
 enum UpdateCacheAction {
