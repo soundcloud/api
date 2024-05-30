@@ -29,7 +29,7 @@ class TrackUpdateService(
       session: UserSession
   ): Future[Outcome[TrackRepresentation]] = {
     for {
-      uploadeImageResponse <- uploadArtworkToS3(maybeUpdateAlbumArt)
+      uploadeImageResponse <- uploadArtworkToS3(session, maybeUpdateAlbumArt)
       trackCoordinatorTrack <- trackCoordinatorClient.updateTrack(
         session,
         trackUrn,
@@ -49,7 +49,7 @@ class TrackUpdateService(
   ): Future[Outcome[TrackRepresentation]] = {
     for {
       user <- fetchUser(session, session.getUser)
-      uploadedImageResponse <- uploadArtworkToS3(maybeAlbumArt)
+      uploadedImageResponse <- uploadArtworkToS3(session, maybeAlbumArt)
       trackCoordinatorTrack <- trackCoordinatorClient.createTrack(
         session,
         trackAsset,
@@ -68,12 +68,13 @@ class TrackUpdateService(
   }
 
   private def uploadArtworkToS3(
+      session: UserSession,
       maybeUpdateAlbumArt: Option[TrackArtworkUpdateRequest]
   ): Future[Option[TrackArtworkUpdateResult]] = {
     maybeUpdateAlbumArt match {
       case Some(artworkMetadata) =>
         hocuspocusService
-          .storeImage(HocuspocusUtils.toRaw(artworkMetadata.imageData))
+          .storeImage(HocuspocusUtils.toRaw(artworkMetadata.imageData, Some(session)))
           .map(image => createTrackArtworkUpdate(image))
 
       case _ => Future.None

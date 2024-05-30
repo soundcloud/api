@@ -4,6 +4,9 @@
 syntax = "proto3";
 
 package com.soundcloud.hocuspocus;
+
+import "common_session.proto";
+
 option go_package = "github.com/soundcloud/hocuspocus";
 
 // Will be lowercased and used in the path name. Field names must match /[A-Z]+/
@@ -24,6 +27,8 @@ message Raw {
 
   // The body of the image
   bytes image = 2;
+
+  proto.soundcloud.common.session.UserSession user_session = 3; // Required
 }
 
 message Image {
@@ -51,11 +56,11 @@ message StoreImagePostFormResponse {
 }
 
 message StoreImagePostFormRequest {
-  Kind kind = 1; 
+  Kind kind = 1;
   // ID customizes the storage key when provided. The value should be non-guessable alphanumeric with a dash.
   // Set this field when you can guarantee uniqueness and randomness
   // When empty, a random ID will be generated for the `key` field.
-  string id = 2; 
+  string id = 2;
   map<string,string> metadata = 3; // Arbitrary meta data to be associated with the image. Should be unique for unique images.
   string content_type = 4; // required
 }

@@ -621,7 +621,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
         BufReader.readAll(Reader.fromStream(this.getClass.getClassLoader.getResourceAsStream(testImage)))
       )
       val artworkUpdateRequest = UpdatePlaylistArtworkRequest(buf)
-      val expectedRaw = HocuspocusUtils.toRaw(buf)
+      val expectedRaw = HocuspocusUtils.toRaw(buf, Some(session))
 
       val expectedArtworkUpdate = PlaylistArtworkUpdate("bucket", "filename")
 

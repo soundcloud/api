@@ -197,7 +197,7 @@ class PlaylistsService(
       playlistArtworkRequest: UpdatePlaylistArtworkRequest
   ): OutcomeF[Unit] = {
     for {
-      createdImage <- uploadImageToHocuspocus(playlistArtworkRequest.imageData)
+      createdImage <- uploadImageToHocuspocus(session, playlistArtworkRequest.imageData)
       updateParams <- extractPlaylistArtworkUpdateParams(createdImage).liftF
       _ <- playlistsWritesTwirpService
         .updatePlaylistArtwork(
@@ -208,13 +208,13 @@ class PlaylistsService(
     } yield ()
   }
 
-  private def uploadImageToHocuspocus(imageData: Buf): OutcomeF[Image] = {
+  private def uploadImageToHocuspocus(session: UserSession, imageData: Buf): OutcomeF[Image] = {
     val handleErrors: PartialFunction[Throwable, Outcome[Image]] = {
       case TwinagleException(ErrorCode.InvalidArgument, _, _, _) => NotValid("Invalid Image").bad
     }
 
     hocuspocusService
-      .storeImage(HocuspocusUtils.toRaw(imageData))
+      .storeImage(HocuspocusUtils.toRaw(imageData, Some(session)))
       .map(_.good)
       .handleAndReport(exceptionCollector, true)(handleErrors)
       .outcomeF

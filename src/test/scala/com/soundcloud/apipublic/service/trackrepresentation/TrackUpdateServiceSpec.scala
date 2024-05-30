@@ -1,10 +1,6 @@
 package com.soundcloud.apipublic.service.trackrepresentation
 
 import com.google.protobuf.ByteString
-import com.soundcloud.hocuspocus.{HocuspocusService, Image, Kind, Raw}
-import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.soundcloud.apipublic.client.mothership.OkidokiClient
 import com.soundcloud.apipublic.client.mothership.response.mapper.UserRepresentationMapper
 import com.soundcloud.apipublic.client.mothership.response.representation.UserRepresentation
@@ -18,6 +14,11 @@ import com.soundcloud.apipublic.handler.support.error.UnhandledOutcomeException
 import com.soundcloud.apipublic.handler.support.requestParser._
 import com.soundcloud.apipublic.test.UnitSpecification
 import com.soundcloud.apipublic.test.fixtures.Fixtures
+import com.soundcloud.hocuspocus.{HocuspocusService, Image, Kind, Raw}
+import com.soundcloud.jvmkit.module.outcome._
+import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps.JvmkitSessionExt
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.twitter.io.Buf
 import com.twitter.io.Buf.ByteArray
 import com.twitter.util.{Await, Future}
@@ -72,7 +73,11 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
     ) = {
       when(
         hocuspocusService.storeImage(
-          Raw(Kind.ARTWORKS, ByteString.copyFrom(Buf.ByteArray.Owned.extract(maybeUpdateAlbumArt.imageData)))
+          Raw(
+            Kind.ARTWORKS,
+            ByteString.copyFrom(Buf.ByteArray.Owned.extract(maybeUpdateAlbumArt.imageData)),
+            Some(ownerSession.asProtoSession)
+          )
         )
       ).thenReturn(Future.value(Image(kind = Kind.ARTWORKS, originUri = "s3://bucket/filename")))
     }

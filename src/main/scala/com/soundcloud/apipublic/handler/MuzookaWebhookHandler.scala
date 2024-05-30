@@ -89,7 +89,7 @@ class MuzookaWebhookHandler(
       artistImageUpdateRequest: ArtistImageUpdateRequest
   ) =
     hocuspocusService
-      .storeImage(HocuspocusUtils.toRaw(artistImageUpdateRequest.imageData))
+      .storeImage(HocuspocusUtils.toRaw(artistImageUpdateRequest.imageData, Some(userSession)))
       .map(image => moshimoshiClient.updateUserAvatar(userSession, userUrn, image))
 
   private def findImage(artist: MuzookaArtist): Option[Image] = {

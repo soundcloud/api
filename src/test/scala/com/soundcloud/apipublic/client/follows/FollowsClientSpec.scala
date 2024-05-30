@@ -48,6 +48,7 @@ class FollowsClientSpec extends UnitSpecification {
     val user = Urn("soundcloud", "users", "1")
     val anotherUser = Urn("soundcloud", "users", "2")
     val yetAnotherUser = Urn("soundcloud", "users", "3")
+    val dateTime = new DateTime("2015-12-08T00:32:10.000+00:00")
 
     val serviceMock = mock[JsonClient]
     val client = new FollowsClient(serviceMock)
@@ -75,7 +76,7 @@ class FollowsClientSpec extends UnitSpecification {
     "returns the created following when a new following is created" in new FollowContext {
       mockWith(Status.Created, Fixtures.followingCreated)
 
-      result ==== FollowingCreated(Following("42", new DateTime("2015-12-08T00:32:10.000"), anotherUser, user))
+      result ==== FollowingCreated(Following("42", dateTime, anotherUser, user))
     }
 
     "indicates when the target user is already being followed" in new FollowContext {
@@ -84,7 +85,7 @@ class FollowsClientSpec extends UnitSpecification {
       result ==== AlreadyFollowing
     }
 
-    "indicates when the target user doesn't exist" in new FollowContext {
+    "indicates when the target user doesn'dateTime exist" in new FollowContext {
       mockWith(Status.NotFound, JsNull)
 
       result ==== UserNotFound
@@ -258,7 +259,7 @@ class FollowsClientSpec extends UnitSpecification {
     "returns the followings when one page of results is found" in new FollowingsContext {
       mockWith(Status.Ok, Fixtures.oneFollowingPage)
 
-      val followings = Seq(Following("42", new DateTime("2015-12-08T00:32:10.000"), anotherUser, user))
+      val followings = Seq(Following("42", dateTime, anotherUser, user))
       val pagination = None
 
       result ==== Some(FollowingsPage(followings, pagination))
@@ -267,7 +268,7 @@ class FollowsClientSpec extends UnitSpecification {
     "returns the followings and the next page information when multiple pages are found" in new FollowingsContext {
       mockWith(Status.Ok, Fixtures.oneFollowingPageWithNext)
 
-      val followings = Seq(Following("42", new DateTime("2015-12-08T00:32:10.000"), anotherUser, user))
+      val followings = Seq(Following("42", dateTime, anotherUser, user))
       val pagination = Some(Pagination("12345", 1))
 
       result ==== Some(FollowingsPage(followings, pagination))
@@ -305,7 +306,7 @@ class FollowsClientSpec extends UnitSpecification {
     "returns the followings when one page of results is found" in new FollowersContext {
       mockWith(Status.Ok, Fixtures.oneFollowingPage)
 
-      val followings = Seq(Following("42", new DateTime("2015-12-08T00:32:10.000"), anotherUser, user))
+      val followings = Seq(Following("42", dateTime, anotherUser, user))
       val pagination = None
 
       result ==== Some(FollowingsPage(followings, pagination))
@@ -314,7 +315,7 @@ class FollowsClientSpec extends UnitSpecification {
     "returns the followings and the next page information when multiple pages are found" in new FollowersContext {
       mockWith(Status.Ok, Fixtures.oneFollowingPageWithNext)
 
-      val followings = Seq(Following("42", new DateTime("2015-12-08T00:32:10.000"), anotherUser, user))
+      val followings = Seq(Following("42", dateTime, anotherUser, user))
       val pagination = Some(Pagination("12345", 1))
 
       result ==== Some(FollowingsPage(followings, pagination))
