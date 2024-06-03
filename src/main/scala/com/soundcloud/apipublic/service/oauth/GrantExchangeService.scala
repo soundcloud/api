@@ -45,11 +45,13 @@ class GrantExchangeService(accessGrantExchangeService: proto.AccessGrantExchange
           case AccessGrantExchangeError.INVALID_CLIENT => NotAuthorized("invalid_client").bad
           case AccessGrantExchangeError.INVALID_GRANT => NotValid("invalid_grant").bad
           case AccessGrantExchangeError.INVALID_SCOPE => NotValid("invalid_scope").bad
+          case AccessGrantExchangeError.UNAUTHORIZED_CLIENT => NotValid("unauthorized_client").bad
           case AccessGrantExchangeError.RATE_LIMIT_EXCEEDED => NotAllowed("rate_limit_exceeded").bad
           case proto.AccessGrantExchangeResponse.Error.Unrecognized(unrecognizedValue) =>
             throw new IllegalArgumentException(
               s"Unrecognised response from authenticator proto client: $unrecognizedValue"
             )
+          // Note: unauthorized_client would come through for public clients but these endpoints are being deprecated and we expect no public clients (new) to use them
         }
       case proto.AccessGrantExchangeResponse.Result.Empty =>
         throw new IllegalArgumentException("Unexpected empty response from authenticator proto client.")

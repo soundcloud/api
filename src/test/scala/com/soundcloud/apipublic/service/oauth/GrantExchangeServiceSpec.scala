@@ -154,6 +154,19 @@ class GrantExchangeServiceSpec extends UnitSpecification {
       }
     }
 
+    "when the response is UNAUTHORIZED_CLIENT" >> {
+      "it returns an unauthorized error" in {
+        val response = proto
+          .AccessGrantExchangeResponse()
+          .withError(
+            proto.AccessGrantExchangeResponse.Error.UNAUTHORIZED_CLIENT
+          )
+        val ctx = ctxFactory(response)
+
+        ctx.result ==== NotValid("unauthorized_client").bad
+      }
+    }
+
     "when the response is INVALID_GRANT" >> {
       "it returns a NotValid error" in {
         val response = proto

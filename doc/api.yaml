@@ -1276,6 +1276,11 @@ components:
         code: 401
         message: invalid_client
         link: https://developers.soundcloud.com/docs/api/guide#authentication
+    ErrorUnauthorizedClient:
+      value:
+        code: 401
+        message: unauthorized_client
+        link: https://developers.soundcloud.com/docs/api/guide#authentication
     Forbidden:
       value:
         code: 403
