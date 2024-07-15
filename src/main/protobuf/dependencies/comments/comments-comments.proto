@@ -67,7 +67,7 @@ message GetCommentResponse {
 message GetUserCommentsRequest {
   string user_urn = 1;
   int32 limit = 2;
-  google.protobuf.Int32Value cursor = 3;
+  google.protobuf.Int64Value cursor = 3;
 }
 
 message GetUserCommentsResponse {

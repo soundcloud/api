@@ -92,6 +92,8 @@ message SimpleSearchRequest {
     Action.Action action = 4;
     // Enable/disable caching (optional, default: true)
     google.protobuf.BoolValue caching_enabled = 5;
+    // Specify a query layout (optional, default: configured in config)
+    RequestedLayout layout = 6;
     // Query pagination parameters (optional, default: offset = 0, size = 20)
     SearchOffsetPagination pagination = 7;
     // Query URN of this request (when making repeated requests, eg. scrolling, supply the same query URN) (optional)
@@ -309,7 +311,9 @@ message Action {
         // User clicked on a genre grid cell
         GENRE_CELL_CLICKED = 5;
         // User clicked on a filter menu choice
-        FILTERS_MENU_CLICKED = 6;
+        FILTERS_MENU_CLICKED = 6;;
+        // User clicked on a section see all link
+        SEE_ALL_CLICKED = 7;
     }
 }
 
@@ -373,8 +377,6 @@ message SimpleSearchResponse {
 // Query stats
 // Contains metrics pertaining to the query
 message QueryStats {
-    // True if the response came from cache, false if the query was executed
-    bool from_cache = 1;
     // Total execution time of the request
     int64 execution_time_ms = 2;
     // Total results matched by the request

@@ -372,9 +372,7 @@ message Track {
     string track_authorization = 39;
     repeated TrackFlag flags = 40;
 
-    // additional fields that are not included in the response
-    // unless they are specified in the track field mask
-    Tracklist tracklist = 47; // optional
+    Tracklist tracklist = 47; // deprecated, optional
 
     // metadata fields
     Metadata metadata = 48;
@@ -389,6 +387,39 @@ message Track {
     Caption caption = 54; // optional
     AudioAnalysis audio_analysis = 55; // optional
     google.protobuf.StringValue profile_urn = 56; // deprecated, optional
+    CacheCondition cache_condition = 57; // optional
+}
+
+// all cache keys are part of the GetVisibleTracksRequest
+enum CacheKey {
+    UNKNOWN_CACHE_KEY = 0;
+    TRACK_URN = 1; // in each GetVisibleTracksRequest.track_requests, TrackRequest.urn
+    TRACK_FIELD_MASK = 2; // GetVisibleTracksRequest.track_field_mask
+    HAS_HQ_AUDIO_FEATURE = 3; // whether "hq_audio" is contained in GetVisibleTracksRequest.user_session.features
+    HAS_MANIFEST_TRANSCODING_FEATURE = 4; // whether "manifest_transcodings" is contained in GetVisibleTracksRequest.user_session.features
+    HAS_CONTENT_HIGH_TIER_FEATURE = 5; // whether "content_high_tier" is contained in GetBulkAuthorizationsRequest.user_session.features
+    USER_SESSION_GEO_COUNTRY_CODE = 6; // GetBulkAuthorizationsRequest.user_session.geo.countryCode
+    SC_CONS_SUB_OR_USER_SESSION_GEO_COUNTRY_CODE = 7; // subscription territory from submarine
+    // (country code from 'SC-Cons-Sub-Country' extra header) if user has subscription,
+    // else GetBulkAuthorizationsRequest.user_session.geo.countryCode
+    FIRST_PARTY_CLIENTS_ONLY = 8; // Caching is only allowed for calls from first-party clients
+    NOT_FOR_UPLOADER = 9; // Cached values cannot be used for the owner of the track (user who uploaded the track)
+}
+
+message CacheCondition {
+    bool cacheable = 1; // optional, cacheable by TRACK_URN and
+    bool cacheableByCacheKeys = 2; // optional
+    repeated CacheKey cacheKeys = 3; // required if restrictedCacheable true
+    // All currently possible combinations of cacheKeys are:
+    // * TRACK_URN and TRACK_FIELD_MASK OR
+    // * TRACK_URN, TRACK_FIELD_MASK, HAS_HQ_AUDIO_FEATURE and HAS_MANIFEST_TRANSCODING_FEATURE
+    // * TRACK_URN, TRACK_FIELD_MASK, HAS_CONTENT_HIGH_TIER_FEATURE, SC_CONS_SUB_OR_USER_SESSION_GEO_COUNTRY_CODE, FIRST_PARTY_CLIENTS_ONLY and NOT_FOR_UPLOADER
+    // * TRACK_URN, TRACK_FIELD_MASK, HAS_HQ_AUDIO_FEATURE, HAS_MANIFEST_TRANSCODING_FEATURE, HAS_CONTENT_HIGH_TIER_FEATURE, SC_CONS_SUB_OR_USER_SESSION_GEO_COUNTRY_CODE, FIRST_PARTY_CLIENTS_ONLY and NOT_FOR_UPLOADER
+    // * TRACK_URN, TRACK_FIELD_MASK, USER_SESSION_GEO_COUNTRY_CODE, SC_CONS_SUB_OR_USER_SESSION_GEO_COUNTRY_CODE, FIRST_PARTY_CLIENTS_ONLY and NOT_FOR_UPLOADER
+    // * TRACK_URN, TRACK_FIELD_MASK, HAS_HQ_AUDIO_FEATURE, HAS_MANIFEST_TRANSCODING_FEATURE, USER_SESSION_GEO_COUNTRY_CODE, SC_CONS_SUB_OR_USER_SESSION_GEO_COUNTRY_CODE, FIRST_PARTY_CLIENTS_ONLY and NOT_FOR_UPLOADER
+    int32 numberOfCacheKeys = 4; // checksum: number of cache keys which are explicitly defined and not unknown.
+    // If numberOfCacheKeys is not the number of enums in CacheKeys, value should not be cached.
+    // This is to enable forwards compatibility while still not caching on too few keys when a new key is added.
 }
 
 message Metadata {
@@ -483,31 +514,31 @@ message WaveformUrl {
     string png = 3;
 }
 
-message Tracklist {
-    repeated TrackSegment segments = 1;
+message Tracklist { // deprecated
+    repeated TrackSegment segments = 1;  // deprecated
 }
 
-message TrackSegment {
-    string urn = 1;
-    Track track = 2;
-    google.protobuf.Int32Value start_ms = 3;
-    google.protobuf.Int32Value end_ms = 4;
-    repeated Artist artists = 5;
-    Label label = 6;
+message TrackSegment {  // deprecated
+    string urn = 1;  // deprecated
+    Track track = 2;  // deprecated
+    google.protobuf.Int32Value start_ms = 3;  // deprecated
+    google.protobuf.Int32Value end_ms = 4;  // deprecated
+    repeated Artist artists = 5;  // deprecated
+    Label label = 6;  // deprecated
 
-    message Track {
-        google.protobuf.StringValue reference_track_urn = 1;
-        string title = 2;
+    message Track {  // deprecated
+        google.protobuf.StringValue reference_track_urn = 1;  // deprecated
+        string title = 2;  // deprecated
     }
 
-    message Artist {
-        string name = 1;
-        google.protobuf.StringValue urn = 2;
+    message Artist {  // deprecated
+        string name = 1;  // deprecated
+        google.protobuf.StringValue urn = 2;  // deprecated
     }
 
-    message Label {
-        string name = 1;
-        google.protobuf.StringValue urn = 2;
+    message Label {  // deprecated
+        string name = 1;  // deprecated
+        google.protobuf.StringValue urn = 2;  // deprecated
     }
 }
 
