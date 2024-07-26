@@ -1,6 +1,7 @@
 package com.soundcloud.apipublic.client.search
 import com.google.protobuf.timestamp.Timestamp
 import com.soundcloud.apipublic.authorization.policies.Access
+import com.soundcloud.apipublic.client.search.SearchApiClient.ScSystem
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
@@ -77,6 +78,7 @@ object ProtoMappers {
 
   implicit class PlaylistsParamsToProto(params: PlaylistsParams) {
     def toSimpleSearchRequest(session: UserSession, access: AccessParams): SimpleSearchRequest = SimpleSearchRequest(
+      scSystem = Some(ScSystem),
       userSession = Some(session.asProtoSession),
       anonymousId = if (session.isAnonymous) generateAnonymousID else None,
       text = params.q,
@@ -103,6 +105,7 @@ object ProtoMappers {
 
   implicit class TracksParamsToProto(params: TracksParams) {
     def toSimpleSearchRequest(session: UserSession, access: AccessParams): SimpleSearchRequest = SimpleSearchRequest(
+      scSystem = Some(ScSystem),
       userSession = Some(session.asProtoSession),
       anonymousId = if (session.isAnonymous) generateAnonymousID else None,
       text = params.q,
@@ -154,6 +157,7 @@ object ProtoMappers {
 
   implicit class SearchQueryParamsToProto(params: SearchQueryParams) {
     def toSimpleSearchRequest(session: UserSession, access: AccessParams): SimpleSearchRequest = SimpleSearchRequest(
+      scSystem = Some(ScSystem),
       userSession = Some(session.asProtoSession),
       anonymousId = if (session.isAnonymous) generateAnonymousID else None,
       text = params.q,
@@ -203,6 +207,7 @@ object ProtoMappers {
 
   implicit class UsersParamsToProto(params: UsersParams) {
     def toSimpleSearchRequest(session: UserSession, access: AccessParams): SimpleSearchRequest = SimpleSearchRequest(
+      scSystem = Some(ScSystem),
       userSession = Some(session.asProtoSession),
       anonymousId = if (session.isAnonymous) generateAnonymousID else None,
       text = params.q,

@@ -80,9 +80,11 @@ message SearchRequest {
     // By default, errors that occur in resolvers do not fail the entire request
     // Set to true to make the request fail if any error occurs (useful for offline scripts/evaluation etc.)
     google.protobuf.BoolValue fail_on_error = 17;
+    // System sending the request (optional - but should be required soon)
+    google.protobuf.StringValue sc_system = 18;
 }
 
-// Request body for search requests
+// Request body for simple search requests
 message SimpleSearchRequest {
     // You must provide a user session
     proto.soundcloud.common.session.UserSession user_session = 1;
@@ -117,6 +119,8 @@ message SimpleSearchRequest {
     google.protobuf.BoolValue fail_on_error = 17;
     // Enable/disable autocorrection (optional, default: true)
     google.protobuf.BoolValue autocorrect_enabled = 18;
+    // System sending the request (optional - but should be required soon)
+    google.protobuf.StringValue sc_system = 19;
 }
 
 

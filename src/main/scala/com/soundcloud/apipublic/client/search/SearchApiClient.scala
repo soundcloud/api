@@ -18,6 +18,10 @@ import proto.soundcloud.search.api.{
   Aggregation => AggregationProto
 }
 
+object SearchApiClient {
+  val ScSystem: String = "api-public"
+}
+
 class SearchApiClient(client: SearchClientProtobuf, exceptionCollector: ExceptionCollector) extends SearchClient {
   import ProtoMappers._
 
