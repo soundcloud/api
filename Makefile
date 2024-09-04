@@ -177,3 +177,6 @@ publish-changelog:
 .PHONY: validate-manifest
 validate-manifest:
 	sc manifest validate -m manifest.json
+
+post-to-slack:
+	bash scripts/slack_e2e_test_results.sh

@@ -3,6 +3,8 @@ name: api-public-end-to-end-tests
 env:
   SC_PIPELINE_GROUP: api-team
 on:
+  schedule:
+    - cron: "0 10 * * *" # once a day @ 10 AM UTC
   workflow_dispatch:
     inputs:
       ref:
@@ -30,6 +32,8 @@ jobs:
       uses: soundcloud/sc-github-actions/sc-tools@master
     - name: make end-to-end-test
       run: make end-to-end-test
+    - name: make post e2e success to slack
+      run: make post-to-slack
   contract-tests:
     runs-on:
     - self-hosted
