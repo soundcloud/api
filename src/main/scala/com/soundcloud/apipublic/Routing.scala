@@ -1,10 +1,11 @@
 package com.soundcloud.apipublic
 
-import com.soundcloud.jvmkit.module.http.server.{Handler, JsonResponseBuilder}
 import com.soundcloud.apipublic.handler._
 import com.soundcloud.apipublic.handler.comments.CommentsHandler
 import com.soundcloud.apipublic.handler.search.SearchHandler
-import com.twitter.finagle.http.Method
+import com.soundcloud.jvmkit.module.http.server.{Handler, HandlerRequest, JsonResponseBuilder}
+import com.twitter.finagle.SimpleFilter
+import com.twitter.finagle.http.{Method, Response}
 import com.twitter.util.Future
 
 object Routing {
@@ -57,8 +58,11 @@ object Routing {
       route(Method.Delete, "/me/followings/:other_id", userFollowHandler.unfollow)
   }
 
-  def forOauthGrantExchange(handler: Handler): List[(Method, String, Handler)] = {
-    route(Method.Post, grantExchangePath, handler)
+  def forOauthGrantExchange(
+      filter: SimpleFilter[HandlerRequest, Response],
+      handler: Handler
+  ): List[(Method, String, Handler)] = {
+    route(Method.Post, grantExchangePath, filter andThen handler.apply _)
   }
 
   def forSingleTrackHandler(singleTrackHandler: SingleTrackHandler): List[(Method, String, Handler)] = {

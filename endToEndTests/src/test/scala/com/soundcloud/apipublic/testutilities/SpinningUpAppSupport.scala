@@ -26,6 +26,7 @@ trait SpinningUpAppSupport {
       ClientBuilder()
         .stack(Http.client)
         .hosts(serverAddress)
+        .timeout(timeout)
         .hostConnectionLimit(25)
         .build()
     }

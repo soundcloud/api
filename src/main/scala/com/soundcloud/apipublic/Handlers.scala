@@ -5,7 +5,7 @@ import com.soundcloud.apipublic.handler.comments.CommentsHandler
 import com.soundcloud.apipublic.handler.muzooka.ImageDownloader
 import com.soundcloud.apipublic.handler.search.SearchHandler
 import com.soundcloud.apipublic.service.media.DownloadService
-import com.soundcloud.apipublic.support.oauth.{GrantExchangeRequestParser, RailsLikeParamsParser}
+import com.soundcloud.apipublic.support.oauth.{ForwardToSecureFilter, GrantExchangeRequestParser, RailsLikeParamsParser}
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 
@@ -83,6 +83,9 @@ class Handlers(
   val likesHandler = new LikesHandler(userAuthentication, likesService, userRepresentationsService)
 
   val grantExchangeRequestMapper = new GrantExchangeRequestParser(new RailsLikeParamsParser())
+  val forwardToSecureFilter =
+    new ForwardToSecureFilter(grantExchangeRequestMapper, clients.rolloutClient, clients.secureClient)
+
   val oauthGrantExchangeHandler =
     new OauthGrantExchangeHandler(
       telemetry,

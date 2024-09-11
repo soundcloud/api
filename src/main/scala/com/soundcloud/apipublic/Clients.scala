@@ -9,6 +9,7 @@ import com.soundcloud.apipublic.client.mothership.{MoshimoshiClient, OkidokiClie
 import com.soundcloud.apipublic.client.playlists.PlaylistDeletionClient
 import com.soundcloud.apipublic.client.reposts.RepostsClient
 import com.soundcloud.apipublic.client.search.SearchApiClient
+import com.soundcloud.apipublic.client.secure.SecureClient
 import com.soundcloud.apipublic.client.shortlinks.ShortLinksClient
 import com.soundcloud.apipublic.client.trackcoordinator.TrackCoordinatorClient
 import com.soundcloud.apipublic.client.trackmetadata.TrackmetadataClient
@@ -112,6 +113,10 @@ class Clients(
 
   lazy val shortLinksClient = new ShortLinksClient(
     new DynamicHttpClient(HttpClientConfig.from(ResourceName("dynamic_http"), config), telemetry)
+  )
+
+  val secureClient = new SecureClient(
+    HttpClient[String](HttpClientConfig.from(ResourceName("secure"), config), telemetry).httpService
   )
 
   val tracksMediaTwirpClient = TwirpClient(

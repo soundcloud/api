@@ -1,5 +1,8 @@
 package com.soundcloud.apipublic
 
+import com.soundcloud.apipublic.Routing._
+import com.soundcloud.apipublic.filter._
+import com.soundcloud.apipublic.support._
 import com.soundcloud.jvmkit.module.admin.AdminServer
 import com.soundcloud.jvmkit.module.bff.BffHttpServer
 import com.soundcloud.jvmkit.module.bff.filters.CorsFilter
@@ -14,9 +17,6 @@ import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.config.AppConfig
 import com.soundcloud.jvmkit.module.util.{ResourceName, Urn}
 import com.soundcloud.jvmkit.module.zookeeper.CuratorFramework
-import com.soundcloud.apipublic.Routing._
-import com.soundcloud.apipublic.filter._
-import com.soundcloud.apipublic.support._
 import com.twitter.finagle.Filter
 import com.twitter.finagle.http.filter.JsonpFilter
 import com.twitter.finagle.http.{Method, Request, Response}
@@ -83,7 +83,7 @@ object App {
       .register(
         List.concat(
           forUserFollowHandler(handlers.userFollowHandler),
-          forOauthGrantExchange(handlers.oauthGrantExchangeHandler),
+          forOauthGrantExchange(handlers.forwardToSecureFilter, handlers.oauthGrantExchangeHandler),
           forSingleTrackHandler(handlers.singleTrackHandler),
           forPlaylistHandler(handlers.playlistsHandler),
           forSimilarTracksHandler(handlers.similarTracksHandler),
