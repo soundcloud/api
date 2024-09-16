@@ -21,7 +21,7 @@ import play.api.libs.json.Writes
 import java.net.URL
 
 /**
-  * Redirects search queries on to search-dispatcher and fetches meta data.
+  * Redirects search queries on to the search api and fetches metadata.
   */
 class SearchHandler(
     userAuthentication: UserAuthentication,

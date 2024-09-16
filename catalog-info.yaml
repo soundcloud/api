@@ -75,7 +75,6 @@ spec:
     - Component:moshimoshi
     - Component:okidoki
     - Component:playlists
-    - Component:search-dispatcher-remix
     - Component:search
     - Component:system-playlists
     - Component:timeline

@@ -41,9 +41,6 @@ RATELIMITING_SRV_RECORD="dnssrv!http.api.prod.ratelimiting.srv.${ZONE}.s-cloud.n
 
 TIMELINE_CLIENT_REQUEST_TIMEOUT_MILLIS="4000"
 
-SEARCH_SRV_RECORD="dnssrv!http.publicapi.prod.search.srv.db.s-cloud.net."
-SEARCH_CLIENT_REQUEST_TIMEOUT_MILLIS=3000
-
 TIMELINE_SRV_RECORD="dnssrv!http.api.prod.timeline.srv.${ZONE}.s-cloud.net."
 
 LIKES_SRV_RECORD="dnssrv!http.api.prod.likes.srv.${ZONE}.s-cloud.net."

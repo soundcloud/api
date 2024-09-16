@@ -57,9 +57,6 @@ RATELIMITING_SRV_RECORD=dnssrv!_first16.http.api.prod.ratelimiting.srv.db.s-clou
 
 TIMELINE_CLIENT_REQUEST_TIMEOUT_MILLIS=2000
 
-SEARCH_SRV_RECORD=dnssrv!_first16.http.publicapi.prod.search.srv.db.s-cloud.net.
-SEARCH_CLIENT_REQUEST_TIMEOUT_MILLIS=3000
-
 TIMELINE_SRV_RECORD=dnssrv!_first16.http.api.prod.timeline.srv.db.s-cloud.net.
 
 TRACK_COORDINATOR_SRV_RECORD=dnssrv!_first16.http.coordinator.prod.tracks.srv.db.s-cloud.net.
