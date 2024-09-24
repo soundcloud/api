@@ -1,7 +1,7 @@
 source api-production-secrets
 
 MEDIA_SERVICE_ADDRESS=dnssrv!http.coordinator.prod.media-service.srv.db.s-cloud.net
-API_PUBLIC_ADDRESS=dnssrv!gateway.api-core.soundcloud.cloud
+API_PUBLIC_ADDRESS=dnssrv!http.api.prod.api-public.srv
 
 MAX_REQUEST_BYTES=2147483648
 
