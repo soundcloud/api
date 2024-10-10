@@ -84,7 +84,7 @@ class Handlers(
 
   val grantExchangeRequestMapper = new GrantExchangeRequestParser(new RailsLikeParamsParser())
   val forwardToSecureFilter =
-    new ForwardToSecureFilter(grantExchangeRequestMapper, clients.rolloutClient, clients.secureClient)
+    new ForwardToSecureFilter(grantExchangeRequestMapper, clients.rolloutClient, clients.secureClient, telemetry)
 
   val oauthGrantExchangeHandler =
     new OauthGrantExchangeHandler(

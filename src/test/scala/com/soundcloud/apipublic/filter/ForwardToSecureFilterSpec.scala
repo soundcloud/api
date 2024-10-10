@@ -9,6 +9,7 @@ import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Method, Request, Response}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.{verify, verifyNoInteractions, when}
+import com.soundcloud.jvmkit.module.telemetry.Telemetry
 
 class ForwardToSecureFilterSpec extends UnitSpecification {
   val fallbackBodyMessage = "fallback"
@@ -24,8 +25,9 @@ class ForwardToSecureFilterSpec extends UnitSpecification {
     val parser = mock[GrantExchangeRequestParser]
     val rollout = mock[Rollout]
     val secureClient = mock[SecureClient]
+    val telemetry = Telemetry.createIsolatedInstance
 
-    val filter = new ForwardToSecureFilter(parser, rollout, secureClient)
+    val filter = new ForwardToSecureFilter(parser, rollout, secureClient, telemetry)
 
     val service = new StubService
 
