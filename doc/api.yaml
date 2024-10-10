@@ -30,7 +30,7 @@ tags:
 paths:
   /connect:
     get:
-      summary: The OAuth2 authorization endpoint. Your app redirects a user to this endpoint, allowing them to delegate access to their account.
+      summary: Deprecated since 01.10.2024, please use https://secure.soundcloud.com/authorize instead.
       deprecated: true
       description: >
         <h3>Security Advice</h3>
@@ -61,7 +61,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
   /oauth2/token:
     post:
-      summary: This endpoint accepts POST requests and is used to provision access tokens once a user has authorized your application.
+      summary: Deprecated since 01.10.2024, please use https://secure.soundcloud.com/oauth/token instead.
       deprecated: true
       tags:
         - oauth
