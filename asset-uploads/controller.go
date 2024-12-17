@@ -5,12 +5,14 @@ import (
 	"mime"
 	"net/http"
 	"net/http/httputil"
+	"net/url"
 	"strings"
 )
 
 type controller struct {
 	maxRequestBytes int64
 	proxy           *httputil.ReverseProxy
+	targetUrl       string
 	service         serviceAPI
 }
 
@@ -59,7 +61,7 @@ func (c controller) dispatch(w http.ResponseWriter, r *http.Request, svc svcDisp
 
 	method := r.Method
 	if method != http.MethodPost && method != http.MethodPut {
-		client := labelClient(r.Header.Get(http.CanonicalHeaderKey("Sc-System")))
+		client := labelClient(r.Header.Get(("Sc-System")))
 		log.Printf("rejected misdirected request due to unhandled method: %s %s (%s)", method, r.RequestURI, client)
 		// Using "misdirected" because we do support other methods – just not on this component (i.e. there is a routing issue somewhere).
 		w.Header().Set("Cache-Control", "no-store")
@@ -67,7 +69,7 @@ func (c controller) dispatch(w http.ResponseWriter, r *http.Request, svc svcDisp
 		return
 	}
 
-	client := labelClient(r.Header.Get(http.CanonicalHeaderKey("Sc-System")))
+	client := labelClient(r.Header.Get(("Sc-System")))
 
 	mt, params, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if err != nil {
@@ -103,13 +105,52 @@ func (c controller) dispatch(w http.ResponseWriter, r *http.Request, svc svcDisp
 
 	r.Body = http.MaxBytesReader(w, r.Body, c.maxRequestBytes)
 
+	log.Printf("Rewritten URL Path: %s", r.URL.Path)
+
+	// Parse the target URL with "/tracks-after-upload" appended.
+	targetURL, err := url.Parse(c.targetUrl + "/tracks-after-upload")
+	if err != nil {
+		log.Printf("Invalid target URL: %v", err)
+		http.Error(w, emptyResponse, http.StatusInternalServerError)
+		return
+	}
+
+	// Rewrite the request URL and update the Host header.
+	r.URL = targetURL
+	r.Host = targetURL.Host
+
 	rr, err := svc(boundary, r)
 	if err != nil {
 		handleProxyError(w, rr, err)
 		return
 	}
 
-	c.proxy.ServeHTTP(w, rr)
+	newUpload := labelClient(r.Header.Get(("Sc-Test-Track-Upload")))
+	if strings.EqualFold(newUpload, "True") {
+		// Parse the target URL and configure the ReverseProxy for API Gateway
+		// TODO move to api-production config and api-production-secrets.enc
+		targetURL, err := url.Parse("https://api.soundcloud.com")
+		if err != nil {
+			log.Printf("Invalid target URL: %v", err)
+			http.Error(w, emptyResponse, http.StatusInternalServerError)
+			return
+		}
+
+		// Initialize the ReverseProxy for the rewritten target URL
+		c.proxy = &httputil.ReverseProxy{
+			Director: func(req *http.Request) {
+				req.URL.Scheme = targetURL.Scheme
+				req.URL.Host = targetURL.Host
+				req.URL.Path = "/tracks-after-upload" // Rewrite the path here
+				req.Host = targetURL.Host
+			},
+			Transport:    http.DefaultTransport, // Or use your desired transport
+			ErrorHandler: handleProxyError,
+		}
+		c.proxy.ServeHTTP(w, rr)
+	} else {
+		c.proxy.ServeHTTP(w, rr)
+	}
 }
 
 func labelClient(name string) string {

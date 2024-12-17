@@ -86,6 +86,7 @@ object Routing {
   def forTracksHandler(tracksHandler: TracksHandler): List[(Method, String, Handler)] = {
     route(Method.Put, trackIdPath, tracksHandler.handleUpdateTrack) :::
       route(Method.Post, "/tracks", tracksHandler.handleCreateTrack) :::
+      route(Method.Post, "/tracks-after-upload", tracksHandler.handleCreateTrack) :::
       route(Method.Delete, trackIdPath, tracksHandler.handleDeleteTrack)
   }
 

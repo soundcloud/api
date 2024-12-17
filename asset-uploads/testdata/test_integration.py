@@ -45,7 +45,7 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
         self.assertAuthorization(res, 's3cr3t_1')
         self.assertChecksum(res, asset.md5)
         self.assertNoTrackAssetData(res)
-        self.assertRequest(res, 'POST', '/tracks')
+        self.assertRequest(res, 'POST', '/tracks-after-upload')
         self.assertTrackOriginalFilename(res, 'test_chunk.wav')
         self.assertTrackAssetLocation(res)
         self.assertTrackUID(res)
@@ -69,7 +69,7 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
             self.assertAuthorization(res, 's3cr3t_1')
             self.assertChecksum(res, asset.md5)
             self.assertNoTrackAssetData(res)
-            self.assertRequest(res, 'POST', path)
+            self.assertRequest(res, 'POST', '/tracks-after-upload')
             self.assertTrackOriginalFilename(res, 'test_chunk.wav')
             self.assertTrackAssetLocation(res)
             self.assertTrackUID(res)
@@ -102,7 +102,7 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
         self.assertAuthorization(res, 's3cr3t_3')
         self.assertChecksum(res, asset.md5)
         self.assertNoTrackAssetData(res)
-        self.assertRequest(res, 'POST', '/tracks')
+        self.assertRequest(res, 'POST', '/tracks-after-upload')
         self.assertTrackOriginalFilename(res, 'test_length.wav')
         self.assertTrackAssetLocation(res)
         self.assertTrackUID(res)
@@ -132,7 +132,7 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
                 asset_uploads/tracks
             '''.format(token)
         res = check_output(cmd, shell=True).decode('ascii')
-        self.assertRequest(res, 'POST', '/tracks')
+        self.assertRequest(res, 'POST', '/tracks-after-upload')
         self.assertAuthorization(res, token[0:64])
 
     def test_empty_filename(self):
@@ -149,7 +149,7 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
         self.assertAuthorization(res, 's3cr3t_5')
         self.assertChecksum(res, asset.md5)
         self.assertNoTrackAssetData(res)
-        self.assertRequest(res, 'POST', '/tracks')
+        self.assertRequest(res, 'POST', '/tracks-after-upload')
         self.assertTrackOriginalFilename(res, '')
         self.assertTrackAssetLocation(res)
         self.assertTrackUID(res)
@@ -163,7 +163,7 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
                 asset_uploads/some-endpoint
             '''.format(token)
         res = check_output(cmd, shell=True).decode('ascii')
-        self.assertRequest(res, 'POST', '/some-endpoint')
+        self.assertRequest(res, 'POST', '/tracks-after-upload')
         self.assertAuthorization(res, token)
 
 

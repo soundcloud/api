@@ -2,13 +2,14 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"os"
-	"time"
 	"strconv"
+	"time"
 
 	_ "net/http/pprof"
 
@@ -25,17 +26,18 @@ import (
 )
 
 func main() {
-    bytes, err := strconv.ParseInt(os.Getenv("MAX_REQUEST_BYTES"), 10, 64)
-    if err != nil {
-        log.Fatal(err)
-    }
+	bytes, err := strconv.ParseInt(os.Getenv("MAX_REQUEST_BYTES"), 10, 64)
+	if err != nil {
+		log.Fatal(err)
+	}
 	var (
 		addr      = flag.String("addr", ":80", "Listen address")
 		adminAddr = flag.String("admin-addr", ":5000", "Listen address admin server")
 
 		mediaServiceAddr = flag.String("media-service-addr", os.Getenv("MEDIA_SERVICE_ADDRESS"), "media service address")
 
-		apiAddr = flag.String("api-addr", os.Getenv("API_PUBLIC_ADDRESS"), "API Public service address")
+		apiAddr        = flag.String("api-addr", os.Getenv("API_PUBLIC_ADDRESS"), "API Public service address")
+		apiGatewayAddr = flag.String("apiGatewayAddr", os.Getenv("API_PUBLIC_GATEWAY"), "API Public Gateway service address")
 
 		awsKey    = flag.String("aws-key", os.Getenv("AWS_ACCESS_KEY_ID"), "AWS access key ID")
 		awsSecret = flag.String("aws-secret", os.Getenv("AWS_SECRET_ACCESS_KEY"), "AWS secret access key")
@@ -90,21 +92,15 @@ func main() {
 		},
 	}
 
-	apiPublicURL, err := url.Parse("http://" + *apiAddr)
+	apiPublic, err := initializeReverseProxy("http://"+*apiAddr, dnssrv.DefaultTransport)
 	if err != nil {
 		log.Fatal(err)
 	}
-	apiPublic := httputil.NewSingleHostReverseProxy(apiPublicURL)
-	apiPublic.Transport = instrumenthttp.Tripperware(
-		"API_PUBLIC",
-		instrumenthttp.TripperwareOpts{},
-		dnssrv.DefaultTransport,
-	)
-	apiPublic.ErrorHandler = handleProxyError
 
 	controller := &controller{
 		maxRequestBytes: *maxRequestBytes,
 		proxy:           apiPublic,
+		targetUrl:       *apiGatewayAddr,
 		service:         service,
 	}
 
@@ -158,4 +154,25 @@ func main() {
 	if err := server.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func initializeReverseProxy(addr string, transport http.RoundTripper) (*httputil.ReverseProxy, error) {
+	// Parse the address URL
+	url, err := url.Parse(addr)
+	if err != nil {
+		log.Fatal(err)
+		return nil, fmt.Errorf("failed to parse URL: %w", err)
+	}
+
+	// Initialize the reverse proxy with the provided URL and transport
+	proxy := httputil.NewSingleHostReverseProxy(url)
+	proxy.Transport = instrumenthttp.Tripperware(
+		"API_PUBLIC",
+		instrumenthttp.TripperwareOpts{},
+		transport,
+	)
+	proxy.ErrorHandler = handleProxyError
+
+	// Return the initialized proxy
+	return proxy, nil
 }
