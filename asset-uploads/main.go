@@ -36,7 +36,6 @@ func main() {
 
 		mediaServiceAddr = flag.String("media-service-addr", os.Getenv("MEDIA_SERVICE_ADDRESS"), "media service address")
 
-		apiAddr        = flag.String("api-addr", os.Getenv("API_PUBLIC_ADDRESS"), "API Public service address")
 		apiGatewayAddr = flag.String("apiGatewayAddr", os.Getenv("API_PUBLIC_GATEWAY"), "API Public Gateway service address")
 
 		awsKey    = flag.String("aws-key", os.Getenv("AWS_ACCESS_KEY_ID"), "AWS access key ID")
@@ -92,7 +91,9 @@ func main() {
 		},
 	}
 
-	apiPublic, err := initializeReverseProxy("http://"+*apiAddr, dnssrv.DefaultTransport)
+	// Parse the target URL and configure the ReverseProxy for API Gateway
+	// TODO move to api-production config and api-production-secrets.enc
+	apiPublic, err := initializeReverseProxy("https://api.soundcloud.com", http.DefaultTransport)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -164,8 +165,17 @@ func initializeReverseProxy(addr string, transport http.RoundTripper) (*httputil
 		return nil, fmt.Errorf("failed to parse URL: %w", err)
 	}
 
-	// Initialize the reverse proxy with the provided URL and transport
-	proxy := httputil.NewSingleHostReverseProxy(url)
+	// Initialize the ReverseProxy for the rewritten target URL
+	proxy := &httputil.ReverseProxy{
+		Director: func(req *http.Request) {
+			req.URL.Scheme = url.Scheme
+			req.URL.Host = url.Host
+			req.URL.Path = "/tracks-after-upload" // Rewrite the path here
+			req.Host = url.Host
+		},
+		Transport:    http.DefaultTransport, // Or use your desired transport
+		ErrorHandler: handleProxyError,
+	}
 	proxy.Transport = instrumenthttp.Tripperware(
 		"API_PUBLIC",
 		instrumenthttp.TripperwareOpts{},
