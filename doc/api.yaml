@@ -8,6 +8,9 @@ info:
   termsOfService: https://developers.soundcloud.com/docs/api/terms-of-use
 servers:
   - url: https://api.soundcloud.com
+security:
+  - AuthHeader: []
+  - oAuth2_1: []
 tags:
   - name: oauth
     description: Authentication and Authorization Endpoints.
@@ -30,7 +33,7 @@ tags:
 paths:
   /connect:
     get:
-      summary: Deprecated since 01.10.2024, please use https://secure.soundcloud.com/authorize instead.
+      summary: Deprecated since 01.10.2024, please use https://secure.soundcloud.com/authorize instead. Use Authorize button in Swagger UI to see it in action.
       deprecated: true
       description: >
         <h3>Security Advice</h3>
@@ -61,7 +64,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
   /oauth2/token:
     post:
-      summary: Deprecated since 01.10.2024, please use https://secure.soundcloud.com/oauth/token instead.
+      summary: Deprecated since 01.10.2024, please use https://secure.soundcloud.com/oauth/token instead. Use Authorize button in Swagger UI to see it in action.
       deprecated: true
       tags:
         - oauth
@@ -118,8 +121,6 @@ paths:
       summary: Returns the authenticated user’s information.
       tags:
         - me
-      security:
-        - AuthHeader: [ ]
       responses:
         200:
           $ref: '#/components/responses/Me'
@@ -130,8 +131,6 @@ paths:
       summary: Returns the authenticated user's activities.
       tags:
         - me
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/access'
         - $ref: '#/components/parameters/limit'
@@ -145,8 +144,6 @@ paths:
       summary: Recent the authenticated user's activities.
       tags:
         - me
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/access'
         - $ref: '#/components/parameters/limit'
@@ -160,8 +157,6 @@ paths:
       summary: Returns the authenticated user's recent track related activities.
       tags:
         - me
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/access'
         - $ref: '#/components/parameters/limit'
@@ -175,8 +170,6 @@ paths:
       summary: Returns a list of favorited or liked tracks of the authenticated user.
       tags:
         - me
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/access_explicit'
@@ -191,8 +184,6 @@ paths:
       summary: Returns a list of favorited or liked playlists of the authenticated user.
       tags:
         - me
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/linked_partitioning'
@@ -206,8 +197,6 @@ paths:
       summary: Returns a list of users who are followed by the authenticated user.
       tags:
         - me
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/offset'
@@ -221,8 +210,6 @@ paths:
       summary: Returns a list of recent tracks from users followed by the authenticated user.
       tags:
         - me
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/access'
         - $ref: '#/components/parameters/limit'
@@ -238,8 +225,6 @@ paths:
       deprecated: true
       tags:
         - me
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
       responses:
@@ -253,8 +238,6 @@ paths:
       summary: Follows a user.
       tags:
         - me
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id_to_follow'
       responses:
@@ -270,8 +253,6 @@ paths:
       summary: Deletes a user who is followed by the authenticated user.
       tags:
         - me
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id_to_follow'
       responses:
@@ -293,8 +274,6 @@ paths:
       summary: Returns a list of users who are following the authenticated user.
       tags:
         - me
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/limit'
       responses:
@@ -308,8 +287,6 @@ paths:
       deprecated: true
       tags:
         - me
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/follower_id'
       responses:
@@ -323,8 +300,6 @@ paths:
       description: Returns playlist info, playlist tracks and tracks owner info.
       tags:
         - me
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/show_tracks'
         - $ref: '#/components/parameters/linked_partitioning'
@@ -341,8 +316,6 @@ paths:
       summary: Returns a list of user's tracks.
       tags:
         - me
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/linked_partitioning'
@@ -356,8 +329,6 @@ paths:
       summary: Performs a track search based on a query
       tags:
         - search
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/q"
         - $ref: "#/components/parameters/ids"
@@ -402,8 +373,6 @@ paths:
                 - required:
                   - track[title]
                   - track[asset_data]
-      security:
-        - AuthHeader: [ ]
       responses:
         201:
           $ref: '#/components/responses/Track'
@@ -418,8 +387,6 @@ paths:
       summary: Performs a playlist search based on a query
       tags:
         - search
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/q"
         - $ref: '#/components/parameters/access'
@@ -438,8 +405,6 @@ paths:
       summary: Creates a playlist.
       tags:
         - playlists
-      security:
-        - AuthHeader: [ ]
       requestBody:
         description: Create Playlist request
         content:
@@ -470,8 +435,6 @@ paths:
       summary: Performs a user search based on a query
       tags:
         - search
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/q"
         - $ref: "#/components/parameters/ids"
@@ -490,8 +453,6 @@ paths:
       summary: Returns a playlist.
       tags:
         - playlists
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/playlist_id"
         - $ref: "#/components/parameters/secret_token"
@@ -508,8 +469,6 @@ paths:
       summary: Updates a playlist.
       tags:
         - playlists
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/fake_playlist_id"
       requestBody:
@@ -532,8 +491,6 @@ paths:
       summary: Deletes a playlist.
       tags:
         - playlists
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/fake_playlist_id"
       responses:
@@ -546,8 +503,6 @@ paths:
       summary: Returns tracks under a playlist.
       tags:
         - playlists
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/playlist_id"
         - $ref: "#/components/parameters/secret_token"
@@ -565,8 +520,6 @@ paths:
       summary: Returns a collection of playlist's reposters.
       tags:
         - playlists
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/playlist_id'
         - $ref: '#/components/parameters/limit'
@@ -582,8 +535,6 @@ paths:
       summary: Returns a track.
       tags:
         - tracks
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
         - $ref: "#/components/parameters/secret_token"
@@ -598,8 +549,6 @@ paths:
       summary: Updates a track's information.
       tags:
         - tracks
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
       requestBody:
@@ -625,8 +574,6 @@ paths:
       summary: Deletes a track.
       tags:
         - tracks
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
       responses:
@@ -639,8 +586,6 @@ paths:
       summary: Returns a track's streamable URLs
       tags:
         - tracks
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
         - $ref: "#/components/parameters/secret_token"
@@ -656,8 +601,6 @@ paths:
       summary: Returns the comments posted on the track(track_id).
       tags:
         - tracks
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
         - $ref: '#/components/parameters/limit'
@@ -674,8 +617,6 @@ paths:
       summary: Returns the newly created comment on success
       tags:
         - tracks
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
       requestBody:
@@ -713,8 +654,6 @@ paths:
       summary: Returns a list of users who have favorited or liked the track.
       tags:
         - tracks
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
         - $ref: '#/components/parameters/limit'
@@ -731,8 +670,6 @@ paths:
       summary: Returns a collection of track's reposters.
       tags:
         - tracks
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
         - $ref: '#/components/parameters/limit'
@@ -748,8 +685,6 @@ paths:
       summary: Returns all related tracks of track on SoundCloud.
       tags:
         - tracks
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/track_id'
         - $ref: '#/components/parameters/access'
@@ -768,8 +703,6 @@ paths:
       summary: Resolves soundcloud.com and on.soundcloud.com URLs to Resource URLs to use with the API.
       tags:
         - miscellaneous
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/url'
       responses:
@@ -782,8 +715,6 @@ paths:
       summary: Returns a user.
       tags:
         - users
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
       responses:
@@ -799,8 +730,6 @@ paths:
       deprecated: true
       tags:
         - users
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/limit'
@@ -816,8 +745,6 @@ paths:
       description: Returns a list of users that follows (user_id).
       tags:
         - users
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/limit'
@@ -832,8 +759,6 @@ paths:
       description: Returns list of users that (user_id) follows.
       tags:
         - users
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/limit'
@@ -849,8 +774,6 @@ paths:
       deprecated: true
       tags:
         - users
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/following_id'
@@ -866,8 +789,6 @@ paths:
       summary: Returns a list of user's playlists.
       tags:
         - users
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/access'
@@ -884,8 +805,6 @@ paths:
       summary: Returns a list of user's tracks.
       tags:
         - users
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/access'
@@ -901,8 +820,6 @@ paths:
       summary: Returns list of user's links added to their profile (website, facebook, instagram).
       tags:
         - users
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/limit'
@@ -916,8 +833,6 @@ paths:
       summary: Returns a list of user's liked tracks.
       tags:
         - users
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/access'
@@ -937,8 +852,6 @@ paths:
       summary: Returns a list of user's liked playlists.
       tags:
         - users
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/limit'
@@ -957,8 +870,6 @@ paths:
       summary: Likes a track.
       tags:
         - likes
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/test_track_id'
       responses:
@@ -976,8 +887,6 @@ paths:
       summary: Unlikes a track.
       tags:
         - likes
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/test_track_id'
       responses:
@@ -992,8 +901,6 @@ paths:
       summary: Likes a playlist.
       tags:
         - likes
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/playlist_id'
       responses:
@@ -1011,8 +918,6 @@ paths:
       summary: Unlikes a playlist.
       tags:
         - likes
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/playlist_id'
       responses:
@@ -1027,8 +932,6 @@ paths:
       summary: Reposts a track as the authenticated user
       tags:
         - reposts
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/test_track_id'
       responses:
@@ -1042,8 +945,6 @@ paths:
       summary: Removes a repost on a track as the authenticated user
       tags:
         - reposts
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/test_track_id'
       responses:
@@ -1058,8 +959,6 @@ paths:
       summary: Reposts a playlist as the authenticated user
       tags:
         - reposts
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/repost_playlist_id'
       responses:
@@ -1073,8 +972,6 @@ paths:
       summary: Removes a repost on a playlist as the authenticated user
       tags:
         - reposts
-      security:
-        - AuthHeader: [ ]
       parameters:
         - $ref: '#/components/parameters/repost_playlist_id'
       responses:

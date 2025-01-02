@@ -17,16 +17,6 @@ var options = {
 app.set('port', process.env.PORT || 3000);
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
-// Mitigates XSS, see https://soundcloud.atlassian.net/browse/INT-931
-app.use('/', function (req, res, next) {
-  if (Object.keys(req.query).length > 0) {
-    console.log(req.query)
-    res.status(403).send('')
-  } else {
-    next()
-  }
-})
-
 app.use('/', swaggerUi.serve, swaggerUi.setup(swaggerDocument, options));
 
 const server = app.listen(app.get('port'),
