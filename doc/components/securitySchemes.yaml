@@ -5,7 +5,7 @@ AuthHeader:
   description: 'The string "OAuth" followed by the user’s token: OAuth ACCESS_TOKEN. Obtained in oAuth2.1 flow'
 oAuth2_1:
   type: oauth2
-  description: This API uses OAuth2.1 with Authorization Code flow, Client Credential flow. When registering your app, for it to work with Swagger UI specify redirect url as https://developers.soundcloud.com/docs/api/explorer/open-api/oauth2-redirect.html. [More info](https://developers.soundcloud.com/docs/api/guide#authentication)
+  description: This API uses OAuth2.1 with Authorization Code flow, Client Credential flow. When registering your app, for it to work with Swagger UI specify redirect url as https://developers.soundcloud.com/docs/api/explorer/oauth2-redirect.html. [More info](https://developers.soundcloud.com/docs/api/guide#authentication)
   flows:
     authorizationCode:
       authorizationUrl: https://secure.soundcloud.com/authorize
