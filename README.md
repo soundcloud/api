@@ -12,7 +12,7 @@ Please check the [releases] page.
 * [Backstage blog]
 * [API announcements]
 
-**NOTE: This is not a forum for requesting new API keys. While we hope to explore opening up access again, we're currently not issuing new keys to 3rd party apps. Please subscribe to our [@SoundCloudDev] on Twitter for updates**
+**NOTE: This is not a forum for requesting new API keys. Please send us a request via our via our support channels, e.g. the chat bot. Also please subscribe to our [@SoundCloudDev] on X for updates**
 
 ## Opening an issue
 Please use the [issue tracker] in this repository for bug reports, feature requests, suggestions, and documentation improvements. We will triage the request and mark it as one of the following types:
