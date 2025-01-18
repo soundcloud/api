@@ -12,6 +12,7 @@ import com.soundcloud.apipublic.service.representation.collection.Collection
 import com.soundcloud.apipublic.service.trackrepresentation.{TrackRepresentation, TrackRepresentationsService}
 import com.soundcloud.hocuspocus.{HocuspocusService, Image}
 import com.soundcloud.jvmkit.module.outcome._
+import com.soundcloud.jvmkit.module.rollout.{Rollout, RolloutFeature}
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionHandler.FutureExtensions
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
@@ -23,11 +24,11 @@ import com.twitter.util.Future
 import proto.soundcloud.playlists.api.{
   CreatePlaylistRequest,
   GetVisiblePlaylistsRequest,
-  Playlist => ProtoPlaylist,
   PlaylistPagination,
   PlaylistResponse,
   UpdatePlaylistRequest,
   UpdatePlaylistResponse,
+  Playlist => ProtoPlaylist,
   PlaylistRequest => ProtoPlaylistRequest,
   PlaylistsService => PlaylistsTwirpService,
   UpdatePlaylistArtworkRequest => UpdatePlaylistArtworkTwirpRequest,
@@ -42,7 +43,8 @@ class PlaylistsService(
     playlistsWritesTwirpService: PlaylistsWritesTwirpService,
     exceptionCollector: ExceptionCollector,
     hocuspocusService: HocuspocusService,
-    playlistProtoMapper: PlaylistProtoMapper = new PlaylistProtoMapper()
+    playlistProtoMapper: PlaylistProtoMapper = new PlaylistProtoMapper(),
+    rollout: Rollout
 ) {
 
   def fetchPlaylistTracks(
@@ -181,15 +183,22 @@ class PlaylistsService(
     }
   }
 
+  private val disableArtworkUpdateRollout = RolloutFeature("disable_artwork_update")
+
   private def updatePlaylistArtwork(
       session: UserSession,
       playlistUrn: Urn,
       playlistArtworkRequest: UpdatePlaylistArtworkRequest
-  ): OutcomeF[Unit] =
-    for {
-      _ <- updateArtwork(session, playlistUrn, playlistArtworkRequest)
-      _ <- Future.Unit.outcomeF
-    } yield ()
+  ): OutcomeF[Unit] = {
+    rollout.isActive(disableArtworkUpdateRollout).outcomeF.flatMap {
+      case true => Future.Unit.outcomeF
+      case false =>
+        for {
+          _ <- updateArtwork(session, playlistUrn, playlistArtworkRequest)
+          _ <- Future.Unit.outcomeF
+        } yield ()
+    }
+  }
 
   private def updateArtwork(
       session: UserSession,
