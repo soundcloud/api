@@ -160,7 +160,7 @@ MEMORY_REQUEST_replicas = 2Gi
 MEMORY_REQUEST = $(if $(MEMORY_REQUEST_$(ZONES)),$(MEMORY_REQUEST_$(ZONES)),$(error MEMORY_REQUEST is not set for ZONES $(ZONES)))
 
 deploy-prometheus:
-	sc prometheus deploy --zones $(ZONES) -s api-public -e production \
+	sc prometheus deploy --zones $(ZONES) -s api-public \
 		--cpu.request=$(CPU_REQUEST) \
 		--memory.request=$(MEMORY_REQUEST) \
 		--volume-size=150Gi \
@@ -168,6 +168,7 @@ deploy-prometheus:
 		--rule=https://ent.int.s-cloud.net/prometheus/rules/prometheus_base.yml \
 		--rule=https://ent.int.s-cloud.net/prometheus/rules/jvmkit.yml \
 		--rule=https://ent.int.s-cloud.net/prometheus/rules/canary_vs_release.yml \
+		--env=production
 
 GITHUB_SHA ?= HEAD
 publish-changelog:
