@@ -202,7 +202,7 @@ class Clients(
 
   val userTracksService = new UserTracksService(tracksService, trackmetadataClient)
   val trackUpdateService =
-    new TrackUpdateService(trackCoordinatorClient, okidokiClient, hocuspocusClient, tracksService, rolloutClient)
+    new TrackUpdateService(trackCoordinatorClient, okidokiClient, hocuspocusClient, tracksService)
   val similarTracksService = new SimilarTracksService(tracksService, systemPlaylistsClient)
   val playlistService =
     new PlaylistsService(
@@ -211,8 +211,7 @@ class Clients(
       okidokiClient,
       playlistsWritesTwirpClient,
       exceptionCollector,
-      hocuspocusClient,
-      rollout = rolloutClient
+      hocuspocusClient
     )
   val likesService =
     new LikesService(

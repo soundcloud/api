@@ -16,7 +16,6 @@ import com.soundcloud.apipublic.test.UnitSpecification
 import com.soundcloud.apipublic.test.fixtures.Fixtures
 import com.soundcloud.hocuspocus.{HocuspocusService, Image, Kind, Raw}
 import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.jvmkit.module.rollout.{Rollout, RolloutFeature}
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps.JvmkitSessionExt
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
@@ -33,13 +32,12 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
     val okidokiClient = mock[OkidokiClient]
     val hocuspocusService = mock[HocuspocusService]
     val trackService = mock[TrackRepresentationsService]
-    val rollout = mock[Rollout]
 
     val mockTrackRepresentation = createTrackRepresentationFromVisibleTrack()
     val ownerSession = new UserSessionBuilder().setUser(mockTrackRepresentation.user.urn).build
 
     val trackUpdateService =
-      new TrackUpdateService(trackCoordinatorClient, okidokiClient, hocuspocusService, trackService, rollout)
+      new TrackUpdateService(trackCoordinatorClient, okidokiClient, hocuspocusService, trackService)
 
     def setupMocksForTrackService(trackUrn: Urn, expectedResponse: Option[TrackRepresentation]) = {
       when(trackService.track(ownerSession, TrackRequest(trackUrn, None))).thenReturn(
@@ -83,12 +81,6 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
         )
       ).thenReturn(Future.value(Image(kind = Kind.ARTWORKS, originUri = "s3://bucket/filename")))
     }
-
-    when(rollout.isActive(RolloutFeature("disable_artwork_update"))).thenReturn(Future(false))
-  }
-
-  trait RolloutEnabledContext extends Context {
-    when(rollout.isActive(RolloutFeature("disable_artwork_update"))).thenReturn(Future(true))
   }
 
   "#updateTrack" >> {
@@ -179,7 +171,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
     }
 
     "album artwork" >> {
-      trait SuccessContext extends Context {
+      trait SuccessContent extends Context {
         val bytes = ByteArray("i-am-an-image".getBytes(): _*)
         val trackArtworkMetaRequest = TrackArtworkUpdateRequest(imageData = bytes)
         val trackArtworkUpdateResult = TrackArtworkUpdateResult(bucket = "bucket", filename = "filename")
@@ -208,7 +200,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
         )
       }
 
-      "Can update track and album data" in new SuccessContext {
+      "Can update track and album data" in new SuccessContent {
         setupMocksForUpdateTrackMeta(
           trackUrn,
           trackAssetDataUpdateRequest = None,
@@ -237,7 +229,7 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
         }
       }
 
-      "Can update only album data" in new SuccessContext {
+      "Can update only album data" in new SuccessContent {
         setupMocksForUpdateTrackMeta(
           trackUrn,
           trackAssetDataUpdateRequest = None,
@@ -287,36 +279,6 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
             ownerSession
           )
         ) must throwAn[UnhandledOutcomeException]
-      }
-
-      "It does not upload artwork if artwork update is disabled" in new SuccessContext with RolloutEnabledContext {
-        setupMocksForUpdateTrackMeta(
-          trackUrn,
-          trackAssetDataUpdateRequest = None,
-          updateTrackMetadata = emptyTrackUpdate,
-          None,
-          Good(mockTrackMetadataUpdateResult)
-        )
-
-        setupMocksForTrackService(mockTrackRepresentation.urn, Some(mockTrackRepresentation))
-
-        val result = Await.result(
-          trackUpdateService.updateTrack(
-            Some(trackArtworkMetaRequest),
-            maybeUpdateTrackAsset = None,
-            trackMetadata = emptyTrackUpdate,
-            mockTrackRepresentation.urn,
-            ownerSession
-          )
-        )
-
-        there was noCallsTo(hocuspocusService)
-
-        result match {
-          case Good(track) =>
-            Json.toJson(track) === Json.toJson(expectedResponse)
-          case _ =>
-        }
       }
     }
 

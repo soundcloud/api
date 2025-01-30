@@ -11,7 +11,6 @@ import com.soundcloud.apipublic.client.tracks.TrackRequest
 import com.soundcloud.apipublic.handler.support.error.UnhandledOutcomeException
 import com.soundcloud.apipublic.handler.support.requestParser._
 import com.soundcloud.apipublic.service.artwork.HocuspocusUtils
-import com.soundcloud.jvmkit.module.rollout.{Rollout, RolloutFeature}
 import com.twitter.util.Future
 
 import scala.collection.immutable.HashSet
@@ -20,8 +19,7 @@ class TrackUpdateService(
     trackCoordinatorClient: TrackCoordinatorClient,
     moshimoshiClient: MoshimoshiClient,
     hocuspocusService: HocuspocusService,
-    trackRepresentationsService: TrackRepresentationsService,
-    rollout: Rollout
+    trackRepresentationsService: TrackRepresentationsService
 ) {
   def updateTrack(
       maybeUpdateAlbumArt: Option[TrackArtworkUpdateRequest],
@@ -69,23 +67,17 @@ class TrackUpdateService(
     }
   }
 
-  private val disableArtworkUpdateRollout = RolloutFeature("disable_artwork_update")
-
   private def uploadArtworkToS3(
       session: UserSession,
       maybeUpdateAlbumArt: Option[TrackArtworkUpdateRequest]
   ): Future[Option[TrackArtworkUpdateResult]] = {
-    rollout.isActive(disableArtworkUpdateRollout).flatMap {
-      case true => Future.None
-      case false =>
-        maybeUpdateAlbumArt match {
-          case Some(artworkMetadata) =>
-            hocuspocusService
-              .storeImage(HocuspocusUtils.toRaw(artworkMetadata.imageData, Some(session)))
-              .map(image => createTrackArtworkUpdate(image))
+    maybeUpdateAlbumArt match {
+      case Some(artworkMetadata) =>
+        hocuspocusService
+          .storeImage(HocuspocusUtils.toRaw(artworkMetadata.imageData, Some(session)))
+          .map(image => createTrackArtworkUpdate(image))
 
-          case _ => Future.None
-        }
+      case _ => Future.None
     }
   }
 
