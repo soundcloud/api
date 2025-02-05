@@ -163,7 +163,8 @@ deploy-prometheus:
 	sc prometheus deploy --zones $(ZONES) -s api-public \
 		--cpu.request=$(CPU_REQUEST) \
 		--memory.request=$(MEMORY_REQUEST) \
-		--volume-size=150Gi \
+		--volume-size=200Gi \
+		--retention=360h \
 		--rule=config/prometheus.yml \
 		--rule=https://ent.int.s-cloud.net/prometheus/rules/prometheus_base.yml \
 		--rule=https://ent.int.s-cloud.net/prometheus/rules/jvmkit.yml \
