@@ -18,12 +18,16 @@ DEFAULT_REQUEST_LATENCY_BUCKETS="0.001,0.005,0.010,0.020,0.050,0.100,0.200,0.300
 
 AUTHENTICATOR_SRV_RECORD="dnssrv!http.api.prod.authenticator.srv.${ZONE}.s-cloud.net."
 DYNAMIC_HTTP_ADDRESS="https://unused.address.to.init.dynamic.client"
-FOLLOWS_SRV_RECORD="dnssrv!http.api.prod.follows.srv.${ZONE}.s-cloud.net."
 GOBBLY_SRV_RECORD="dnssrv!http.api.prod.gobbly.srv.db.s-cloud.net."
-GATEKEEPER_SRV_RECORD="dnssrv!http.api.prod.gatekeeper.srv.${ZONE}.s-cloud.net."
 GEOIP_SRV_RECORD="dnssrv!http.geoip2http.prod.geoip.srv.${ZONE}.s-cloud.net."
 REPOSTS_SRV_RECORD="dnssrv!http.api.prod.reposts.srv.${ZONE}.s-cloud.net."
 REPOSTS_CLIENT_REQUEST_TIMEOUT_MILLIS="5000"
+
+FOLLOWS_SRV_RECORD="dnssrv!http.api.prod.follows.srv.${ZONE}.s-cloud.net."
+FOLLOWS_CLIENT_REQUEST_TIMEOUT_MILLIS=3000
+
+GATEKEEPER_SRV_RECORD="dnssrv!http.api.prod.gatekeeper.srv.${ZONE}.s-cloud.net."
+GATEKEEPER_CLIENT_REQUEST_TIMEOUT_MILLIS=3000
 
 # Playlists and listings are being extracted out of Mothership, this configuration value is in anticipation of that.
 PLAYLIST_SRV_RECORD="dnssrv!http.moshimoshi.prod.mothership.srv.${ZONE}.s-cloud.net."
@@ -57,6 +61,7 @@ OKIDOKI_EXCESS_TIMEOUT_CLIENT_REQUEST_TIMEOUT_MILLIS=5000
 AUTHENTICATOR_CLIENT_FAILURE_ACCRUAL_REQ_SUCCESS_RATE="0.99"
 AUTHENTICATOR_CLIENT_FAILURE_ACCRUAL_WINDOW="1000"
 AUTHENTICATOR_CLIENT_FAILURE_ACCRUAL_MARK_DEAD_FOR_MILLIS="100"
+AUTHENTICATOR_CLIENT_REQUEST_TIMEOUT_MILLIS=3000
 
 TRACKMETADATA_SRV_RECORD=dnssrv!http.api.prod.trackmetadata.srv.${ZONE}.s-cloud.net.
 TRACKMETADATA_CLIENT_REQUEST_TIMEOUT_MILLIS=1500
@@ -69,6 +74,7 @@ TRACK_ACCESS_RECORDER_SRV_RECORD=dnssrv!http.moshimoshi.prod.mothership.srv.${ZO
 TRACK_ACCESS_RECORDER_CLIENT_REQUEST_TIMEOUT_MILLIS="3000"
 
 OAUTH_AUTHORIZATION_SRV_RECORD=dnssrv!http.oauth.prod.authenticator.srv.${ZONE}.s-cloud.net.
+OAUTH_AUTHORIZATION_CLIENT_REQUEST_TIMEOUT_MILLIS=3000
 
 HOCUSPOCUS_SRV_RECORD=dnssrv!http.api.prod.hocuspocus.srv.db.s-cloud.net.
 HOCUSPOCUS_CLIENT_REQUEST_TIMEOUT_MILLIS=5000
@@ -83,6 +89,7 @@ MOSHIMOSHI_SRV_RECORD=dnssrv!http.moshimoshi.prod.mothership.srv.${ZONE}.s-cloud
 COMMENTS_SRV_RECORD=dnssrv!http.api.prod.comments.srv.${ZONE}.s-cloud.net.
 
 SUBMARINE_SRV_RECORD="dnssrv!http.api.prod.submarine.srv.${ZONE}.s-cloud.net."
+SUBMARINE_CLIENT_REQUEST_TIMEOUT_MILLIS=3000
 
 SEARCHSDUI_CLIENT_FAILURE_ACCRUAL_MARK_DEAD_FOR_MILLIS=500
 SEARCHSDUI_CLIENT_REQUEST_TIMEOUT_MILLIS=3000
