@@ -96,6 +96,6 @@ SEARCHSDUI_CLIENT_REQUEST_TIMEOUT_MILLIS=3000
 SEARCHSDUI_SRV_RECORD=dnssrv!http.api.publicapi.search.srv.db.s-cloud.net.
 
 SECURE_SRV_RECORD=dnssrv!http.oauth.prod.api-auth.srv.${ZONE}.s-cloud.net.
-SECURE_CLIENT_REQUEST_TIMEOUT_MILLIS=2000
+SECURE_CLIENT_REQUEST_TIMEOUT_MILLIS=5000
 
 AUTHENTICATOR_DISPENSER_SRV_RECORD="dnssrv!http.dispenser.prod.authenticator.srv.db.s-cloud.net."
