@@ -5,7 +5,6 @@ import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBui
 import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.{LoggedInUserSession, UserSession}
-import com.soundcloud.apipublic.client.followcounts.FollowCountsClient
 import com.soundcloud.apipublic.client.follows._
 import com.soundcloud.apipublic.client.follows.representation._
 import com.soundcloud.apipublic.client.follows.representation.follow._
@@ -17,11 +16,10 @@ import com.soundcloud.apipublic.client.follows.representation.unfollow.{
   UserNotFound => UnfollowUserNotFound
 }
 import com.soundcloud.apipublic.client.mothership.OkidokiClient
-import com.soundcloud.apipublic.client.mothership.response.mapper.UserRepresentationMapper
 import com.soundcloud.apipublic.client.mothership.response.representation.UserRepresentation
-import com.soundcloud.apipublic.client.reposts.RepostsClient
 import com.soundcloud.apipublic.service.representation.collection.Collection
 import com.soundcloud.apipublic.support.{ErrorResponse, UserUrnUtil}
+import com.soundcloud.apipublic.service.users.UserRepresentationsService
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, Return, Throw, Try}
 import org.joda.time.format.DateTimeFormat
@@ -32,8 +30,7 @@ class UserFollowHandler(
     userAuthentication: UserAuthentication,
     okidoki: OkidokiClient,
     follows: FollowsClient,
-    followCountsClient: FollowCountsClient,
-    repostsClient: RepostsClient,
+    userRepresentationsService: UserRepresentationsService,
     baseUrl: String
 ) {
   val formatter = DateTimeFormat.forPattern("yyyy/M/d")
@@ -233,15 +230,7 @@ class UserFollowHandler(
   }
 
   private def fetchUsers(session: UserSession, urns: Set[Urn]): Future[List[UserRepresentation]] = {
-    for {
-      (users, followCountsMap, repostCountsByUrn) <- Future.join(
-        okidoki.fetch(session, urns),
-        followCountsClient
-          .counts(urns.toSeq)
-          .map(_.map(followCounts => (followCounts.userUrn, followCounts)).toMap),
-        repostsClient.getRepostCountsByUrnWithFallback(session, urns)
-      )
-    } yield users.map(UserRepresentationMapper(_, Some(followCountsMap), Some(repostCountsByUrn)))
+    userRepresentationsService.users(session, urns.toSeq, fetchSubscriptions = false)
   }
 
   private def findUserAge(session: UserSession, userUrn: Urn): Future[Option[Int]] = {

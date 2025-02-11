@@ -48,7 +48,7 @@ class Handlers(
   )
 
   val userFollowHandler =
-    new UserFollowHandler(userAuthentication, okidokiClient, followsClient, followCountsClient, repostsClient, baseUrl)
+    new UserFollowHandler(userAuthentication, okidokiClient, followsClient, userRepresentationsService, baseUrl)
 
   val searchHandler: SearchHandler = {
     new SearchHandler(

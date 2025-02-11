@@ -9,6 +9,7 @@ import com.soundcloud.apipublic.client.mothership.response.representation.UserRe
 import com.soundcloud.apipublic.client.reposts.RepostsClient
 import com.soundcloud.apipublic.service.users.UserOrderingUtils.sortByProvidedUrns
 import com.soundcloud.apipublic.subscriptions.SubmarineClient
+import com.soundcloud.apipublic.subscriptions.SubmarineCreatorSubscription
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionHandler.FutureExtensions
 import com.twitter.util.Future
@@ -33,7 +34,8 @@ class UserRepresentationsService(
 
   def users(
       session: UserSession,
-      urns: Seq[Urn]
+      urns: Seq[Urn],
+      fetchSubscriptions: Boolean = true
   ): Future[List[UserRepresentation]] = {
     val uniqueUrns = urns.toSet
     for {
@@ -44,7 +46,7 @@ class UserRepresentationsService(
           .map(_.map(followCounts => (followCounts.userUrn, followCounts)).toMap),
         repostsClient.getRepostCountsByUrnWithFallback(session, uniqueUrns),
         getTotalLikesCount(uniqueUrns),
-        submarineClient.fetchActiveCreatorSubscriptions(session, uniqueUrns)
+        maybeGetSubscriptions(fetchSubscriptions, session, uniqueUrns)
       )
       fullUsers = users.map(
         UserRepresentationMapper(
@@ -59,7 +61,16 @@ class UserRepresentationsService(
     } yield sortByProvidedUrns(fullUsers, urns).toList
   }
 
-  private def getTotalLikesCount(urns: Set[Urn]): Future[Map[Urn, Long]] =
+  private def maybeGetSubscriptions(
+      fetchSubscriptions: Boolean,
+      session: UserSession,
+      uniqueUrns: Set[Urn]
+  ): Future[Map[Urn, Option[SubmarineCreatorSubscription]]] = {
+    if (fetchSubscriptions) submarineClient.fetchActiveCreatorSubscriptions(session, uniqueUrns)
+    else Future.value(Map.empty)
+  }
+
+  def getTotalLikesCount(urns: Set[Urn]): Future[Map[Urn, Long]] =
     likesClient
       .getUserLikeCountBatch(
         BatchGetUserLikeCountRequest(urns.map(_.toString).toSeq)
