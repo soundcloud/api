@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -18,7 +18,9 @@ type fakeUploader struct {
 	fn func(*uploadTrackRequest) (*uploadTrackResponse, error)
 }
 
-func (f fakeUploader) uploadTrack(r *uploadTrackRequest) (*uploadTrackResponse, error) { return f.fn(r) }
+func (f fakeUploader) uploadTrack(r *uploadTrackRequest) (*uploadTrackResponse, error) {
+	return f.fn(r)
+}
 
 func TestValidMultipart(t *testing.T) {
 	body := []byte(
@@ -47,7 +49,7 @@ func TestValidMultipart(t *testing.T) {
 		t.Fatalf("Expected no error, got %v", err)
 	}
 
-	bs, _ := ioutil.ReadAll(res.request.Body)
+	bs, _ := io.ReadAll(res.request.Body)
 	if !bytes.Equal(body, bs) {
 		t.Errorf("Expected request to be unmodified %s, %s", body, bs)
 	}
@@ -127,7 +129,7 @@ func TestUnescapedFilename(t *testing.T) {
 		t.Errorf("Expected an upload, got none")
 	}
 
-	bs, _ := ioutil.ReadAll(res.request.Body)
+	bs, _ := io.ReadAll(res.request.Body)
 	if bytes.Contains(bs, []byte("track[asset_data]")) {
 		t.Errorf("Expected request request to be modified %s", bs)
 	}
@@ -169,6 +171,115 @@ func TestInvalidMultipart(t *testing.T) {
 		}
 		if _, ok := err.(clientError); !ok {
 			t.Errorf("Expected clientError, got: %s", err)
+		}
+	}
+}
+
+func TestUnsupportedMultipartTrackFields(t *testing.T) {
+	tests := [...]struct {
+		body []byte
+	}{
+		0: {
+			body: []byte(
+				"--------------------------becf7c3b48144d16" +
+					crlf + "Content-Disposition: form-data; name=\"track[uid]\"" +
+					crlf + "" +
+					crlf + "user-generated-upload-id" +
+					crlf + "--------------------------becf7c3b48144d16--" +
+					crlf),
+		},
+		1: {
+			body: []byte(
+				"--------------------------becf7c3b48144d16" +
+					crlf + "Content-Disposition: form-data; name=\"track[title]\"" +
+					crlf + "" +
+					crlf + "My Track" +
+					crlf + "--------------------------becf7c3b48144d16" +
+					crlf + "Content-Disposition: form-data; name=\"track[original_filename]\"" +
+					crlf + "" +
+					crlf + "my_track.wav" +
+					crlf + "--------------------------becf7c3b48144d16--" +
+					crlf),
+		},
+		2: {
+			body: []byte(
+				"--------------------------becf7c3b48144d16" +
+					crlf + "Content-Disposition: form-data; name=\"track[replacing_uid]\"" +
+					crlf + "" +
+					crlf + "user-generated-upload-id" +
+					crlf + "--------------------------becf7c3b48144d16" +
+					crlf + "Content-Disposition: form-data; name=\"track[asset_data]\"; filename=\"my_track.wav\"" +
+					crlf + "Content-Type: application/octet-stream" +
+					crlf + "" +
+					crlf + "12345" +
+					crlf + "" +
+					crlf + "--------------------------becf7c3b48144d16--" +
+					crlf),
+		},
+		3: {
+			body: []byte(
+				"--------------------------becf7c3b48144d16" +
+					crlf + "Content-Disposition: form-data; name=\"track[title]\"" +
+					crlf + "" +
+					crlf + "My Track" +
+					crlf + "--------------------------becf7c3b48144d16" +
+					crlf + "Content-Disposition: form-data; name=\"track[replacing_original_filename]\"" +
+					crlf + "" +
+					crlf + "my_track.wav" +
+					crlf + "--------------------------becf7c3b48144d16--" +
+					crlf),
+		},
+		4: {
+			body: []byte(
+				"--------------------------becf7c3b48144d16" +
+					crlf + "Content-Disposition: form-data; name=\"track[title]\"" +
+					crlf + "" +
+					crlf + "My Track" +
+					crlf + "--------------------------becf7c3b48144d16" +
+					crlf + "Content-Disposition: form-data; name=\"track[uid]\"" +
+					crlf + "" +
+					crlf + "user-generated-upload-id" +
+					crlf + "--------------------------becf7c3b48144d16" +
+					crlf + "Content-Disposition: form-data; name=\"track[original_filename]\"" +
+					crlf + "" +
+					crlf + "my_track.wav" +
+					crlf + "--------------------------becf7c3b48144d16--" +
+					crlf),
+		},
+	}
+
+	for _, tt := range tests {
+		service := &service{}
+
+		// TODO is there a generic way to do this rather than repeating the tests twice?
+		_, err := service.createTrack(&createTrackRequest{
+			boundary: "------------------------becf7c3b48144d16",
+			request: func() *http.Request {
+				return httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(tt.body))
+			}(),
+		})
+
+		if err == nil {
+			t.Error("Expected to fail when invalid form names present")
+		}
+
+		if _, ok := err.(clientError); !ok {
+			t.Errorf("Expected clientError, got: %s", err)
+		}
+
+		_, gErr := service.generic(&genericRequest{
+			boundary: "------------------------becf7c3b48144d16",
+			request: func() *http.Request {
+				return httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(tt.body))
+			}(),
+		})
+
+		if gErr == nil {
+			t.Error("Expected to fail when invalid form names present")
+		}
+
+		if _, ok := gErr.(clientError); !ok {
+			t.Errorf("Expected clientError, got: %s", gErr)
 		}
 	}
 }
@@ -255,39 +366,42 @@ func TestExtractAuthToken(t *testing.T) {
 			t.Errorf("Expected Authorization header to be %s, got %s", want.auth, got)
 		}
 
-		if got, _ := ioutil.ReadAll(res.request.Body); !bytes.Equal(want.body, got) {
+		if got, _ := io.ReadAll(res.request.Body); !bytes.Equal(want.body, got) {
 			t.Errorf("Expected body to be %s, got %s", want.body, got)
 		}
 	}
 }
 
 func TestStoreTrackAssetData(t *testing.T) {
-	body := []byte(
-		"--------------------------6808b4f61ea0e5a2" +
-			crlf + "Content-Disposition: form-data; name=\"track[asset_data]\"; filename=\"my_track.wav\"" +
-			crlf + "Content-Type: application/octet-stream" +
-			crlf + "" +
-			crlf + "12345" +
-			crlf + "" +
-			crlf + "--------------------------6808b4f61ea0e5a2" +
-			crlf + "Content-Disposition: form-data; name=\"track[artwork_data]\"; filename=\"my_track.jpg\"" +
-			crlf + "Content-Type: application/octet-stream" +
-			crlf + "" +
-			crlf + "<JPEG data; won't be modified>" +
-			crlf + "" +
-			crlf + "--------------------------6808b4f61ea0e5a2" +
-			crlf + "Content-Disposition: form-data; name=\"track[title]\"" +
-			crlf + "" +
-			crlf + "My Track" +
-			crlf + "--------------------------6808b4f61ea0e5a2--" +
-			crlf)
+	uploadFailedErr := errors.New("Upload failed")
 
 	tests := [...]struct {
-		body []byte
+		req  []byte
+		resp []byte
 		fn   func(*uploadTrackRequest) (*uploadTrackResponse, error)
+		err  error
 	}{
 		0: {
-			body: []byte(
+			req: []byte(
+				"--------------------------6808b4f61ea0e5a2" +
+					crlf + "Content-Disposition: form-data; name=\"track[asset_data]\"; filename=\"my_track.wav\"" +
+					crlf + "Content-Type: application/octet-stream" +
+					crlf + "" +
+					crlf + "12345" +
+					crlf + "" +
+					crlf + "--------------------------6808b4f61ea0e5a2" +
+					crlf + "Content-Disposition: form-data; name=\"track[artwork_data]\"; filename=\"my_track.jpg\"" +
+					crlf + "Content-Type: application/octet-stream" +
+					crlf + "" +
+					crlf + "<JPEG data; won't be modified>" +
+					crlf + "" +
+					crlf + "--------------------------6808b4f61ea0e5a2" +
+					crlf + "Content-Disposition: form-data; name=\"track[title]\"" +
+					crlf + "" +
+					crlf + "My Track" +
+					crlf + "--------------------------6808b4f61ea0e5a2--" +
+					crlf),
+			resp: []byte(
 				"--------------------------6808b4f61ea0e5a2" +
 					crlf + "Content-Disposition: form-data; name=\"track[original_filename]\"" +
 					crlf + "" +
@@ -310,43 +424,92 @@ func TestStoreTrackAssetData(t *testing.T) {
 					crlf),
 			fn: func(r *uploadTrackRequest) (*uploadTrackResponse, error) {
 				// Echo the track data (without whitespace) as the track uid
-				data, _ := ioutil.ReadAll(r.data)
+				data, _ := io.ReadAll(r.data)
 
 				return &uploadTrackResponse{
 					uid: string(bytes.TrimSpace(data)),
 				}, nil
 			},
+			err: nil,
 		},
 		1: {
-			body: []byte{},
+			req: []byte(
+				"--------------------------6808b4f61ea0e5a2" +
+					crlf + "Content-Disposition: form-data; name=\"track[asset_data]\"; filename=\"my_track.wav\"" +
+					crlf + "Content-Type: application/octet-stream" +
+					crlf + "" +
+					crlf + "12345" +
+					crlf + "" +
+					crlf + "--------------------------6808b4f61ea0e5a2" +
+					crlf + "Content-Disposition: form-data; name=\"track[artwork_data]\"; filename=\"my_track.jpg\"" +
+					crlf + "Content-Type: application/octet-stream" +
+					crlf + "" +
+					crlf + "<JPEG data; won't be modified>" +
+					crlf + "" +
+					crlf + "--------------------------6808b4f61ea0e5a2" +
+					crlf + "Content-Disposition: form-data; name=\"track[title]\"" +
+					crlf + "" +
+					crlf + "My Track" +
+					crlf + "--------------------------6808b4f61ea0e5a2--" +
+					crlf),
+			resp: []byte{},
 			fn: func(r *uploadTrackRequest) (*uploadTrackResponse, error) {
-				return nil, errors.New("Upload failed")
+				return nil, uploadFailedErr
 			},
+			err: uploadFailedErr,
+		},
+		2: {
+			req: []byte(
+				"--------------------------6808b4f61ea0e5a2" +
+					crlf + "Content-Disposition: form-data; name=\"track[asset_data]\"; filename=\"my_track.wav\"" +
+					crlf + "Content-Type: application/octet-stream" +
+					crlf + "" +
+					crlf + "12345" +
+					crlf + "" +
+					crlf + "--------------------------6808b4f61ea0e5a2" +
+					crlf + "Content-Disposition: form-data; name=\"track[uid]\"" +
+					crlf + "" +
+					crlf + "user-specified-upload-id" +
+					crlf + "" +
+					crlf + "--------------------------6808b4f61ea0e5a2" +
+					crlf + "Content-Disposition: form-data; name=\"track[title]\"" +
+					crlf + "" +
+					crlf + "My Track" +
+					crlf + "--------------------------6808b4f61ea0e5a2--" +
+					crlf),
+			resp: []byte{},
+			fn: func(r *uploadTrackRequest) (*uploadTrackResponse, error) {
+				// Echo the track data (without whitespace) as the track uid
+				data, _ := io.ReadAll(r.data)
+
+				return &uploadTrackResponse{
+					uid: string(bytes.TrimSpace(data)),
+				}, nil
+			},
+			err: clientError{},
 		},
 	}
 
-	for _, want := range tests {
+	for _, test := range tests {
 		service := &service{
-			upload: &fakeUploader{fn: want.fn},
+			upload: &fakeUploader{fn: test.fn},
 		}
 
 		res, err := service.createTrack(&createTrackRequest{
 			boundary: "------------------------6808b4f61ea0e5a2",
 			request: func() *http.Request {
-				return httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(body))
+				return httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(test.req))
 			}(),
 		})
 
-		if len(want.body) == 0 {
-			// The test didn't expect a body, the request should fail.
-			if err == nil {
-				t.Error("Expected failed upload error")
-			}
-			continue
+		if got := err; test.err != got {
+			t.Errorf("Expected error to be %s, got %s", test.err, got)
 		}
 
-		if got, _ := ioutil.ReadAll(res.request.Body); !bytes.Equal(want.body, got) {
-			t.Errorf("Expected body to be %s, got %s", want.body, got)
+		if len(test.resp) != 0 {
+			if got, _ := io.ReadAll(res.request.Body); !bytes.Equal(test.resp, got) {
+				t.Errorf("Expected body to be %s, got %s", test.resp, got)
+			}
 		}
 	}
 }

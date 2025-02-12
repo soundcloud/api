@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
+	"regexp"
 	"strings"
 )
 
@@ -47,7 +47,7 @@ func (e clientError) Error() string {
 	return fmt.Sprintf("client error: %s", e.cause)
 }
 
-type fileNameValidationError struct {}
+type fileNameValidationError struct{}
 
 func (e fileNameValidationError) Error() string {
 	return fmt.Sprintf("file name validation error")
@@ -83,6 +83,7 @@ func (s service) rewriteMultipartRequest(r *http.Request, boundary string, fn re
 	}
 
 	for {
+
 		p, err := reader.NextPart()
 		if err != nil {
 			if err == io.EOF {
@@ -91,6 +92,11 @@ func (s service) rewriteMultipartRequest(r *http.Request, boundary string, fn re
 			}
 			_ = writer.Close()
 			return nil, clientError{cause: err}
+		}
+
+		if err := s.validateFormName(p); err != nil {
+			_ = writer.Close()
+			return nil, err
 		}
 
 		if err := fn(p, writer, header); err != nil {
@@ -106,7 +112,26 @@ func (s service) rewriteMultipartRequest(r *http.Request, boundary string, fn re
 	return s.modifyRequest(r, header, body), nil
 }
 
+var /* const */ forbiddenTrackFields = []string{
+	"uid",
+	"original_filename",
+	"replacing_uid",
+	"replacing_original_filename",
+}
+
+var /* const */ forbiddenFieldPattern = regexp.MustCompile(
+	fmt.Sprintf(`track\[(%s)\]`, strings.Join(forbiddenTrackFields, "|")),
+)
+
+func (s service) validateFormName(p *multipart.Part) error {
+	if forbiddenFieldPattern.MatchString(p.FormName()) {
+		return clientError{}
+	}
+	return nil
+}
+
 func (s service) rewriteTrackPart(p *multipart.Part, w *multipart.Writer, header http.Header) error {
+
 	if isTrackUpload(p) {
 		upload, err := s.uploadTrackAssetData(p, w)
 		if err != nil {
@@ -169,7 +194,7 @@ func (s service) modifyRequest(r *http.Request, header http.Header, body *bytes.
 	}
 
 	r.ContentLength = int64(body.Len())
-	r.Body = ioutil.NopCloser(body)
+	r.Body = io.NopCloser(body)
 
 	return r
 }
