@@ -1,5 +1,5 @@
 ---
-name: api-public-trigger-gha-workflows
+name: publish-release
 env:
   SC_PIPELINE_GROUP: api-team
 on:
@@ -15,18 +15,19 @@ on:
         required: true
         type: string
 concurrency:
-  group: "${{ github.workflow }}-${{ inputs.ref }}-trigger-gha-workflows"
+  group: "${{ github.workflow }}-${{ inputs.ref }}-publish-release"
 jobs:
-  repository-dispatches:
+  publish-release:
     runs-on:
     - self-hosted
     - i-build-prod
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
+    - name: checkout repo
+      uses: actions/checkout@v3
       with:
-          ref: ${{ inputs.ref }}
-    - name: "./.github/workflows/trigger-repos.sh"
+        fetch-depth: 0
+        ref: ${{ inputs.ref }}
+    - name: make publish-changelog
       env:
         GH_TOKEN: ${{ secrets.SC_GITHUB_BOT_PAT }}
-      run: "./.github/workflows/trigger-repos.sh"
+      run: make publish-changelog

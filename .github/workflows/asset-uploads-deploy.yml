@@ -1,5 +1,5 @@
 ---
-name: api-public-canary
+name: asset-uploads-deploy
 env:
   SC_PIPELINE_GROUP: api-team
 on:
@@ -15,11 +15,12 @@ on:
         required: true
         type: string
 concurrency:
-  group: "${{ github.workflow }}-${{ inputs.ref }}-canary"
+  group: "${{ github.workflow }}-${{ inputs.ref }}-deploy"
 jobs:
-  canary-api:
+  deploy-db:
     env:
-      ZONES: db
+      ENV: production
+      ZONES: primary,replicas
     runs-on:
     - self-hosted
     - i-deploy-prod
@@ -30,5 +31,5 @@ jobs:
         ref: ${{ inputs.ref }}
     - name: Set up sc-tools
       uses: soundcloud/sc-github-actions/sc-tools@master
-    - name: make canary-api
-      run: make canary-api
+    - name: make -C asset-uploads deploy
+      run: make -C asset-uploads deploy

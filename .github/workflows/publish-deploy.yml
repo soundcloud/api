@@ -1,5 +1,5 @@
 ---
-name: api-public-end-to-end-tests
+name: publish-deploy
 env:
   SC_PIPELINE_GROUP: api-team
 on:
@@ -15,12 +15,14 @@ on:
         required: true
         type: string
 concurrency:
-  group: "${{ github.workflow }}-${{ inputs.ref }}-end-to-end-tests"
+  group: "${{ github.workflow }}-${{ inputs.ref }}-publish-deploy"
 jobs:
-  end-to-end-tests:
+  publish-deploy-db:
+    env:
+      ZONES: db
     runs-on:
     - self-hosted
-    - i-build-prod
+    - i-deploy-prod
     steps:
     - name: Checkout repo
       uses: actions/checkout@v4
@@ -28,14 +30,14 @@ jobs:
         ref: ${{ inputs.ref }}
     - name: Set up sc-tools
       uses: soundcloud/sc-github-actions/sc-tools@master
-    - name: make end-to-end-test
-      run: make end-to-end-test
-    - name: make post e2e success to slack
-      run: make post-to-slack
-  contract-tests:
+    - name: make publish-deploy
+      run: make publish-deploy
+  publish-deploy-replicas:
+    env:
+      ZONES: replicas
     runs-on:
     - self-hosted
-    - i-build-prod
+    - i-deploy-prod
     steps:
     - name: Checkout repo
       uses: actions/checkout@v4
@@ -43,5 +45,5 @@ jobs:
         ref: ${{ inputs.ref }}
     - name: Set up sc-tools
       uses: soundcloud/sc-github-actions/sc-tools@master
-    - name: make contract-test
-      run: make contract-test
+    - name: make publish-deploy
+      run: make publish-deploy

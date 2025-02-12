@@ -1,5 +1,5 @@
 ---
-name: api-public-end-to-end-tests-daily
+name: end-to-end-tests-daily
 env:
   SC_PIPELINE_GROUP: api-team
 on:

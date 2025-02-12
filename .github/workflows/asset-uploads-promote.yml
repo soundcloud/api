@@ -1,5 +1,5 @@
 ---
-name: api-public-asset-uploads-publish-deploy
+name: asset-uploads-promote
 env:
   SC_PIPELINE_GROUP: api-team
 on:
@@ -15,12 +15,9 @@ on:
         required: true
         type: string
 concurrency:
-  group: "${{ github.workflow }}-${{ inputs.ref }}-publish-deploy"
+  group: "${{ github.workflow }}-${{ inputs.ref }}-promote"
 jobs:
-  publish-deploy-db:
-    env:
-      ENV: production
-      ZONES: primary,replicas
+  promote:
     runs-on:
     - self-hosted
     - i-deploy-prod
@@ -31,5 +28,5 @@ jobs:
         ref: ${{ inputs.ref }}
     - name: Set up sc-tools
       uses: soundcloud/sc-github-actions/sc-tools@master
-    - name: make -C asset-uploads publish-deploy
-      run: make -C asset-uploads publish-deploy
+    - name: make -C asset-uploads promote-to-stable promote-to-release
+      run: make -C asset-uploads promote-to-stable promote-to-release

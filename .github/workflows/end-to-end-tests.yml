@@ -1,5 +1,5 @@
 ---
-name: api-public-deploy-prometheus
+name: end-to-end-tests
 env:
   SC_PIPELINE_GROUP: api-team
 on:
@@ -15,15 +15,12 @@ on:
         required: true
         type: string
 concurrency:
-  group: "${{ github.workflow }}-${{ inputs.ref }}-deploy-prometheus"
+  group: "${{ github.workflow }}-${{ inputs.ref }}-end-to-end-tests"
 jobs:
-  deploy-db:
-    env:
-      ZONES: db
-    environment: deploy-prometheus
+  end-to-end-tests:
     runs-on:
     - self-hosted
-    - i-deploy-prod
+    - i-build-prod
     steps:
     - name: Checkout repo
       uses: actions/checkout@v4
@@ -31,15 +28,14 @@ jobs:
         ref: ${{ inputs.ref }}
     - name: Set up sc-tools
       uses: soundcloud/sc-github-actions/sc-tools@master
-    - name: make deploy-prometheus
-      run: make deploy-prometheus
-  deploy-replicas:
-    env:
-      ZONES: replicas
-    environment: deploy-prometheus
+    - name: make end-to-end-test
+      run: make end-to-end-test
+    - name: make post e2e success to slack
+      run: make post-to-slack
+  contract-tests:
     runs-on:
     - self-hosted
-    - i-deploy-prod
+    - i-build-prod
     steps:
     - name: Checkout repo
       uses: actions/checkout@v4
@@ -47,5 +43,5 @@ jobs:
         ref: ${{ inputs.ref }}
     - name: Set up sc-tools
       uses: soundcloud/sc-github-actions/sc-tools@master
-    - name: make deploy-prometheus
-      run: make deploy-prometheus
+    - name: make contract-test
+      run: make contract-test

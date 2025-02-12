@@ -1,5 +1,5 @@
 ---
-name: api-public-pr
+name: pr
 env:
   SC_PIPELINE_GROUP: api-team
 on:
@@ -9,11 +9,11 @@ concurrency:
   group: "${{ github.workflow }}-${{ github.ref }}-main"
 jobs:
   call_api_public_pr_test:
-    name: call api-public-pr-test workflow
-    uses: "./.github/workflows/workflow-api-public-pr-test.yml"
+    name: call pr-test workflow
+    uses: "./.github/workflows/pr-test.yml"
     secrets: inherit
   call_api_public_pr_end_to_end_tests:
-    name: call api-public-pr-end-to-end-tests workflow
-    uses: "./.github/workflows/workflow-api-public-pr-end-to-end-tests.yml"
+    name: call pr-end-to-end-tests workflow
+    uses: "./.github/workflows/pr-end-to-end-tests.yml"
     secrets: inherit
     needs: call_api_public_pr_test

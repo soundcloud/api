@@ -1,5 +1,5 @@
 ---
-name: api-public-promote-to-stable
+name: canary
 env:
   SC_PIPELINE_GROUP: api-team
 on:
@@ -15,12 +15,14 @@ on:
         required: true
         type: string
 concurrency:
-  group: "${{ github.workflow }}-${{ inputs.ref }}-promote-to-stable"
+  group: "${{ github.workflow }}-${{ inputs.ref }}-canary"
 jobs:
-  promote-to-stable:
+  canary-api:
+    env:
+      ZONES: db
     runs-on:
     - self-hosted
-    - i-build-prod
+    - i-deploy-prod
     steps:
     - name: Checkout repo
       uses: actions/checkout@v4
@@ -28,5 +30,5 @@ jobs:
         ref: ${{ inputs.ref }}
     - name: Set up sc-tools
       uses: soundcloud/sc-github-actions/sc-tools@master
-    - name: make promote-to-stable promote-to-release
-      run: make promote-to-stable promote-to-release
+    - name: make canary-api
+      run: make canary-api

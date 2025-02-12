@@ -1,5 +1,5 @@
 ---
-name: api-public-deploy-to-production
+name: asset-uploads-publish-deploy
 env:
   SC_PIPELINE_GROUP: api-team
 on:
@@ -15,11 +15,12 @@ on:
         required: true
         type: string
 concurrency:
-  group: "${{ github.workflow }}-${{ inputs.ref }}-deploy-to-production"
+  group: "${{ github.workflow }}-${{ inputs.ref }}-publish-deploy"
 jobs:
-  deploy-db:
+  publish-deploy-db:
     env:
-      ZONES: db
+      ENV: production
+      ZONES: primary,replicas
     runs-on:
     - self-hosted
     - i-deploy-prod
@@ -30,20 +31,5 @@ jobs:
         ref: ${{ inputs.ref }}
     - name: Set up sc-tools
       uses: soundcloud/sc-github-actions/sc-tools@master
-    - name: make deploy-api
-      run: make deploy-api
-  deploy-replicas:
-    env:
-      ZONES: replicas
-    runs-on:
-    - self-hosted
-    - i-deploy-prod
-    steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
-      with:
-        ref: ${{ inputs.ref }}
-    - name: Set up sc-tools
-      uses: soundcloud/sc-github-actions/sc-tools@master
-    - name: make deploy-api
-      run: make deploy-api
+    - name: make -C asset-uploads publish-deploy
+      run: make -C asset-uploads publish-deploy

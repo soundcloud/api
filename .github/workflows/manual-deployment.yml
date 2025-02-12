@@ -39,25 +39,25 @@ jobs:
     outputs:
       ref: ${{ steps.canonical-commit-ref.outputs.ref }}
   deploy:
-    name: call workflow-api-public-common workflow
+    name: call common workflow
     needs: validate_ref
-    uses: "./.github/workflows/workflow-api-public-common.yml"
+    uses: "./.github/workflows/common.yml"
     secrets: inherit
     with:
       ref: ${{ needs.validate_ref.outputs.ref }}
   deploy_asset_uploads:
-    name: call workflow-api-public-common workflow
+    name: call common workflow
     if: ${{ github.event.inputs.deploy_asset_uploads == 'true' }}
     needs: validate_ref
-    uses: "./.github/workflows/workflow-api-public-asset-uploads-common.yml"
+    uses: "./.github/workflows/asset-uploads-common.yml"
     secrets: inherit
     with:
       ref: ${{ needs.validate_ref.outputs.ref }}
   deploy_memcached:
-    name: call workflow-api-public-memcached-deploy-common workflow
+    name: call memcached-deploy-common workflow
     if: ${{ github.event.inputs.deploy_memcached == 'true' }}
     needs: validate_ref
-    uses: "./.github/workflows/workflow-api-public-memcached-deploy-common.yml"
+    uses: "./.github/workflows/memcached-deploy-common.yml"
     secrets: inherit
     with:
       ref: ${{ needs.validate_ref.outputs.ref }}

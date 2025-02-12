@@ -13,8 +13,8 @@ concurrency:
   group: "${{ github.workflow }}-${{ github.ref }}-${{ github.run_number }}-main"
 jobs:
   call_api_public_common:
-    name: call api-public-common workflow
-    uses: "./.github/workflows/workflow-api-public-common.yml"
+    name: call common workflow
+    uses: "./.github/workflows/common.yml"
     secrets: inherit
     with:
       ref: ${{ github.ref }}

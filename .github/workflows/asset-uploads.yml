@@ -1,5 +1,5 @@
 ---
-name: api-public-asset-uploads
+name: asset-uploads
 env:
   SC_PIPELINE_GROUP: api-team
 on:
@@ -8,14 +8,14 @@ on:
     branches:
     - master
     paths:
-    - ".github/workflows/workflow-api-public-asset-uploads.yml"
+    - ".github/workflows/asset-uploads.yml"
     - asset-uploads/**/*
 concurrency:
   group: "${{ github.workflow }}-${{ github.ref }}-main"
 jobs:
   call_api_public_asset_uploads_commons:
-    name: call api-public-asset-uploads-common workflow
-    uses: "./.github/workflows/workflow-api-public-asset-uploads-common.yml"
+    name: call asset-uploads-common workflow
+    uses: "./.github/workflows/asset-uploads-common.yml"
     secrets: inherit
     with:
       ref: ${{ github.ref }}

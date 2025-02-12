@@ -1,5 +1,5 @@
 ---
-name: api-public-deploy-doc
+name: deploy-doc
 env:
   SC_PIPELINE_GROUP: api-team
 on:

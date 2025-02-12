@@ -1,5 +1,5 @@
 ---
-name: api-public-pr-test
+name: pr-test
 env:
   SC_PIPELINE_GROUP: api-team
 on:

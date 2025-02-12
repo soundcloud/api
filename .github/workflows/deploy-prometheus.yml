@@ -1,5 +1,5 @@
 ---
-name: api-public-publish-deploy
+name: deploy-prometheus
 env:
   SC_PIPELINE_GROUP: api-team
 on:
@@ -15,11 +15,12 @@ on:
         required: true
         type: string
 concurrency:
-  group: "${{ github.workflow }}-${{ inputs.ref }}-publish-deploy"
+  group: "${{ github.workflow }}-${{ inputs.ref }}-deploy-prometheus"
 jobs:
-  publish-deploy-db:
+  deploy-db:
     env:
       ZONES: db
+    environment: deploy-prometheus
     runs-on:
     - self-hosted
     - i-deploy-prod
@@ -30,11 +31,12 @@ jobs:
         ref: ${{ inputs.ref }}
     - name: Set up sc-tools
       uses: soundcloud/sc-github-actions/sc-tools@master
-    - name: make publish-deploy
-      run: make publish-deploy
-  publish-deploy-replicas:
+    - name: make deploy-prometheus
+      run: make deploy-prometheus
+  deploy-replicas:
     env:
       ZONES: replicas
+    environment: deploy-prometheus
     runs-on:
     - self-hosted
     - i-deploy-prod
@@ -45,5 +47,5 @@ jobs:
         ref: ${{ inputs.ref }}
     - name: Set up sc-tools
       uses: soundcloud/sc-github-actions/sc-tools@master
-    - name: make publish-deploy
-      run: make publish-deploy
+    - name: make deploy-prometheus
+      run: make deploy-prometheus

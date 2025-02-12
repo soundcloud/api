@@ -1,5 +1,5 @@
 ---
-name: api-public-asset-uploads-test
+name: asset-uploads-test
 env:
   SC_PIPELINE_GROUP: api-team
 on:
