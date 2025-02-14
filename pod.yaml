@@ -17,7 +17,7 @@ containers:
   resources:
     requests:
       memory: 3Gi
-      cpu: 1
+      cpu: 2
     limits:
       memory: 5Gi
   readinessProbe:
