@@ -134,7 +134,7 @@ class SearchHandler(
       extraParams: Option[ParamMap]
   ): Future[Response] = {
     val hasLinkedPartitioning = req.params.contains("linked_partitioning")
-    val pagination = OffsetBasedPagination.build(req, Seq("linked_partitioning") ++ playlistParams)
+    val pagination = OffsetBasedPagination.build(baseUrl, req, Seq("linked_partitioning") ++ playlistParams)
     val access: AccessParams = AccessParamsExtractor.unapply(req.params)
 
     val params = ParamMap(extraParams.map(_ ++ req.params).getOrElse(req.params))
@@ -152,7 +152,7 @@ class SearchHandler(
       extraParams: Option[ParamMap]
   ): Future[Response] = {
     val hasLinkedPartitioning = req.params.contains("linked_partitioning")
-    val pagination = OffsetBasedPagination.build(req, Seq("linked_partitioning") ++ userParams)
+    val pagination = OffsetBasedPagination.build(baseUrl, req, Seq("linked_partitioning") ++ userParams)
     val access: AccessParams = AccessParamsExtractor.unapply(req.params)
 
     val params: ParamMap = ParamMap(extraParams.map(_ ++ req.params).getOrElse(req.params))

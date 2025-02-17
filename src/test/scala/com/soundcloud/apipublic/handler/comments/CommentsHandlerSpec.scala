@@ -26,8 +26,8 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
     val validTrackId = 262857585
     val validTrackUrn = Urn("soundcloud", "tracks", validTrackId.toString())
     val validClientId = "clientid"
-    val headers = Map("Host" -> "api.example.com")
-
+    val headers = Map[String, String]()
+    val baseUrl = "https://api.example.com"
     val user = UserBuilder.user(1)
     val comment = Comment(1, "hi", "2014/05/01 12:47:49 +0000", None, validTrackId, 20, UserBuilder.user(20))
 
@@ -39,7 +39,7 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
     val session: UserSession = loggedInSession(Urn("soundcloud", "users", "1"))
     val userAuthentication = new FakeUserAuthentication(session)
 
-    lazy val handler = new CommentsHandler(userAuthentication, commentService)
+    lazy val handler = new CommentsHandler(userAuthentication, commentService, baseUrl)
     override def routingDefinitions() = Routing.forCommentsHandler(handler)
   }
 

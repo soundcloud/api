@@ -26,12 +26,13 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationSp
   trait Context extends HandlerSpecificationScope {
     val session = loggedInSession(Urn("soundcloud", "users", "1"))
     val userAuthentication = new FakeUserAuthentication(session)
-
+    val baseUrl = "localhost"
     val userTracksService = mock[UserTracksService]
 
     val handler = new UserTracksHandler(
       userAuthentication,
-      userTracksService
+      userTracksService,
+      baseUrl
     )
 
     override def routingDefinitions = Routing.forUserTracksHandler(handler)
@@ -44,8 +45,7 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationSp
 
       def paginationParams(path: String): CursorBasedPagination = {
         val mockRequest = Request(path)
-        mockRequest.host = "localhost"
-        CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
+        CursorBasedPagination.build("localhost", mockRequest, Seq("linked_partitioning"))
 
       }
 

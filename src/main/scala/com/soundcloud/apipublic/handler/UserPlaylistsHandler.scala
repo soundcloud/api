@@ -18,7 +18,8 @@ import play.api.libs.json.Json
 
 class UserPlaylistsHandler(
     userAuthentication: UserAuthentication,
-    userPlaylistsService: UserPlaylistsService
+    userPlaylistsService: UserPlaylistsService,
+    baseUrl: String
 ) {
 
   def getUserPlaylist(req: HandlerRequest): Future[Response] = {
@@ -30,7 +31,7 @@ class UserPlaylistsHandler(
       val showTracks = req.params.getBoolean("show_tracks")
 
       val pagination = hasLinkedPartitioning.map(_ =>
-        OffsetBasedPagination.build(req, Seq("linked_partitioning", "access", "show_tracks", "secret_token"))
+        OffsetBasedPagination.build(baseUrl, req, Seq("linked_partitioning", "access", "show_tracks", "secret_token"))
       )
 
       Try(getUserUrn(userId)) match {
@@ -74,7 +75,7 @@ class UserPlaylistsHandler(
       access: AccessParams
   ): Future[Response] = {
     val hasLinkedPartitioning = req.params.contains("linked_partitioning")
-    val pagination = CursorBasedPagination.build(req, Seq("linked_partitioning", "access", "show_tracks"))
+    val pagination = CursorBasedPagination.build(baseUrl, req, Seq("linked_partitioning", "access", "show_tracks"))
     val showTracks = req.params.getBoolean("show_tracks")
 
     Try(getUserUrn(userId)) match {

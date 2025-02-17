@@ -34,7 +34,7 @@ class CommentServiceSpec extends UnitSpecification {
     val someClientId = "veryrealclientid"
 
     val pagination = OffsetBasedPagination(
-      "http://api.example.com",
+      "api.example.com",
       s"/tracks/${trackId}/comments",
       ParamMap("filter_replies" -> "0", "threaded" -> "0", "client_id" -> someClientId),
       None,

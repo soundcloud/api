@@ -20,12 +20,12 @@ class TimelineHandlerSpec extends UnitSpecification {
   trait Context extends HandlerSpecificationScope with TimeLineHandlerTestData {
     val timelineClient = mock[TimelineJsonClient]
     val timelineService = mock[TimelineService]
-
     val session = loggedInSession(usrUrn)
 
     val handler = new TimelineHandler(
       new FakeUserAuthentication(session),
-      timelineService
+      timelineService,
+      baseUrl
     )
 
     val access = AccessParams.defaultAccess
@@ -55,8 +55,8 @@ class TimelineHandlerSpec extends UnitSpecification {
         val path = s"$endpoint$queryParams"
 
         val mockRequest = Request(path)
-        mockRequest.host = "localhost"
-        val pagination = CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
+        val pagination =
+          CursorBasedPagination.build("http://api.soundcloud.com", mockRequest, Seq("linked_partitioning"))
 
         val mockTimelineResponse = Timeline(mockTimelineItems, mockTimelineMeta, pagination)
         when(timelineService.fetchTimelineTracksForUser(session, access, None, false, 10, pagination))
@@ -78,8 +78,8 @@ class TimelineHandlerSpec extends UnitSpecification {
         val path = s"$endpoint$queryParams"
 
         val mockRequest = Request(path)
-        mockRequest.host = "localhost"
-        val pagination = CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
+        val pagination =
+          CursorBasedPagination.build("http://api.soundcloud.com", mockRequest, Seq("linked_partitioning"))
 
         val mockTimelineResponse = Timeline(mockTimelineItems, mockTimelineMeta, pagination)
         when(timelineService.fetchTimelineTracksForUser(session, access, None, false, 10, pagination))
@@ -100,8 +100,8 @@ class TimelineHandlerSpec extends UnitSpecification {
         val path = s"$endpoint$queryParams"
 
         val mockRequest = Request(path)
-        mockRequest.host = "localhost"
-        val pagination = CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
+        val pagination =
+          CursorBasedPagination.build("http://api.soundcloud.com", mockRequest, Seq("linked_partitioning"))
 
         when(timelineService.fetchTimelineTracksForUser(session, access, None, false, 10, pagination))
           .thenReturn(Future.value(null))
@@ -184,8 +184,8 @@ class TimelineHandlerSpec extends UnitSpecification {
         val path = s"$endpoint$queryParams"
 
         val mockRequest = Request(path)
-        mockRequest.host = "localhost"
-        val pagination = CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
+        val pagination =
+          CursorBasedPagination.build("http://api.soundcloud.com", mockRequest, Seq("linked_partitioning"))
 
         val mockTimelineResponse = Timeline(mockTimelineItems, mockTimelineMeta, pagination)
         when(timelineService.fetchTimelineForUser(session, access, None, false, 10, pagination))
@@ -208,8 +208,8 @@ class TimelineHandlerSpec extends UnitSpecification {
           val path = s"$endpoint$queryParams"
 
           val mockRequest = Request(path)
-          mockRequest.host = "localhost"
-          val pagination = CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
+          val pagination =
+            CursorBasedPagination.build("http://api.soundcloud.com", mockRequest, Seq("linked_partitioning"))
 
           val mockTimelineResponse = Timeline(mockTimelineItems, mockTimelineMeta, pagination)
           when(timelineService.fetchTimelineForUser(session, access, None, false, 10, pagination))

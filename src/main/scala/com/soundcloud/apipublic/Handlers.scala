@@ -18,7 +18,8 @@ class Handlers(
 
   val timelineHandler: TimelineHandler = new TimelineHandler(
     userAuthentication,
-    timelineService
+    timelineService,
+    baseUrl
   )
 
   val trackStreamsHandler: TrackStreamsHandler = new TrackStreamsHandler(
@@ -44,7 +45,8 @@ class Handlers(
 
   val userTracksHandler = new UserTracksHandler(
     userAuthentication,
-    userTracksService
+    userTracksService,
+    baseUrl
   )
 
   val userFollowHandler =
@@ -76,11 +78,11 @@ class Handlers(
       exceptionCollector
     )
 
-  val userPlaylistsHandler = new UserPlaylistsHandler(userAuthentication, userPlaylistsService)
+  val userPlaylistsHandler = new UserPlaylistsHandler(userAuthentication, userPlaylistsService, baseUrl)
 
-  val repostsHandler = new RepostsHandler(userAuthentication, repostsService)
+  val repostsHandler = new RepostsHandler(userAuthentication, repostsService, baseUrl)
 
-  val likesHandler = new LikesHandler(userAuthentication, likesService, userRepresentationsService)
+  val likesHandler = new LikesHandler(userAuthentication, likesService, userRepresentationsService, baseUrl)
 
   val grantExchangeRequestMapper = new GrantExchangeRequestParser(new RailsLikeParamsParser())
   val forwardToSecureFilter =
@@ -93,7 +95,7 @@ class Handlers(
       grantExchangeService
     )
 
-  val commentsHandler = new CommentsHandler(userAuthentication, commentsService)
+  val commentsHandler = new CommentsHandler(userAuthentication, commentsService, baseUrl)
 
   val meHandler = new MeHandler(userAuthentication, meService)
 

@@ -15,7 +15,11 @@ import com.soundcloud.apipublic.support.TrackUrnUtil.getTrackUrn
 import com.twitter.finagle.http.{Response, Status}
 import com.twitter.util.{Future, Return, Try}
 
-class RepostsHandler(userAuthentication: UserAuthentication, repostsService: RepostsService) {
+class RepostsHandler(
+    userAuthentication: UserAuthentication,
+    repostsService: RepostsService,
+    baseUrl: String
+) {
 
   def createTracksRepost(request: HandlerRequest): Future[Response] =
     execute(request, getTrackUrn, repostsService.createTracksRepost)
@@ -25,7 +29,7 @@ class RepostsHandler(userAuthentication: UserAuthentication, repostsService: Rep
 
   def getTracksReposters(request: HandlerRequest): Future[Response] =
     userAuthentication.withUserSession(request) { session =>
-      val pagination = CursorBasedPagination.build(request)
+      val pagination = CursorBasedPagination.build(baseUrl, request)
 
       Try(getTrackUrn(request)) match {
         case Return(urn) =>
@@ -48,7 +52,7 @@ class RepostsHandler(userAuthentication: UserAuthentication, repostsService: Rep
 
   def getPlaylistsReposters(request: HandlerRequest): Future[Response] =
     userAuthentication.withUserSession(request) { session =>
-      val pagination = CursorBasedPagination.build(request)
+      val pagination = CursorBasedPagination.build(baseUrl, request)
 
       Try(getPlaylistUrn(request)) match {
         case Return(urn) =>

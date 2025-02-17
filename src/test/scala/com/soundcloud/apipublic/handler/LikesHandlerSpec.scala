@@ -43,12 +43,12 @@ class LikesHandlerSpec extends UnitSpecification {
   trait Context extends HandlerSpecificationScope {
     val session = loggedInSession(Urn("soundcloud", "users", "1"))
     val userAuthentication: UserAuthentication
-
+    val baseUrl = "localhost"
     val likesService = mock[LikesService]
     val userRepresentationService = mock[UserRepresentationsService]
     val telemetry = Telemetry.createIsolatedInstance
 
-    val handler = new LikesHandler(userAuthentication, likesService, userRepresentationService)
+    val handler = new LikesHandler(userAuthentication, likesService, userRepresentationService, baseUrl)
 
     override def routingDefinitions = Routing.forLikesHandler(handler)
   }
@@ -73,8 +73,7 @@ class LikesHandlerSpec extends UnitSpecification {
 
       def paginationParams(path: String): CursorBasedPagination = {
         val mockRequest = Request(path)
-        mockRequest.host = "localhost"
-        CursorBasedPagination.build(mockRequest, Seq("linked_partitioning", "access"))
+        CursorBasedPagination.build(baseUrl, mockRequest, Seq("linked_partitioning", "access"))
 
       }
 
@@ -147,8 +146,7 @@ class LikesHandlerSpec extends UnitSpecification {
 
       def paginationParams(path: String): CursorBasedPagination = {
         val mockRequest = Request(path)
-        mockRequest.host = "localhost"
-        CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
+        CursorBasedPagination.build(baseUrl, mockRequest, Seq("linked_partitioning"))
 
       }
 
@@ -207,8 +205,7 @@ class LikesHandlerSpec extends UnitSpecification {
 
       def paginationParams(path: String): CursorBasedPagination = {
         val mockRequest = Request(path)
-        mockRequest.host = "localhost"
-        CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
+        CursorBasedPagination.build(baseUrl, mockRequest, Seq("linked_partitioning"))
       }
 
       when(userRepresentationService.users(session, Seq(userUrn)))
@@ -584,8 +581,7 @@ class LikesHandlerSpec extends UnitSpecification {
 
       def paginationParams(path: String): CursorBasedPagination = {
         val mockRequest = Request(path)
-        mockRequest.host = "localhost"
-        CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
+        CursorBasedPagination.build("localhost", mockRequest, Seq("linked_partitioning"))
 
       }
 

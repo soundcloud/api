@@ -27,12 +27,13 @@ class UserPlaylistsHandlerSpec extends UnitSpecification {
     val playlist = new PlaylistBuilder().build
     val session = loggedInSession(Urn("soundcloud", "users", "1"))
     val userAuthentication = new FakeUserAuthentication(session)
-
+    val baseUrl = "localhost"
     val userPlaylistsService = mock[UserPlaylistsService]
 
     val handler = new UserPlaylistsHandler(
       userAuthentication,
-      userPlaylistsService
+      userPlaylistsService,
+      baseUrl
     )
 
     override def routingDefinitions = Routing.forUserPlaylistsHandler(handler)
@@ -46,8 +47,7 @@ class UserPlaylistsHandlerSpec extends UnitSpecification {
 
       def paginationParams(path: String): CursorBasedPagination = {
         val mockRequest = Request(path)
-        mockRequest.host = "localhost"
-        CursorBasedPagination.build(mockRequest, Seq("linked_partitioning", "access"))
+        CursorBasedPagination.build("localhost", mockRequest, Seq("linked_partitioning", "access"))
       }
 
       def stubService(
@@ -138,8 +138,7 @@ class UserPlaylistsHandlerSpec extends UnitSpecification {
 
       def paginationParams(path: String): OffsetBasedPagination = {
         val mockRequest = Request(path)
-        mockRequest.host = "localhost"
-        OffsetBasedPagination.build(mockRequest, Seq("linked_partitioning", "secret_token", "access"))
+        OffsetBasedPagination.build("localhost", mockRequest, Seq("linked_partitioning", "secret_token", "access"))
       }
 
       def stubService(

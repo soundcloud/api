@@ -33,13 +33,13 @@ object OffsetBasedPagination extends PaginationHelpers {
   protected[pagination] val NormalizedLimitParam = "limit"
   protected[pagination] val NormalizedOffsetParam = "offset"
 
-  def build(request: Request, extraParams: Seq[String] = Seq.empty) = {
+  def build(baseUrl: String, request: Request, extraParams: Seq[String] = Seq.empty) = {
     val offset = request.params
       .get(OffsetBasedPagination.NormalizedOffsetParam)
       .map(_.toInt)
 
     OffsetBasedPagination(
-      baseUrl = baseUrl(request),
+      baseUrl = baseUrl,
       path = path(request),
       extraParams = getExtraParams(request, extraParams),
       limit = getPageSize(request.params),

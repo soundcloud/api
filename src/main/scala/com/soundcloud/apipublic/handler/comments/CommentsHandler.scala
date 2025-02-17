@@ -19,7 +19,8 @@ import play.api.libs.json.{JsString, JsValue, Json}
 
 class CommentsHandler(
     userAuthentication: UserAuthentication,
-    commentService: CommentService
+    commentService: CommentService,
+    baseUrl: String
 ) {
 
   def getCommentsForTrack(request: HandlerRequest): Future[Response] = {
@@ -119,7 +120,7 @@ class CommentsHandler(
     val offset = params.get("offset").map(_.toInt)
 
     val basePagination =
-      OffsetBasedPagination.build(request, request.params.keySet.toSeq)
+      OffsetBasedPagination.build(baseUrl, request, request.params.keySet.toSeq)
     basePagination.copy(limit = limit, offset = offset)
   }
 

@@ -15,7 +15,8 @@ import com.twitter.util.{Future, Return, Throw, Try}
 
 class UserTracksHandler(
     userAuthentication: UserAuthentication,
-    userTracksService: UserTracksService
+    userTracksService: UserTracksService,
+    baseUrl: String
 ) {
 
   def getUserTracks(req: HandlerRequest): Future[Response] = {
@@ -40,7 +41,7 @@ class UserTracksHandler(
       access: AccessParams
   ): Future[Response] = {
     val hasLinkedPartitioning = req.params.contains("linked_partitioning")
-    val pagination = CursorBasedPagination.build(req, Seq("linked_partitioning", "access"))
+    val pagination = CursorBasedPagination.build(baseUrl, req, Seq("linked_partitioning", "access"))
 
     Try(getUserUrn(userId)) match {
       case Return(urn) =>

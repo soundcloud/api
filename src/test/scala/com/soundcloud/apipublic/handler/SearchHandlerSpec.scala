@@ -72,8 +72,7 @@ class SearchHandlerSpec extends UnitSpecification {
       ) with UsersParamsHandler
 
       val request = Request("/users", requestParams.toSeq: _*)
-      request.host = "localhost"
-      val page = OffsetBasedPagination.build(request, Seq("linked_partitioning", "q"))
+      val page = OffsetBasedPagination.build("http://api.soundcloud.com", request, Seq("linked_partitioning", "q"))
 
       when(searchService.searchUsers(anonymousSession, request.params.asUsersParams, page, access))
         .thenReturn(Good(userCollection).outcomeF)
@@ -82,7 +81,7 @@ class SearchHandlerSpec extends UnitSpecification {
     }
 
     "performs a search when q param is present" in new Context {
-      val response = get("/users", requestParams, Map("Host" -> "localhost"))
+      val response = get("/users", requestParams, Map())
       response.statusCode ==== 200
       response.contentString ==== expectedResponse
     }
@@ -95,13 +94,13 @@ class SearchHandlerSpec extends UnitSpecification {
         searchService
           .searchUsers(anonymousSession, ParamMap(request.params ++ wildcardParam).asUsersParams, page, access)
       ).thenReturn(Good(userCollection).outcomeF)
-      val response = get("/users", pageParams, Map("Host" -> "localhost"))
+      val response = get("/users", pageParams, Map())
       response.statusCode ==== 200
       response.contentString ==== expectedResponse
     }
 
     "response contains a caching header" in new Context {
-      val response = get("/users", requestParams, Map("Host" -> "localhost"))
+      val response = get("/users", requestParams, Map())
 
       response.statusCode ==== 200
 
@@ -111,7 +110,7 @@ class SearchHandlerSpec extends UnitSpecification {
 
     "200 when no pagination params" in new Context {
       override lazy val requestParams = queryParams
-      val response = get("/users", request.params, Map("Host" -> "localhost"))
+      val response = get("/users", request.params, Map())
       response.statusCode ==== 200
     }
 
@@ -119,7 +118,7 @@ class SearchHandlerSpec extends UnitSpecification {
       when(searchService.searchUsers(anonymousSession, request.params.asUsersParams, page, access))
         .thenReturn(NotValid("not valid").badF)
 
-      val response = get("/users", request.params, Map("Host" -> "localhost"))
+      val response = get("/users", request.params, Map())
       response.statusCode ==== 400
     }
 
@@ -127,7 +126,7 @@ class SearchHandlerSpec extends UnitSpecification {
       when(searchService.searchUsers(anonymousSession, request.params.asUsersParams, page, access))
         .thenReturn(HttpServiceError(HttpResponseFields(500)).badF)
 
-      val response = get("/users", request.params, Map("Host" -> "localhost"))
+      val response = get("/users", request.params, Map())
       response.statusCode ==== 500
     }
 
@@ -155,7 +154,7 @@ class SearchHandlerSpec extends UnitSpecification {
         new URL("http://api.soundcloud.com" + (path + queryString))
       )
 
-      lazy val response = get("/tracks", params, Map("Host" -> "localhost"))
+      lazy val response = get("/tracks", params, Map())
     }
 
     "returns 200 when a valid duration is sent" in new Context {
@@ -303,8 +302,7 @@ class SearchHandlerSpec extends UnitSpecification {
 
       def paginationParams(path: String): OffsetBasedPagination = {
         val mockRequest = Request(path)
-        mockRequest.host = "localhost"
-        OffsetBasedPagination.build(mockRequest, Seq("linked_partitioning", "q"))
+        OffsetBasedPagination.build("http://api.soundcloud.com", mockRequest, Seq("linked_partitioning", "q"))
       }
     }
 

@@ -107,7 +107,8 @@ class PlaylistsHandler(
       val access = AccessParamsExtractor.unapply(request.params)
       val pagination =
         hasLinkedPartitioning.map(_ =>
-          OffsetBasedPagination.build(request, Seq("linked_partitioning", "access", "show_tracks", "secret_token"))
+          OffsetBasedPagination
+            .build(baseUrl, request, Seq("linked_partitioning", "access", "show_tracks", "secret_token"))
         )
 
       Try(getPlaylistUrn(request)) match {
@@ -129,7 +130,7 @@ class PlaylistsHandler(
       val access = AccessParamsExtractor.unapply(request.params)
       val pagination =
         hasLinkedPartitioning.map(_ =>
-          OffsetBasedPagination.build(request, Seq("linked_partitioning", "access", "secret_token"))
+          OffsetBasedPagination.build(baseUrl, request, Seq("linked_partitioning", "access", "secret_token"))
         )
 
       Try(getPlaylistUrn(request)) match {

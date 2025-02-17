@@ -20,7 +20,7 @@ class PaginationSpec extends Specification {
   def testSuite[P <: Pagination](
       firstPageTest: (P, String),
       subsequentPageTest: (P, String),
-      buildFromRequestTest: ((Request, Seq[String]) => P, (P, P, P, P))
+      buildFromRequestTest: ((String, Request, Seq[String]) => P, (P, P, P, P))
   ) = {
     "first page" >> {
       val (page, expectedHref) = firstPageTest
@@ -54,23 +54,23 @@ class PaginationSpec extends Specification {
       val offsetParam = Map("cursor" -> "1")
 
       "when not proxying params" in {
-        buildFromRequest(mockRequest(proxyParam ++ pageSizeParam ++ offsetParam), Seq.empty) ==== expectedPageWithoutProxiedParams
+        buildFromRequest(baseUrl, mockRequest(proxyParam ++ pageSizeParam ++ offsetParam), Seq.empty) ==== expectedPageWithoutProxiedParams
       }
 
       "when proxying params" in {
-        buildFromRequest(mockRequest(proxyParam ++ pageSizeParam ++ offsetParam), proxyParam.keys.toSeq) ==== expectedPageWithProxiedParams
+        buildFromRequest(baseUrl, mockRequest(proxyParam ++ pageSizeParam ++ offsetParam), proxyParam.keys.toSeq) ==== expectedPageWithProxiedParams
       }
 
       "with no cursor param" in {
-        buildFromRequest(mockRequest(proxyParam ++ pageSizeParam), Seq.empty) ==== expectedPageWithDefaultCursor
+        buildFromRequest(baseUrl, mockRequest(proxyParam ++ pageSizeParam), Seq.empty) ==== expectedPageWithDefaultCursor
       }
 
       "with no page size param" in {
-        buildFromRequest(mockRequest(offsetParam), Seq.empty) ==== expectedPageWithDefaultLimit
+        buildFromRequest(baseUrl, mockRequest(offsetParam), Seq.empty) ==== expectedPageWithDefaultLimit
       }
 
       "with limit param instead page size" in {
-        buildFromRequest(mockRequest(limitParam), Seq.empty) ==== expectedPageWithDefaultCursor
+        buildFromRequest(baseUrl, mockRequest(limitParam), Seq.empty) ==== expectedPageWithDefaultCursor
       }
     }
   }
@@ -106,7 +106,7 @@ class PaginationSpec extends Specification {
   "OffsetBasedPagination" >> {
     "can build offset pagination from request with no offset" in new Scope {
       val request = mockRequest(Map("limit" -> "2"))
-      val pagination = OffsetBasedPagination.build(request)
+      val pagination = OffsetBasedPagination.build(baseUrl, request)
       pagination.limit ==== 2
       pagination.offset ==== None
       pagination.normalizedHref ==== s"$baseUrl$path?limit=2&offset=0"
@@ -117,7 +117,7 @@ class PaginationSpec extends Specification {
 
     "can build offset pagination from request with offset" in new Scope {
       val request = mockRequest(Map("limit" -> "2", "offset" -> "2"))
-      val pagination = OffsetBasedPagination.build(request)
+      val pagination = OffsetBasedPagination.build(baseUrl, request)
       pagination.limit ==== 2
       pagination.offset ==== Some(2)
       pagination.normalizedHref ==== s"$baseUrl$path?limit=2&offset=2"
@@ -128,19 +128,19 @@ class PaginationSpec extends Specification {
 
     "it returns a valid nextHref when there are still resources to consume" in new Scope {
       val request = mockRequest(Map("limit" -> "10", "offset" -> "5"))
-      val pagination = OffsetBasedPagination.build(request)
+      val pagination = OffsetBasedPagination.build(baseUrl, request)
       pagination.nextHref(20) ==== Some(s"$baseUrl$path?limit=10&offset=15")
     }
 
     "it returns an empty nextHref when the limit is reached" in new Scope {
       val request = mockRequest(Map("limit" -> "20", "offset" -> "10"))
-      val pagination = OffsetBasedPagination.build(request)
+      val pagination = OffsetBasedPagination.build(baseUrl, request)
       pagination.nextHref(20) ==== None
     }
 
     "it returns a valid nextHref with no client_id present" in new Scope {
       val request = mockRequest(Map("limit" -> "10", "client_id" -> "TEST_CLIENT_ID", "offset" -> "5"))
-      val pagination = OffsetBasedPagination.build(request)
+      val pagination = OffsetBasedPagination.build(baseUrl, request)
       pagination.nextHref(20) ==== Some(s"$baseUrl$path?limit=10&offset=15")
     }
   }

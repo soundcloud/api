@@ -22,7 +22,8 @@ import play.api.libs.json.Json
 class LikesHandler(
     userAuthentication: UserAuthentication,
     likesService: LikesService,
-    userRepresentationsService: UserRepresentationsService
+    userRepresentationsService: UserRepresentationsService,
+    baseUrl: String
 ) {
 
   def createMeLikedTrackId(req: HandlerRequest): Future[Response] = {
@@ -106,7 +107,7 @@ class LikesHandler(
   def getTrackLikers(request: HandlerRequest): Future[Response] = {
     userAuthentication.withUserSession(request) { session =>
       val hasLinkedPartitioning = request.params.contains("linked_partitioning")
-      val pagination = CursorBasedPagination.build(request, Seq("linked_partitioning"))
+      val pagination = CursorBasedPagination.build(baseUrl, request, Seq("linked_partitioning"))
 
       Try(getTrackUrn(request)) match {
         case Return(urn) =>
@@ -143,7 +144,7 @@ class LikesHandler(
       userId: String
   ): Future[Response] = {
     val hasLinkedPartitioning = request.params.contains("linked_partitioning")
-    val pagination = CursorBasedPagination.build(request, Seq("linked_partitioning"))
+    val pagination = CursorBasedPagination.build(baseUrl, request, Seq("linked_partitioning"))
 
     Try(getUserUrn(userId)) match {
       case Return(urn) =>
@@ -162,7 +163,7 @@ class LikesHandler(
       access: AccessParams
   ): Future[Response] = {
     val hasLinkedPartitioning = request.params.contains("linked_partitioning")
-    val pagination = CursorBasedPagination.build(request, Seq("linked_partitioning", "access"))
+    val pagination = CursorBasedPagination.build(baseUrl, request, Seq("linked_partitioning", "access"))
 
     Try(getUserUrn(userId)) match {
       case Return(urn) =>

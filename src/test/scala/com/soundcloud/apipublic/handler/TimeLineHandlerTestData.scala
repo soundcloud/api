@@ -8,7 +8,7 @@ trait TimeLineHandlerTestData extends TrackRepresentationSpecContext {
   val usrUrn = Urn("soundcloud", "users", "1")
   override val trackUrn = Urn("soundcloud", "tracks", "2")
   val playlistUrn = Urn("soundcloud", "playlists", "3")
-  val baseUrl = "www.soundcloud.com"
+  val baseUrl = "http://api.soundcloud.com"
 
   val userJson = Json.obj(
     "urn" -> usrUrn.toString,

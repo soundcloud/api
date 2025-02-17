@@ -22,9 +22,6 @@ abstract class Pagination(
 }
 
 trait PaginationHelpers {
-  def baseUrl(request: Request): String = {
-    s"https://${request.host.get}"
-  }
 
   def path(request: Request): String = request.path
 

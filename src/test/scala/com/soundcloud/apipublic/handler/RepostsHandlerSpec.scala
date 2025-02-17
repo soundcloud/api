@@ -24,12 +24,13 @@ class RepostsHandlerSpec extends UnitSpecification {
     val track = Urn("soundcloud", "tracks", "100")
     val playlist = Urn("soundcloud", "playlists", "200")
     val geo = new Geo("US")
-    val requestHeaders = Map("Host" -> "api.example.com")
+    val requestHeaders = Map[String, String]()
+    val baseUrl = "https://api.example.com"
     val session =
       new UserSessionBuilder().setUser(userUrn).setAgent(Urn("soundcloud", "applications", "v2")).setGeo(geo).build()
     val repostsService = mock[RepostsService]
 
-    lazy val handler = new RepostsHandler(new FakeUserAuthentication(session), repostsService)
+    lazy val handler = new RepostsHandler(new FakeUserAuthentication(session), repostsService, baseUrl)
 
     override def routingDefinitions = Routing.forRepostsHandler(handler)
   }

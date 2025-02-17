@@ -12,9 +12,7 @@ class TimelineTest extends Specification with Mockito {
   trait Context extends Scope with TimeLineHandlerTestData {
 
     val mockRequest = Request("/me/activities/track?limit=10")
-    mockRequest.host = "localhost"
-
-    val pagination = CursorBasedPagination.build(mockRequest, Seq("linked_partitioning"))
+    val pagination = CursorBasedPagination.build("https://localhost", mockRequest, Seq("linked_partitioning"))
     val mockTimelineItems = List(
       new TrackTimelineItem(createdAt = "2021-03-11T15:21:48.060+01:00", "track", mockTrackRepresentation)
     )

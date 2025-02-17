@@ -42,7 +42,7 @@ class PlaylistsHandlerSpec extends UnitSpecification {
     val playlistsService = mock[PlaylistsService]
     val playlistUrn = Urn("soundcloud", "playlists", "1")
 
-    val baseUrl = "http://localhost:5000"
+    val baseUrl = "https://api.soundcloud.com"
 
     lazy val handler = new PlaylistsHandler(
       new FakeUserAuthentication(session),
@@ -113,13 +113,13 @@ class PlaylistsHandlerSpec extends UnitSpecification {
       }
 
       "returns 401 for anonymous user" in new CreatePlaylistContext with Anonymous {
-        val response = post(path, Map.empty, Map("Host" -> "api.soundcloud.com"), playlistCreateBody)
+        val response = post(path, Map.empty, Map(), playlistCreateBody)
         response.status ==== Status.Unauthorized
       }
 
       "with invalid POST body" >> {
         "returns 422" in new CreatePlaylistContext with InvalidPostBody {
-          val response = post(path, Map.empty, Map("Host" -> "api.soundcloud.com"), playlistCreateBody)
+          val response = post(path, Map.empty, Map(), playlistCreateBody)
           response.status ==== Status.UnprocessableEntity
         }
       }
@@ -127,14 +127,14 @@ class PlaylistsHandlerSpec extends UnitSpecification {
       "with valid POST body" >> {
         "returns 201 when create succeeds" in new CreatePlaylistContext with ValidPostBody {
           stubService(maybeArtworkRequest = None)
-          val response = post(path, Map.empty, Map("Host" -> "api.soundcloud.com"), playlistCreateBody)
+          val response = post(path, Map.empty, Map(), playlistCreateBody)
           response.status ==== Status.Created
           response.contentString ==== Json.stringify(Json.toJson(playlist))
         }
 
         "on success adds the location header" in new CreatePlaylistContext with ValidPostBody {
           stubService(maybeArtworkRequest = None)
-          val response = post(path, Map.empty, Map("Host" -> "api.soundcloud.com"), playlistCreateBody)
+          val response = post(path, Map.empty, Map(), playlistCreateBody)
           response.headerMap("location") ==== s"$baseUrl/playlists/${playlist.id.toString}"
         }
       }
@@ -292,7 +292,7 @@ class PlaylistsHandlerSpec extends UnitSpecification {
         playlist
       ).outcomeF
 
-      lazy val response = put("/playlists/1", Map.empty, Map("Host" -> "api.soundcloud.com"), playlistCreateBody)
+      lazy val response = put("/playlists/1", Map.empty, Map(), playlistCreateBody)
     }
 
     trait ValidPostBody {
@@ -426,8 +426,11 @@ class PlaylistsHandlerSpec extends UnitSpecification {
     "returns paginated track collection" in new Context {
       val path = "/playlists/1/tracks?linked_partitioning=true&limit=1&secret_token=s-3creT&access=playable,preview"
       val mockRequest = Request(path)
-      mockRequest.host = "localhost"
-      val pagination = OffsetBasedPagination.build(mockRequest, Seq("linked_partitioning", "secret_token", "access"))
+      val pagination = OffsetBasedPagination.build(
+        "https://api.soundcloud.com",
+        mockRequest,
+        Seq("linked_partitioning", "secret_token", "access")
+      )
       val paginatedTracksCollection =
         Collection(List(requestedTrack1, requestedTrack2), Some(pagination.normalizedHref))
 

@@ -21,12 +21,13 @@ import play.api.libs.json.Json
   */
 class TimelineHandler(
     userAuthentication: UserAuthentication,
-    timelineService: TimelineService
+    timelineService: TimelineService,
+    baseUrl: String
 ) {
 
   def renderPublicStream(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session: LoggedInUserSession, _) =>
-      val pagination = CursorBasedPagination.build(request, Seq("linked_partitioning", "access"))
+      val pagination = CursorBasedPagination.build(baseUrl, request, Seq("linked_partitioning", "access"))
 
       val (cursor, reverseCursor) = extractCursor(pagination)
       val limit = pagination.pageSize
@@ -49,7 +50,7 @@ class TimelineHandler(
 
   def renderTrackStream(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session: LoggedInUserSession, _) =>
-      val pagination = CursorBasedPagination.build(request, Seq("linked_partitioning", "access"))
+      val pagination = CursorBasedPagination.build(baseUrl, request, Seq("linked_partitioning", "access"))
 
       val (cursor, reverseCursor) = extractCursor(pagination)
       val limit = pagination.pageSize
@@ -98,7 +99,7 @@ class TimelineHandler(
 
   def renderFollowingTracks(request: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(request) { (session: LoggedInUserSession, _) =>
-      val pagination = CursorBasedPagination.build(request, Seq("linked_partitioning", "access"))
+      val pagination = CursorBasedPagination.build(baseUrl, request, Seq("linked_partitioning", "access"))
 
       val (cursor, reverseCursor) = extractCursor(pagination)
       val limit = pagination.pageSize
