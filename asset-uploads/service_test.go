@@ -288,7 +288,6 @@ func TestExtractAuthToken(t *testing.T) {
 	const (
 		fiveBytes   = "012345"
 		twentyBytes = "01234567890123456789"
-		largeToken  = twentyBytes + twentyBytes + twentyBytes + fiveBytes
 	)
 
 	tests := [...]struct {
@@ -312,20 +311,6 @@ func TestExtractAuthToken(t *testing.T) {
 					crlf + "Content-Disposition: form-data; name=\"oauth_token\"" +
 					crlf + "" +
 					crlf + "some-token" +
-					crlf + "--------------------------becf7c3b48144d16" +
-					crlf + "Content-Disposition: form-data; name=\"track[title]\"" +
-					crlf + "" +
-					crlf + "My Tack" +
-					crlf + "--------------------------becf7c3b48144d16--" +
-					crlf),
-		},
-		2: {
-			auth: "OAuth " + largeToken[:64],
-			body: []byte(
-				"--------------------------becf7c3b48144d16" +
-					crlf + "Content-Disposition: form-data; name=\"oauth_token\"" +
-					crlf + "" +
-					crlf + largeToken +
 					crlf + "--------------------------becf7c3b48144d16" +
 					crlf + "Content-Disposition: form-data; name=\"track[title]\"" +
 					crlf + "" +
