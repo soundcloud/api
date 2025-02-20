@@ -201,7 +201,7 @@ func (s service) modifyRequest(r *http.Request, header http.Header, body *bytes.
 
 func (s service) extractAuthToken(p *multipart.Part) (*bytes.Buffer, error) {
 	const (
-		maxTokenBytes = 64
+		maxTokenBytes = 1024
 	)
 
 	// Because the token is extracted to be propagated outside of the request
