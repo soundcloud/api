@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -285,10 +286,7 @@ func TestUnsupportedMultipartTrackFields(t *testing.T) {
 }
 
 func TestExtractAuthToken(t *testing.T) {
-	const (
-		fiveBytes   = "012345"
-		twentyBytes = "01234567890123456789"
-	)
+	var largeToken = strings.Repeat("0", 1025)
 
 	tests := [...]struct {
 		auth string
@@ -311,6 +309,20 @@ func TestExtractAuthToken(t *testing.T) {
 					crlf + "Content-Disposition: form-data; name=\"oauth_token\"" +
 					crlf + "" +
 					crlf + "some-token" +
+					crlf + "--------------------------becf7c3b48144d16" +
+					crlf + "Content-Disposition: form-data; name=\"track[title]\"" +
+					crlf + "" +
+					crlf + "My Tack" +
+					crlf + "--------------------------becf7c3b48144d16--" +
+					crlf),
+		},
+		2: {
+			auth: "OAuth " + largeToken[:1024],
+			body: []byte(
+				"--------------------------becf7c3b48144d16" +
+					crlf + "Content-Disposition: form-data; name=\"oauth_token\"" +
+					crlf + "" +
+					crlf + largeToken +
 					crlf + "--------------------------becf7c3b48144d16" +
 					crlf + "Content-Disposition: form-data; name=\"track[title]\"" +
 					crlf + "" +
