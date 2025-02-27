@@ -1,7 +1,8 @@
-# SoundCloud API Issue Tracker
+# SoundCloud API Issue Tracker 
 This repository is a means for our current API users to engage with SoundCloud on
 *  reporting bugs and feature requests in order to improve the API. 
-Please use the [issue tracker] in this repository. 
+Please use the [issue tracker] in this repository.
+**Please note: We have limited support between Feb 28th and Mar 8th 2025**
 
 * following the latest changes to the API. 
 Please check the [releases] page.
