@@ -1,4 +1,3 @@
----
 name: asset-uploads-promote
 env:
   SC_PIPELINE_GROUP: api-team
@@ -30,3 +29,6 @@ jobs:
       uses: soundcloud/sc-github-actions/sc-tools@master
     - name: make -C asset-uploads promote-to-stable promote-to-release
       run: make -C asset-uploads promote-to-stable promote-to-release
+    permissions:
+      contents: read
+      id-token: write

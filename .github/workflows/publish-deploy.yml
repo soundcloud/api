@@ -1,4 +1,3 @@
----
 name: publish-deploy
 env:
   SC_PIPELINE_GROUP: api-team
@@ -32,6 +31,9 @@ jobs:
       uses: soundcloud/sc-github-actions/sc-tools@master
     - name: make publish-deploy
       run: make publish-deploy
+    permissions:
+      contents: read
+      id-token: write
   publish-deploy-replicas:
     env:
       ZONES: replicas
@@ -47,3 +49,6 @@ jobs:
       uses: soundcloud/sc-github-actions/sc-tools@master
     - name: make publish-deploy
       run: make publish-deploy
+    permissions:
+      contents: read
+      id-token: write

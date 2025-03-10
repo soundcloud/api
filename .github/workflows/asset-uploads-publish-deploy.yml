@@ -1,4 +1,3 @@
----
 name: asset-uploads-publish-deploy
 env:
   SC_PIPELINE_GROUP: api-team
@@ -33,3 +32,6 @@ jobs:
       uses: soundcloud/sc-github-actions/sc-tools@master
     - name: make -C asset-uploads publish-deploy
       run: make -C asset-uploads publish-deploy
+    permissions:
+      contents: read
+      id-token: write

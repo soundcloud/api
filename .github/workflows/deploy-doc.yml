@@ -1,4 +1,3 @@
----
 name: deploy-doc
 env:
   SC_PIPELINE_GROUP: api-team
@@ -31,3 +30,6 @@ jobs:
     - name: make package publish publish-deploy promote deploy
       run: make package publish publish-deploy promote deploy
       working-directory: doc
+    permissions:
+      contents: read
+      id-token: write
