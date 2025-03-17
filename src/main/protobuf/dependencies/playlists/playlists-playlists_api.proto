@@ -21,6 +21,7 @@ message GetVisiblePlaylistsRequest {
     proto.soundcloud.common.session.UserSession user_session = 2;
     google.protobuf.StringValue subscription_country_code = 3; // optional
     google.protobuf.FieldMask field_mask = 4;
+    google.protobuf.BoolValue use_write_node = 5; // temporary solution, to mitigate read after write inconsistencies
 }
 
 message PlaylistRequest {
@@ -47,7 +48,8 @@ message PlaylistResponse {
     Playlist playlist = 1;
     repeated TrackRequest track_requests = 2;
     PlaylistPagination pagination = 3; // optional
-    repeated PlaylistFlag flags = 4;
+    repeated PlaylistFlag flags = 4; // deprecated
+    google.protobuf.Timestamp release_time_for_countdown = 5; // optional
 }
 
 message Playlist {
@@ -115,6 +117,7 @@ message CreatePlaylistRequest {
 
 message CreatePlaylistResponse {
     string urn = 1;
+    Playlist playlist = 2;
 }
 
 message UpdatePlaylistRequest {
@@ -123,7 +126,9 @@ message UpdatePlaylistRequest {
     proto.soundcloud.common.session.UserSession user_session = 3;
 }
 
-message UpdatePlaylistResponse {}
+message UpdatePlaylistResponse {
+    Playlist playlist = 1;
+}
 
 message DeletePlaylistRequest {
     string urn = 1;

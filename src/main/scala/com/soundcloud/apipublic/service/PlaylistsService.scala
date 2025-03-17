@@ -23,13 +23,15 @@ import com.twitter.util.Future
 import proto.soundcloud.playlists.api.{
   CreatePlaylistRequest,
   GetVisiblePlaylistsRequest,
-  Playlist => ProtoPlaylist,
   PlaylistPagination,
   PlaylistResponse,
+  Tracks,
   UpdatePlaylistRequest,
   UpdatePlaylistResponse,
+  Playlist => ProtoPlaylist,
   PlaylistRequest => ProtoPlaylistRequest,
   PlaylistsService => PlaylistsTwirpService,
+  TrackRequest => ProtoTrackRequest,
   UpdatePlaylistArtworkRequest => UpdatePlaylistArtworkTwirpRequest,
   WritesService => PlaylistsWritesTwirpService
 }
@@ -114,6 +116,22 @@ class PlaylistsService(
     } yield playlists
   }
 
+  private def fetchPlaylistData(
+      session: UserSession,
+      protoPlaylist: ProtoPlaylist,
+      access: AccessParams,
+      tracks: Option[Tracks]
+  ): Future[List[Playlist]] = {
+    for {
+      playlists <- resolvePlaylists(
+        List(playlistProtoMapper(protoPlaylist, tracks.map(_.urns.map(ProtoTrackRequest(_))))),
+        session,
+        access,
+        true
+      )
+    } yield playlists
+  }
+
   def fetchPlaylistsMetadataOnly(
       session: UserSession,
       playlistRequests: List[PlaylistRequest]
@@ -140,9 +158,16 @@ class PlaylistsService(
       artworkUpdateRequest: Option[UpdatePlaylistArtworkRequest]
   ): OutcomeF[Playlist] = {
     val playlist = for {
-      createdUrn <- createPlaylistMetadata(playlistCreate, session)
-      _ <- artworkUpdateRequest.map(updatePlaylistArtwork(session, createdUrn, _)).getOrElse(().goodF)
-      playlist <- fetchPlaylist(session, createdUrn, None, AccessParams.explicitAccess, None, None).outcomeF
+      protoPlaylist <- createPlaylist(playlistCreate, session)
+      playlistUrn = Urn.parse(protoPlaylist.urn).get
+      _ <- artworkUpdateRequest.map(updatePlaylistArtwork(session, playlistUrn, _)).getOrElse(().goodF)
+      playlist <- fetchPlaylistData(session, protoPlaylist, AccessParams.explicitAccess, playlistCreate.toProto.tracks)
+        .map(_.headOption)
+        .map {
+          case Some(playlist) => playlist.good
+          case _ => NotFound("playlist not found").bad
+        }
+        .outcomeF
     } yield playlist
     playlist.leftMap {
       case notFound: NotFound =>
@@ -156,10 +181,10 @@ class PlaylistsService(
     }
   }
 
-  private def createPlaylistMetadata(
+  private def createPlaylist(
       playlistCreateOrUpdate: PlaylistCreateOrUpdate,
       session: UserSession
-  ): OutcomeF[Urn] = {
+  ): OutcomeF[ProtoPlaylist] = {
     if (playlistCreateOrUpdate.allFieldsMissing) {
       NotValid("All fields missing").badF
     } else {
@@ -170,7 +195,7 @@ class PlaylistsService(
             userSession = Some(session.asProtoSession)
           )
         )
-        .map(res => Urn.parse(res.urn).get.good)
+        .map(_.playlist.get.good)
         .handle {
           case TwinagleException(ErrorCode.InvalidArgument, msg, _, _) => Bad(NotValid(msg))
           case TwinagleException(ErrorCode.PermissionDenied, msg, _, _) => Bad(NotAuthorized(msg))

@@ -29,7 +29,6 @@ import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.{verify, verifyNoInteractions, when}
 import proto.soundcloud.common.session.{UserSession => ProtoUserSession}
 import proto.soundcloud.playlists.api.{
-  Counts => ProtoCounts,
   CreatePlaylistRequest,
   CreatePlaylistResponse,
   GetVisiblePlaylistsRequest,
@@ -38,6 +37,7 @@ import proto.soundcloud.playlists.api.{
   PlaylistResponse,
   UpdatePlaylistRequest,
   UpdatePlaylistResponse,
+  Counts => ProtoCounts,
   Playlist => ProtoPlaylist,
   PlaylistRequest => ProtoPlaylistRequest,
   PlaylistsService => PlaylistsTwirpService,
@@ -597,8 +597,12 @@ class PlaylistsServiceSpec extends UnitSpecification {
 
       setUpMocksForWritePlaylists(
         playlistCreate = createOrUpdatePlaylist,
-        response =
-          Future.value(CreatePlaylistResponse(urn = Urn("soundcloud", "playlists", playlist.id.toString).toString))
+        response = Future.value(
+          CreatePlaylistResponse(
+            urn = Urn("soundcloud", "playlists", playlist.id.toString).toString,
+            Some(protoPlaylist)
+          )
+        )
       )
 
       val result = Await.result(playlistsService.createPlaylist(session, createOrUpdatePlaylist, None).value)
@@ -633,8 +637,12 @@ class PlaylistsServiceSpec extends UnitSpecification {
 
       setUpMocksForWritePlaylists(
         playlistCreate = createOrUpdatePlaylist,
-        response =
-          Future.value(CreatePlaylistResponse(urn = Urn("soundcloud", "playlists", playlist.id.toString).toString))
+        response = Future.value(
+          CreatePlaylistResponse(
+            urn = Urn("soundcloud", "playlists", playlist.id.toString).toString,
+            Some(protoPlaylist)
+          )
+        )
       )
 
       when(
@@ -714,32 +722,6 @@ class PlaylistsServiceSpec extends UnitSpecification {
       Await.result(playlistsService.createPlaylist(session, createOrUpdatePlaylist, None).value) must throwA[
         RuntimeException
       ]
-    }
-
-    "logs exception if read after write fails" in new CreateOrUpdatePlaylist {
-      override def shouldFailGetVisiblePlaylist = true
-
-      val playlist = new PlaylistBuilder().setId(1).build
-
-      setUpMocksForWritePlaylists(
-        playlistCreate = createOrUpdatePlaylist,
-        response =
-          Future.value(CreatePlaylistResponse(urn = Urn("soundcloud", "playlists", playlist.id.toString).toString))
-      )
-
-      val result = Await.result(playlistsService.createPlaylist(session, createOrUpdatePlaylist, None).value)
-
-      result match {
-        case Good(_) =>
-          failure(s"returned ${result.toString} instead of Bad(NotFound())")
-        case Bad(bad) => bad ==== NotFound("playlist not found")
-      }
-
-      verify(exceptionCollector).addMessage(
-        "read-after-write-playlists",
-        "reading after creating a playlist failed",
-        collectRequestBody = true
-      )
     }
   }
 

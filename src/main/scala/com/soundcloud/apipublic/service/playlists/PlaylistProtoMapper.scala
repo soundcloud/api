@@ -67,4 +67,11 @@ class PlaylistProtoMapper {
       case _ => None
     }
   }
+
+  def apply(
+      protoPlaylist: Playlist,
+      trackRequests: Option[Seq[ProtoTrackRequest]]
+  ): VisiblePlaylist = {
+    createPlaylist(protoPlaylist, trackRequests.getOrElse(List()), None, None)
+  }
 }
