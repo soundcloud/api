@@ -39,7 +39,7 @@ assemble: target/api
 
 .PHONY: package
 package: assemble
-	sc artifact-manager package --runtime=base
+	sc artifact-manager package --runtime=base --multiarch=true
 
 .PHONY: clean
 clean:
