@@ -24,13 +24,13 @@ class UserTracksHandler(
       val userId = req.routeParams("userId")
       val access = AccessParamsExtractor.unapply(req.params)
 
-      performGetTracks(req, session, userId, access)
+      performGetTracks(req, session, userId, access, false)
     }
   }
 
   def getMeTracks(req: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(req) { (session, userUrn) =>
-      performGetTracks(req, session, userUrn.identifier, AccessParams.explicitAccess)
+      performGetTracks(req, session, userUrn.identifier, AccessParams.explicitAccess, true)
     }
   }
 
@@ -38,7 +38,8 @@ class UserTracksHandler(
       req: HandlerRequest,
       session: UserSession,
       userId: String,
-      access: AccessParams
+      access: AccessParams,
+      isPrivate: Boolean
   ): Future[Response] = {
     val hasLinkedPartitioning = req.params.contains("linked_partitioning")
     val pagination = CursorBasedPagination.build(baseUrl, req, Seq("linked_partitioning", "access"))
@@ -48,7 +49,7 @@ class UserTracksHandler(
         val tracksCollection = userTracksService
           .userTracks(session, urn, access, pagination)
           .map(Good(_))
-        CollectionResponse.handleCollectionResponse(tracksCollection, hasLinkedPartitioning)
+        CollectionResponse.handleCollectionResponse(tracksCollection, hasLinkedPartitioning, isPrivate)
       case Throw(e) => Future.value(ErrorResponse.badRequest(e.getMessage))
     }
   }

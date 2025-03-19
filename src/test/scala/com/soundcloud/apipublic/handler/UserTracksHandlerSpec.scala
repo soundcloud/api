@@ -77,6 +77,7 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationSp
 
           val response = get(path)
           response.status ==== Status.Ok
+          response.headerMap.get("Cache-Control").get === "public, max-age=60, must-revalidate"
           response.contentString ==== expectedResponse
         }
       }
@@ -92,6 +93,7 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationSp
 
           val response = get(path)
           response.status ==== Status.Ok
+          response.headerMap.get("Cache-Control").get === "private, max-age=0"
           response.contentString ==== expectedResponse
         }
       }

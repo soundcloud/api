@@ -58,13 +58,13 @@ class UserPlaylistsHandler(
       val userId = req.routeParams("userId")
       val access = AccessParamsExtractor.unapply(req.params)
 
-      performGetPlaylists(req, session, userId, access)
+      performGetPlaylists(req, session, userId, access, false)
     }
   }
 
   def getMePlaylists(req: HandlerRequest): Future[Response] = {
     userAuthentication.withLoggedInUser(req) { (session, userUrn) =>
-      performGetPlaylists(req, session, userUrn.identifier, AccessParams.explicitAccess)
+      performGetPlaylists(req, session, userUrn.identifier, AccessParams.explicitAccess, true)
     }
   }
 
@@ -72,7 +72,8 @@ class UserPlaylistsHandler(
       req: HandlerRequest,
       session: UserSession,
       userId: String,
-      access: AccessParams
+      access: AccessParams,
+      isPrivate: Boolean
   ): Future[Response] = {
     val hasLinkedPartitioning = req.params.contains("linked_partitioning")
     val pagination = CursorBasedPagination.build(baseUrl, req, Seq("linked_partitioning", "access", "show_tracks"))
@@ -84,7 +85,7 @@ class UserPlaylistsHandler(
           userPlaylistsService
             .userPlaylists(session, urn, access, pagination, showTracks)
             .map(Good(_))
-        CollectionResponse.handleCollectionResponse(playlistsCollection, hasLinkedPartitioning)
+        CollectionResponse.handleCollectionResponse(playlistsCollection, hasLinkedPartitioning, isPrivate)
       case Throw(e) => Future.value(ErrorResponse.badRequest(e.getMessage))
     }
   }

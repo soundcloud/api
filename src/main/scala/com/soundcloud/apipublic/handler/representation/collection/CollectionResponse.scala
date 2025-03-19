@@ -13,7 +13,8 @@ object CollectionResponse {
 
   def handleCollectionResponse[T: Writes](
       outcome: Future[Outcome[Collection[T]]],
-      hasLinkedPartitioning: Boolean
+      hasLinkedPartitioning: Boolean,
+      isPrivate: Boolean = false
   ): Future[Response] = {
     outcome
       .map {
@@ -21,7 +22,7 @@ object CollectionResponse {
           val response = JsonResponseBuilder.ok(
             Collection.getRepresentation(collectionResponse, hasLinkedPartitioning)
           )
-          appendCacheHeaders(response)
+          appendCacheHeaders(response, isPrivate)
 
         case Bad(NotValid(_)) => ErrorResponse.badRequest()
         case Bad(NotFound(_)) | Bad(NotAuthorized(_)) => ErrorResponse.notFound()
@@ -29,8 +30,12 @@ object CollectionResponse {
       }
   }
 
-  private def appendCacheHeaders(response: Response) = {
-    response.headerMap.set("Cache-Control", s"public, max-age=$MaxCacheAge, must-revalidate")
+  private def appendCacheHeaders(response: Response, isPrivate: Boolean) = {
+    if (isPrivate) {
+      response.headerMap.set("Cache-Control", "private, max-age=0")
+    } else {
+      response.headerMap.set("Cache-Control", s"public, max-age=$MaxCacheAge, must-revalidate")
+    }
     response
   }
 }
