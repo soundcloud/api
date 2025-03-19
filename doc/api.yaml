@@ -15,9 +15,9 @@ tags:
   - name: oauth
     description: Authentication and Authorization Endpoints.
   - name: me
-    description: Own User Endpoints.
+    description: Own User Endpoints. Requires an access token obtained via the authorization_code flow (resource owner required).
   - name: search
-    description: Search Endpoints.
+    description: Search Endpoints. Supports access tokens from both authorization_code and client_credentials flows.
   - name: playlists
     description: Playlists Endpoints.
   - name: tracks
