@@ -95,7 +95,8 @@ trait TrackRepresentationSpecContext {
     ),
     access = Some(Access.Playable),
     counts = VisibleTrackCounts(None, None, None, None, None),
-    isrc = defaultIsrc
+    isrc = defaultIsrc,
+    metaDataArtist = Option.empty
   )
 
   def defaultIsrc = Some("US-S1Z-99-00001")

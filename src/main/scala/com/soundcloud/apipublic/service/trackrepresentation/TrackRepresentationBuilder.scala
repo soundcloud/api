@@ -70,7 +70,8 @@ object TrackRepresentationBuilder {
       artworkUrl = trackCoordinatorTrack.artwork_url,
       downloadable = trackCoordinatorTrack.downloadable.getOrElse(false),
       policy = None,
-      monetizationModel = None
+      monetizationModel = None,
+      metaDataArtist = trackCoordinatorTrack.publisher_metadata.flatMap(metadata => metadata.artist)
     )
   }
 
@@ -128,7 +129,8 @@ object TrackRepresentationBuilder {
       artworkUrl = visibleTrack.artwork.filename.map(imageUrl),
       downloadable = visibleTrack.downloadable,
       policy = getPolicy(visibleTrack.authorization.policy, client),
-      monetizationModel = getMonetizationModel(visibleTrack.authorization.monetizationModel, client)
+      monetizationModel = getMonetizationModel(visibleTrack.authorization.monetizationModel, client),
+      metaDataArtist = visibleTrack.metaDataArtist
     )
   }
   private val baseUrl = "https://api.soundcloud.com/tracks"

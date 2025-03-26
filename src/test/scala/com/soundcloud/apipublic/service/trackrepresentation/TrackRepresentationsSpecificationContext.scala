@@ -96,7 +96,8 @@ trait TrackRepresentationsSpecificationContext extends UnitSpecification {
         authorization = authorization,
         access = Some(Access.Playable),
         counts = VisibleTrackCounts(Some(111), Some(222), Some(333), Some(444), Some(555)),
-        isrc = isrc
+        isrc = isrc,
+        metaDataArtist = Option.empty
       )
 
     def createTrackRepresentation: TrackRepresentation =

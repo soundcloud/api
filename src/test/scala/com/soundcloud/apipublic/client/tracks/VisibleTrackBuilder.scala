@@ -53,6 +53,7 @@ class VisibleTrackBuilder {
   private var access: Option[Access] = None
   private var counts: VisibleTrackCounts = VisibleTrackCounts(None, None, None, None, None)
   private var isrc: Option[String] = None
+  private var metaDataArtist: Option[String] = None
 
   def setUrn(value: Urn) = {
     urn = value; this
@@ -224,6 +225,10 @@ class VisibleTrackBuilder {
     isrc = value; this
   }
 
+  def setMetaDataArtist(value: Option[String]) = {
+    metaDataArtist = value; this
+  }
+
   def build: VisibleTrack =
     VisibleTrack(
       urn,
@@ -267,6 +272,7 @@ class VisibleTrackBuilder {
       keySignature,
       access,
       counts,
-      isrc
+      isrc,
+      metaDataArtist
     )
 }

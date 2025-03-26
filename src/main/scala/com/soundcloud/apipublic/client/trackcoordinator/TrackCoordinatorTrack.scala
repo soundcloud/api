@@ -3,7 +3,7 @@ package com.soundcloud.apipublic.client.trackcoordinator
 import play.api.libs.json.JsonNaming.SnakeCase
 import play.api.libs.json._
 
-case class PublisherMetadata(isrc: Option[String])
+case class PublisherMetadata(isrc: Option[String], artist: Option[String])
 
 object PublisherMetadata {
   private val snakeCase = Json.configured(JsonConfiguration(SnakeCase))

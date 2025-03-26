@@ -135,7 +135,8 @@ class TrackUpdateService(
   ): TrackRepresentation = {
 
     trackRep.copy(
-      isrc = metadataUpdate.publisher_metadata.flatMap(publisherMetadata => publisherMetadata.isrc),
+      isrc = metadataUpdate.publisher_metadata.flatMap(_.isrc),
+      metaDataArtist = metadataUpdate.publisher_metadata.flatMap(_.artist),
       availableCountries = metadataUpdate.geo_blockings.flatMap(getGeoBlockings),
       title = metadataUpdate.title,
       genre = metadataUpdate.genre,

@@ -34,7 +34,7 @@ class TrackCoordinatorTrackFixtures {
       permalink_url = "https://soundcloud.com/imprisonedprecision/awesome-track-2014-10-27-17-25-29-66",
       playback_count = 0,
       public = public,
-      publisher_metadata = Some(PublisherMetadata(Some("DEABC1234567"))),
+      publisher_metadata = Some(PublisherMetadata(Some("DEABC1234567"), Some("Real1234"))),
       purchase_title = Some("buy123"),
       purchase_url = Some("http://buy.that.com"),
       release = Some("1234"),
@@ -89,7 +89,8 @@ class TrackCoordinatorTrackFixtures {
       permalink_url = "https://soundcloud.com/imprisonedprecision/awesome-track-2014-10-27-17-25-29-66",
       playback_count = 0,
       public = trackRepresentation.public,
-      publisher_metadata = Some(PublisherMetadata(isrc = Some(trackRepresentation.isrc.get.toString))),
+      publisher_metadata =
+        Some(PublisherMetadata(isrc = trackRepresentation.isrc, artist = trackRepresentation.metaDataArtist)),
       purchase_title = trackRepresentation.purchaseTitle,
       purchase_url = trackRepresentation.purchaseUrl,
       release = trackRepresentation.release,

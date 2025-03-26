@@ -54,5 +54,6 @@ case class VisibleTrack(
     keySignature: Option[String],
     access: Option[Access],
     counts: VisibleTrackCounts,
-    isrc: Option[String]
+    isrc: Option[String],
+    metaDataArtist: Option[String]
 )
