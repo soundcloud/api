@@ -113,6 +113,7 @@ class LikesHandlerSpec extends UnitSpecification {
 
           val response = get(path)
           response.status ==== Status.Ok
+          response.headerMap.get("Cache-Control").get === "private, max-age=0"
           response.contentString ==== expectedResponse
         }
       }
@@ -185,6 +186,7 @@ class LikesHandlerSpec extends UnitSpecification {
 
           val response = get(path)
           response.status ==== Status.Ok
+          response.headerMap.get("Cache-Control").get === "private, max-age=0"
           response.contentString ==== expectedResponse
         }
       }

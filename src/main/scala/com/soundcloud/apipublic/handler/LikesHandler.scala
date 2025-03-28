@@ -151,7 +151,7 @@ class LikesHandler(
         val playlistsCollection = likesService
           .userPlaylistsLikes(session, urn, pagination)
           .map(Good(_))
-        CollectionResponse.handleCollectionResponse(playlistsCollection, hasLinkedPartitioning)
+        CollectionResponse.handleCollectionResponse(playlistsCollection, hasLinkedPartitioning, isPrivate = true)
       case Throw(e) => Future.value(ErrorResponse.badRequest(e.getMessage))
     }
   }
@@ -170,7 +170,7 @@ class LikesHandler(
         val tracksCollection = likesService
           .userTracksLikes(session, urn, access, pagination)
           .map(Good(_))
-        CollectionResponse.handleCollectionResponse(tracksCollection, hasLinkedPartitioning)
+        CollectionResponse.handleCollectionResponse(tracksCollection, hasLinkedPartitioning, isPrivate = true)
       case Throw(e) => Future.value(ErrorResponse.badRequest(e.getMessage))
     }
   }
