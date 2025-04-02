@@ -1,6 +1,7 @@
 openapi: 3.0.4
 info:
   title: SoundCloud Public API Specification
+  description: Swagger json can be found [here](https://developers.soundcloud.com/docs/api/explorer/api.json)
   contact:
     name: API issue tracker
     url: https://github.com/soundcloud/api
