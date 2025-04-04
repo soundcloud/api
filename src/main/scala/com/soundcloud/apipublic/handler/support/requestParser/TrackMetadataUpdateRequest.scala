@@ -34,6 +34,7 @@ object TrackMetadataUpdateRequest {
         description = parseNullableStringInput(params, "description"),
         genre = parseNullableStringInput(params, "genre"),
         isrc = parseNullableStringInput(params, "isrc"),
+        artist = parseNullableStringInput(params, "metadata_artist"),
         label_name = parseNullableStringInput(params, "label_name"),
         license = parseNullableStringInput(params, "license"),
         purchase_url = parseNullableStringInput(params, "purchase_url"),

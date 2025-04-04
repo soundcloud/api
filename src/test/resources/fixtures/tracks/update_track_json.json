@@ -20,6 +20,7 @@
     "title": "new title",
     "reveal_stats": false,
     "reveal_comments": true,
-    "purchase_title": "new title"
+    "purchase_title": "new title",
+    "metadata_artist": "new artist"
   }
 }

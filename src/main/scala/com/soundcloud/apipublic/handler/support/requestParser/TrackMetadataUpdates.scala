@@ -13,6 +13,7 @@ case class TrackMetadataUpdates(
     genre: NullableValue[String],
     geo_blockings: NullableValue[List[String]],
     isrc: NullableValue[String],
+    artist: NullableValue[String],
     label_name: NullableValue[String],
     license: NullableValue[String],
     permalink: NonNullableValue[String],
@@ -59,7 +60,8 @@ object TrackMetadataUpdates {
           sharing = NullableValue.read[String](json \ "sharing"),
           tag_list = NullableValue.read[String](json \ "tag_list"),
           title = NonNullableValue.read[String](json \ "title"),
-          isrc = NullableValue.read[String](json \ "isrc")
+          isrc = NullableValue.read[String](json \ "isrc"),
+          artist = NullableValue.read[String](json \ "metadata_artist")
         )
       ) match {
         case Success(value) => JsSuccess(value)
@@ -95,18 +97,23 @@ object TrackMetadataUpdates {
         getNullable(trackUpdate.sharing, "sharing") ++
         getNullable(trackUpdate.label_name, "label_name") ++
         getNullable(trackUpdate.release, "release") ++
-        trackUpdate.isrc.toOptionalJsValue.fold(Json.obj())(isrc =>
-          Json.obj(
-            "publisher_metadata" -> Json.obj(
-              "isrc" -> isrc
-            )
-          )
-        )
+        getNullablePublisherMetadata(trackUpdate)
 
     val nonNullableJsonVals =
       getNonNullable(trackUpdate.title, "title") ++
         getNonNullable(trackUpdate.permalink, "permalink")
 
     nonNullableJsonVals ++ nullableJsonVals
+  }
+
+  private def getNullablePublisherMetadata(trackUpdate: TrackMetadataUpdates): JsObject = {
+    val publisherMetadataFields = Seq(
+      trackUpdate.isrc.toOptionalJsValue.map("isrc" -> _),
+      trackUpdate.artist.toOptionalJsValue.map("artist" -> _)
+    ).flatten
+
+    if (publisherMetadataFields.nonEmpty)
+      Json.obj("publisher_metadata" -> JsObject(publisherMetadataFields))
+    else Json.obj()
   }
 }

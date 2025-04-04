@@ -59,6 +59,9 @@ properties:
   license:
     description: License
     type: string
+  metadata_artist:
+    description: Optional artist name, when different from user.
+    type: string
   permalink_url:
     description: Permalink URL.
     type: string

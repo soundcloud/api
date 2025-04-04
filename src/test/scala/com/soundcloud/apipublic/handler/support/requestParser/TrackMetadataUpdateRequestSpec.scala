@@ -1,9 +1,9 @@
 package com.soundcloud.apipublic.handler.support.requestParser
 
-import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.apipublic.client.mothership.request.representation.{NonNullValue, Value}
 import com.soundcloud.apipublic.test.UnitSpecification
 import com.soundcloud.apipublic.test.fixtures.Fixtures._
+import com.soundcloud.jvmkit.module.outcome._
 import play.api.libs.json.Json
 
 class TrackMetadataUpdateRequestSpec extends UnitSpecification {
@@ -29,12 +29,13 @@ class TrackMetadataUpdateRequestSpec extends UnitSpecification {
         title = NonNullValue("new title"),
         reveal_stats = Value(false),
         reveal_comments = Value(true),
-        purchase_title = Value("new title")
+        purchase_title = Value("new title"),
+        artist = Value("new artist")
       )
     )
 
     val requestBodyExpected =
-      """{"title":"new title","permalink":"permalinky","api_streamable":true,"commentable":true,"description":"a random description","downloadable":false,"embeddable":true,"genre":"bossa nova","geo_blockings":["EN","DE"],"license":"test_license","purchase_title":"new title","release_date":"2008/04/29 22:14:25 +0000","reveal_comments":true,"reveal_stats":false,"tag_list":"tags, tags, tags","purchase_url":"purchase.com/track","sharing":"all","label_name":"alexxx","release":"1234","publisher_metadata":{"isrc":"is-rc"}}"""
+      """{"title":"new title","permalink":"permalinky","api_streamable":true,"commentable":true,"description":"a random description","downloadable":false,"embeddable":true,"genre":"bossa nova","geo_blockings":["EN","DE"],"license":"test_license","purchase_title":"new title","release_date":"2008/04/29 22:14:25 +0000","reveal_comments":true,"reveal_stats":false,"tag_list":"tags, tags, tags","purchase_url":"purchase.com/track","sharing":"all","label_name":"alexxx","release":"1234","publisher_metadata":{"isrc":"is-rc","artist":"new artist"}}"""
   }
 
   "can read json" in new Context {
@@ -64,7 +65,8 @@ class TrackMetadataUpdateRequestSpec extends UnitSpecification {
         "title" -> "new title",
         "reveal_stats" -> "false",
         "reveal_comments" -> "true",
-        "purchase_title" -> "new title"
+        "purchase_title" -> "new title",
+        "metadata_artist" -> "new artist"
       )
 
       val metadataUpdates = TrackMetadataUpdateRequest.fromForm(inputArgMap)
@@ -93,7 +95,8 @@ class TrackMetadataUpdateRequestSpec extends UnitSpecification {
           "title" -> "new title",
           "reveal_stats" -> booleanString,
           "reveal_comments" -> booleanString,
-          "purchase_title" -> "new title"
+          "purchase_title" -> "new title",
+          "metadata_artist" -> "new artist"
         )
       }
     }
@@ -115,6 +118,7 @@ class TrackMetadataUpdateRequestSpec extends UnitSpecification {
   "can write to request body" in new Context {
     val metadataUpdates = updateTrackJson.as[TrackMetadataUpdateRequest]
     val requestBody = Json.stringify(Json.toJson(metadataUpdates.track))
+
     requestBody ==== requestBodyExpected
   }
 }
