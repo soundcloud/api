@@ -1,6 +1,3 @@
 services:
-  memcached:
-    image: docker.localproxy.sc:42042/sc-memcached:latest-${HOSTARCH}
-
   zookeeper:
     image: docker.localproxy.sc:42042/sc-zookeeper:latest-${HOSTARCH}

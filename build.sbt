@@ -14,7 +14,6 @@ lazy val apiPublic = project
       "com.soundcloud" %% "jvmkit-admin-server" % jvmkitVersion,
       "com.soundcloud" %% "jvmkit-bff" % jvmkitVersion,
       "com.soundcloud" %% "jvmkit-rollout" % jvmkitVersion,
-      "com.soundcloud" %% "jvmkit-memcached" % jvmkitVersion,
       "com.soundcloud" %% "jvmkit-json-play" % jvmkitVersion,
       "com.soundcloud" %% "jvmkit-outcome" % jvmkitVersion,
       "com.soundcloud" %% "jvmkit-twirp" % jvmkitVersion,

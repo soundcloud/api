@@ -13,13 +13,6 @@ on:
         options:
           - "true"
           - "false"
-      deploy_memcached:
-        description: "Deploy memcached"
-        required: false
-        default: "false"
-        options:
-        - "false"
-        - "true"
 jobs:
   validate_ref:
     runs-on: ubuntu-latest
@@ -50,14 +43,6 @@ jobs:
     if: ${{ github.event.inputs.deploy_asset_uploads == 'true' }}
     needs: validate_ref
     uses: "./.github/workflows/asset-uploads-common.yml"
-    secrets: inherit
-    with:
-      ref: ${{ needs.validate_ref.outputs.ref }}
-  deploy_memcached:
-    name: call memcached-deploy-common workflow
-    if: ${{ github.event.inputs.deploy_memcached == 'true' }}
-    needs: validate_ref
-    uses: "./.github/workflows/memcached-deploy-common.yml"
     secrets: inherit
     with:
       ref: ${{ needs.validate_ref.outputs.ref }}

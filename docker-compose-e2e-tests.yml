@@ -1,9 +1,4 @@
 services:
-  memcached:
-    image: docker.localproxy.sc:42042/sc-memcached:latest-${HOSTARCH}
-    ports:
-      - 11211:11211
-
   zookeeper:
     image: docker.localproxy.sc:42042/sc-zookeeper:latest-${HOSTARCH}
     ports:
@@ -23,7 +18,6 @@ services:
       - 5001:5001
     depends_on:
       - zookeeper
-      - memcached
 
   asset-uploads:
     image: docker.localproxy.sc:42042/api-public-asset-uploads:$VERSION
