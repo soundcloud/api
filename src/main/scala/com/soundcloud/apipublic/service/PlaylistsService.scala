@@ -27,7 +27,6 @@ import proto.soundcloud.playlists.api.{
   PlaylistResponse,
   Tracks,
   UpdatePlaylistRequest,
-  UpdatePlaylistResponse,
   Playlist => ProtoPlaylist,
   PlaylistRequest => ProtoPlaylistRequest,
   PlaylistsService => PlaylistsTwirpService,
@@ -261,9 +260,41 @@ class PlaylistsService(
       artworkUpdateRequest: Option[UpdatePlaylistArtworkRequest]
   ): OutcomeF[Playlist] = {
     for {
-      _ <- updatePlaylistMetadata(playlistCreate, playlistUrn, session)
+      playlist <- if (playlistCreate.allFieldsMissing) {
+        updateJustArtwork(session, playlistUrn, artworkUpdateRequest)
+      } else {
+        updateMetadataAndArtwork(session, playlistUrn, playlistCreate, artworkUpdateRequest)
+      }
+    } yield playlist
+  }
+
+  private def updateMetadataAndArtwork(
+      session: UserSession,
+      playlistUrn: Urn,
+      playlistCreate: PlaylistCreateOrUpdate,
+      artworkUpdateRequest: Option[UpdatePlaylistArtworkRequest]
+  ): OutcomeF[Playlist] = {
+    for {
+      protoPlaylist <- updatePlaylistMetadata(playlistCreate, playlistUrn, session)
+      playlist <- fetchPlaylistData(session, protoPlaylist, AccessParams.explicitAccess, playlistCreate.toProto.tracks)
+        .map(_.headOption)
+        .map {
+          case Some(playlist) => playlist.good
+          case _ => NotFound("playlist not found").bad
+        }
+        .outcomeF
       _ <- artworkUpdateRequest.map(updatePlaylistArtwork(session, playlistUrn, _)).getOrElse(().goodF)
+    } yield playlist
+  }
+
+  private def updateJustArtwork(
+      session: UserSession,
+      playlistUrn: Urn,
+      artworkUpdateRequest: Option[UpdatePlaylistArtworkRequest]
+  ): OutcomeF[Playlist] = {
+    for {
       playlist <- fetchPlaylist(session, playlistUrn, None, AccessParams.explicitAccess, None, None).outcomeF
+      _ <- artworkUpdateRequest.map(updatePlaylistArtwork(session, playlistUrn, _)).getOrElse(().goodF)
     } yield playlist
   }
 
@@ -271,27 +302,23 @@ class PlaylistsService(
       playlistCreateOrUpdate: PlaylistCreateOrUpdate,
       playlistUrn: Urn,
       session: UserSession
-  ): OutcomeF[UpdatePlaylistResponse] = {
+  ): OutcomeF[ProtoPlaylist] = {
     val updatePlaylistRequest = UpdatePlaylistRequest(
       Some(playlistCreateOrUpdate.toProto),
       playlistUrn.toString,
       Some(session.asProtoSession)
     )
-    if (playlistCreateOrUpdate.allFieldsMissing) {
-      UpdatePlaylistResponse().goodF
-    } else {
-      playlistsWritesTwirpService
-        .updatePlaylist(updatePlaylistRequest)
-        .map(Good(_))
-        .handle {
-          case TwinagleException(ErrorCode.NotFound, _, _, _) => Bad(NotFound("playlist not found"))
-          case TwinagleException(ErrorCode.InvalidArgument, msg, _, _) => Bad(NotValid(msg))
-          case TwinagleException(ErrorCode.PermissionDenied, msg, _, _) => Bad(NotAuthorized(msg))
-          case TwinagleException(code, msg, meta, _) =>
-            throw new RuntimeException(s"unexpected response from playlists: msg: ${msg}, code: ${code}, meta: ${meta}")
-        }
-        .outcomeF
-    }
+    playlistsWritesTwirpService
+      .updatePlaylist(updatePlaylistRequest)
+      .map(_.playlist.get.good)
+      .handle {
+        case TwinagleException(ErrorCode.NotFound, _, _, _) => Bad(NotFound("playlist not found"))
+        case TwinagleException(ErrorCode.InvalidArgument, msg, _, _) => Bad(NotValid(msg))
+        case TwinagleException(ErrorCode.PermissionDenied, msg, _, _) => Bad(NotAuthorized(msg))
+        case TwinagleException(code, msg, meta, _) =>
+          throw new RuntimeException(s"unexpected response from playlists: msg: ${msg}, code: ${code}, meta: ${meta}")
+      }
+      .outcomeF
   }
 
   private def resolvePlaylists(

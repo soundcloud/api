@@ -728,7 +728,11 @@ class PlaylistsServiceSpec extends UnitSpecification {
   "#updatePlaylist" >> {
 
     "updates the playlist" in new CreateOrUpdatePlaylist {
-      setUpMocksForUpdatePlaylists(createOrUpdatePlaylist, playlistUrn, Future.value(UpdatePlaylistResponse()))
+      setUpMocksForUpdatePlaylists(
+        createOrUpdatePlaylist,
+        playlistUrn,
+        Future.value(UpdatePlaylistResponse(Some(protoPlaylist)))
+      )
 
       val result =
         Await.result(playlistsService.updatePlaylist(session, playlistUrn, createOrUpdatePlaylist, None).value)
