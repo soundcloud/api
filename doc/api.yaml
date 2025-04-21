@@ -50,15 +50,15 @@ paths:
         - $ref: '#/components/parameters/client_id'
         - $ref: '#/components/parameters/redirect_uri'
         - $ref: '#/components/parameters/response_type'
-# The scope parameter is usually empty for most of the clients. As different scopes are poorly supported, we shouldn't mention it here at all.
-#        - $ref: '#/components/parameters/scope'
+        # The scope parameter is usually empty for most of the clients. As different scopes are poorly supported, we shouldn't mention it here at all.
+        #        - $ref: '#/components/parameters/scope'
         - $ref: '#/components/parameters/state'
       responses:
         302:
           description: Redirect to connect portal
           headers:
             Location:
-              description: Redirect to connect poral "https://secure.soundcloud.com/connect"
+              description: Redirect to connect portal "https://secure.soundcloud.com/connect"
               schema:
                 type: string
         401:
@@ -362,8 +362,8 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/TrackDataRequest'
                 - required:
-                  - track[title]
-                  - track[asset_data]
+                    - track[title]
+                    - track[asset_data]
             examples:
               default:
                 $ref: '#/components/examples/TrackDataRequest'
@@ -372,8 +372,8 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/TrackDataRequest'
                 - required:
-                  - track[title]
-                  - track[asset_data]
+                    - track[title]
+                    - track[asset_data]
       responses:
         201:
           $ref: '#/components/responses/Track'
@@ -420,7 +420,7 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/CreateUpdatePlaylistFormRequest'
                 - required:
-                  - playlist[title]
+                    - playlist[title]
             examples:
               default:
                 $ref: "#/components/examples/CreateUpdatePlaylistFormRequest"

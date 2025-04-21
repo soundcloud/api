@@ -1,19 +1,17 @@
 package com.soundcloud.apipublic.service.playlists
 
 import java.time.Instant
-
 import com.soundcloud.apipublic.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.apipublic.service.playlists.representation.Playlist
 import com.soundcloud.apipublic.service.trackrepresentation.TrackRepresentation
 import com.soundcloud.apipublic.service.users.UserBuilder
+import com.soundcloud.jvmkit.module.util.Urn
 
 class PlaylistBuilder {
   private val defaultUser = new UserBuilder().build
-
+  private var urn: Urn = Urn("soundcloud", "playlists", "123")
   private var title: String = "my playlist"
-  private var id: Long = 123L
   private var duration: Long = 5000L
-  private var userId: Long = 1212L
   private var kind: String = "playlist"
   private var releaseDay: Option[Int] = Some(1)
   private var permalinkUrl: String = "https://soundcloud.com/user1212/my-playlist"
@@ -48,9 +46,8 @@ class PlaylistBuilder {
   private var likesCount: Long = 808
 
   def setTitle(value: String) = { title = value; this }
-  def setId(value: Long) = { id = value; this }
+  def setUrn(value: Urn) = { urn = value; this }
   def setDuration(value: Long) = { duration = value; this }
-  def setUserid(value: Long) = { userId = value; this }
   def setKind(value: String) = { kind = value; this }
   def setReleaseDay(value: Option[Int]) = { releaseDay = value; this }
   def setPermalinkUrl(value: String) = { permalinkUrl = value; this }
@@ -87,9 +84,9 @@ class PlaylistBuilder {
   def build: Playlist = {
     Playlist(
       title = this.title,
-      id = this.id,
+      urn = this.urn,
       duration = this.duration,
-      userId = this.userId,
+      userUrn = this.user.urn,
       kind = this.kind,
       releaseDay = this.releaseDay,
       permalinkUrl = this.permalinkUrl,

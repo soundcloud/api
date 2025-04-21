@@ -69,6 +69,7 @@ object TrackRepresentation {
       Json.obj(
         "kind" -> "track",
         "id" -> rep.id,
+        "urn" -> rep.urn.toString,
         "created_at" -> rep.createdAt.toString(dateTimeFormat),
         "duration" -> rep.duration,
         "commentable" -> rep.commentable,

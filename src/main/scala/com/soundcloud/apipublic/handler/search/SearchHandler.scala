@@ -38,6 +38,7 @@ class SearchHandler(
     "created_at[from]",
     "created_at[to]",
     "ids",
+    "urns",
     "client_id",
     "place"
   )
@@ -49,6 +50,7 @@ class SearchHandler(
     "order",
     "created_at",
     "ids",
+    "urns",
     "client_id",
     "genres",
     "tags",

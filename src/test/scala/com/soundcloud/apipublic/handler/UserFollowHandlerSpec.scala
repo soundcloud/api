@@ -57,6 +57,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
         |{
         |  "avatar_url": "https://i1.sndcdn.com/avatars-000092704388-h04iht-large.jpg?86347b7",
         |  "id": 123,
+        |  "urn": "soundcloud:users:123",
         |  "kind": "user",
         |  "permalink_url": "http://soundcloud.com/adeline",
         |  "uri": "https://api.soundcloud.com/users/123",
@@ -93,6 +94,7 @@ class UserFollowHandlerSpec extends UnitSpecification {
         |{
         |  "avatar_url": "https://i1.sndcdn.com/avatars-000092704388-h04iht-large.jpg?86347b7",
         |  "id": 123,
+        |  "urn": "soundcloud:users:123",
         |  "kind": "user",
         |  "permalink_url": "http://soundcloud.com/adeline",
         |  "uri": "https://api.soundcloud.com/users/123",

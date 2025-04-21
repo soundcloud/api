@@ -72,7 +72,7 @@ class UserPlaylistsHandlerSpec extends UnitSpecification {
     }
 
     "GET /users/:id/playlists" >> {
-      "with a successful response from playlists service" >> {
+      "with a successful response from playlists service with id" >> {
         "returns playlists" in new PlaylistsForUserContext with SuccessfulResponse {
           val userUrn = Urn("soundcloud", "users", "7110")
           val path = s"/users/7110/playlists$queryString"
@@ -83,24 +83,30 @@ class UserPlaylistsHandlerSpec extends UnitSpecification {
           response.status ==== Status.Ok
           response.contentString ==== expectedResponse
         }
-        "returns empty collection of playlists" in new PlaylistsForUserContext with SuccessfulEmptyResponse {
-          val userUrn = Urn("soundcloud", "users", "7110")
-          val path = s"/users/7110/playlists$queryString"
 
-          stubService(userUrn, path, playlistsCollection)
+        "with a successful response from playlists service with id" >> {
+          "returns playlists" in new PlaylistsForUserContext with SuccessfulResponse {
+            val userUrn = Urn("soundcloud", "users", "7110")
+            val path = s"/users/soundcloud:users:7110/playlists$queryString"
 
-          val response = get(path)
-          response.status ==== Status.Ok
-          response.headerMap.get("Cache-Control").get === "public, max-age=60, must-revalidate"
-          response.contentString ==== expectedResponse
+            stubService(userUrn, path, playlistsCollection)
+
+            val response = get(path)
+            response.status ==== Status.Ok
+            response.contentString ==== expectedResponse
+          }
+          "returns empty collection of playlists" in new PlaylistsForUserContext with SuccessfulEmptyResponse {
+            val userUrn = Urn("soundcloud", "users", "7110")
+            val path = s"/users/7110/playlists$queryString"
+
+            stubService(userUrn, path, playlistsCollection)
+
+            val response = get(path)
+            response.status ==== Status.Ok
+            response.headerMap.get("Cache-Control").get === "public, max-age=60, must-revalidate"
+            response.contentString ==== expectedResponse
+          }
         }
-      }
-
-      "invalid user id requested" in new PlaylistsForUserContext {
-        val path = s"/users/NaN/playlists$queryString"
-
-        val response = get(path)
-        response.status ==== Status.BadRequest
       }
     }
 

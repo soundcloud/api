@@ -593,7 +593,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
   "#createPlaylist" >> {
 
     "creates the playlist" in new CreateOrUpdatePlaylist {
-      val playlist = new PlaylistBuilder().setId(1).build
+      val playlist = new PlaylistBuilder().setUrn(Urn("soundcloud", "users", "1")).build
 
       setUpMocksForWritePlaylists(
         playlistCreate = createOrUpdatePlaylist,
@@ -633,7 +633,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
         Image(kind = Kind.ARTWORKS, originUri = "s3://bucket/filename")
       )
 
-      val playlist = new PlaylistBuilder().setId(1).build
+      val playlist = new PlaylistBuilder().setUrn(Urn("soundcloud", "users", "1")).build
 
       setUpMocksForWritePlaylists(
         playlistCreate = createOrUpdatePlaylist,
@@ -707,7 +707,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
     }
 
     "throws error if Playlists returns unexpected response" in new CreateOrUpdatePlaylist {
-      val playlist = new PlaylistBuilder().setId(1).build
+      val playlist = new PlaylistBuilder().setUrn(Urn("soundcloud", "users", "1")).build
 
       when(
         playlistsWritesTwirpServiceMock

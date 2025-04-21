@@ -25,8 +25,8 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
     val followingUserUrn = Urn("soundcloud", "users", "2012")
     val playlistUrn1 = Urn("soundcloud", "playlists", "88")
     val playlistUrn2 = Urn("soundcloud", "playlists", "99")
-    val playlist1 = new PlaylistBuilder().setId(playlistUrn1.identifier.toLong).build
-    val playlist2 = new PlaylistBuilder().setId(playlistUrn2.identifier.toLong).build
+    val playlist1 = new PlaylistBuilder().setUrn(playlistUrn1).build
+    val playlist2 = new PlaylistBuilder().setUrn(playlistUrn2).build
 
     val access = AccessParams.defaultAccess
 

@@ -9,7 +9,6 @@ import com.soundcloud.apipublic.client.mothership.response.mapper.UserRepresenta
 import com.soundcloud.apipublic.service.users.UserRepresentationsService
 import com.soundcloud.apipublic.test.fixtures.Fixtures
 import com.soundcloud.apipublic.test.{HandlerSpecificationScope, UnitSpecification}
-import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import org.mockito.Mockito.when
 import play.api.libs.json.{JsArray, Json}
@@ -17,11 +16,8 @@ import play.api.libs.json.{JsArray, Json}
 class UsersHandlerSpec extends UnitSpecification {
 
   val userRepresentation = UserRepresentationMapper(Fixtures.okidokiUsers.as[JsArray].value.last)
-  val path = "/users/123"
-  val nonNumericPaths = List(
-    "/users/__12",
-    "/users/permalinkuser"
-  )
+  val numericPath = "/users/123"
+  val urnPath = "/users/123"
 
   trait Context extends HandlerSpecificationScope {
     val userRepresentationsService = smartMock[UserRepresentationsService]
@@ -39,18 +35,21 @@ class UsersHandlerSpec extends UnitSpecification {
     override def routingDefinitions = Routing.forUsersHandler(handler)
   }
 
-  nonNumericPaths.foreach { path =>
-    s"returns 400 for non-numeric track identifier for path: $path" in new Context {
-      val response = get(path)
-      response.status ==== Status.BadRequest
-    }
-  }
-
-  "it returns 200 when a user is found" in new Context {
+  "it returns 200 when a user is found via id" in new Context {
     when(userRepresentationsService.user(session, userUrn))
       .thenReturn(Future.value(Some(userRepresentation)))
 
-    val response = get(path)
+    val response = get(numericPath)
+    response.status.code ==== 200
+
+    response.contentString ==== Json.stringify(Json.toJson(userRepresentation))
+  }
+
+  "it returns 200 when a user is found via urn" in new Context {
+    when(userRepresentationsService.user(session, userUrn))
+      .thenReturn(Future.value(Some(userRepresentation)))
+
+    val response = get(urnPath)
     response.status.code ==== 200
 
     response.contentString ==== Json.stringify(Json.toJson(userRepresentation))
@@ -60,7 +59,7 @@ class UsersHandlerSpec extends UnitSpecification {
     when(userRepresentationsService.user(session, userUrn))
       .thenReturn(Future.None)
 
-    val response = get(path)
+    val response = get(urnPath)
     response.status.code ==== 404
   }
 }

@@ -9,17 +9,17 @@ import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 
 class PlaylistUrnUtilSpec extends Specification with Mockito {
-  "yields playlist urn for request containing a valid routeparam" in new Scope {
+  "yields playlist urn for request containing a valid id routeparam" in new Scope {
     val request = smartMock[HandlerRequest]
     request.routeParams returns ParamMap("id" -> "1234")
 
     getPlaylistUrn(request) ==== Urn("soundcloud", "playlists", "1234")
   }
 
-  "throws illegal state exception if not a valid playlist id" in new Scope {
+  "yields playlist urn for request containing a valid urn routeparam" in new Scope {
     val request = smartMock[HandlerRequest]
     request.routeParams returns ParamMap("id" -> "abc1234")
 
-    getPlaylistUrn(request) must throwA[IllegalArgumentException]
+    getPlaylistUrn(request) ==== Urn("soundcloud", "playlists", "abc1234")
   }
 }

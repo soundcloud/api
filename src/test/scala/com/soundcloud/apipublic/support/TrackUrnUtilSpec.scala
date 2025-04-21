@@ -9,17 +9,17 @@ import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 
 class TrackUrnUtilSpec extends Specification with Mockito {
-  "yields track urn for request containing a valid routeparam" in new Scope {
+  "yields track urn for request containing a valid urn param" in new Scope {
     val request = smartMock[HandlerRequest]
     request.routeParams returns ParamMap("trackId" -> "1234")
 
     getTrackUrn(request) ==== Urn("soundcloud", "tracks", "1234")
   }
 
-  "throws illegal state exception if not a valid track id" in new Scope {
+  "yields track urn for request containing a id param" in new Scope {
     val request = smartMock[HandlerRequest]
     request.routeParams returns ParamMap("trackId" -> "abc1234")
 
-    getTrackUrn(request) must throwA[IllegalArgumentException]
+    getTrackUrn(request) ==== Urn("soundcloud", "tracks", "abc1234")
   }
 }

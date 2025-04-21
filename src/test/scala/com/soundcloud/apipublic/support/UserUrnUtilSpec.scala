@@ -7,11 +7,11 @@ import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 
 class UserUrnUtilSpec extends Specification with Mockito {
-  "yields user urn for request containing a valid user id" in new Scope {
+  "yields user urn for request containing a valid user numeric id" in new Scope {
     getUserUrn("1234") ==== Urn("soundcloud", "users", "1234")
   }
 
-  "throws illegal state exception if not a valid user id" in new Scope {
-    getUserUrn("abc1234") must throwA[IllegalArgumentException]
+  "yields user urn for request containing a valid user urn" in new Scope {
+    getUserUrn("abc1234") ==== Urn("soundcloud", "users", "abc1234")
   }
 }

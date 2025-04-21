@@ -65,6 +65,7 @@ object UserRepresentation {
     Json.obj(
       "avatar_url" -> user.avatar_url.replaceAll("\\?[0-9]+$", "").replaceAll("^http:", "https:"),
       "id" -> user.urn.identifier.toLong,
+      "urn" -> user.urn.toString,
       "kind" -> "user",
       "permalink_url" -> user.permalink_url,
       "uri" -> s"https://api.soundcloud.com/users/${user.urn.identifier}",

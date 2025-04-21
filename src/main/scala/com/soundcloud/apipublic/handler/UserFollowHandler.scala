@@ -209,7 +209,7 @@ class UserFollowHandler(
       }
     } else {
       userAuthentication.withUserSession(request) { s =>
-        withSession(s, Urn("soundcloud", "users", request.routeParams("id")))
+        withSession(s, UserUrnUtil.getUserUrn(request.routeParams("id")))
       }
     }
   }

@@ -12,7 +12,6 @@ import com.soundcloud.apipublic.service.trackrepresentation.{
 }
 import com.soundcloud.apipublic.service.users.UserBuilder
 import com.soundcloud.apipublic.test.{HandlerSpecificationScope, UnitSpecification}
-import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import org.mockito.Mockito.{verify, when}
 import play.api.libs.json.Json
@@ -35,11 +34,8 @@ class SingleTrackHandlerSpec extends UnitSpecification with TrackRepresentationS
     user = user,
     geoblockings = List.empty
   )
-  val path = "/tracks/987"
-  val nonNumericPaths = List(
-    "/tracks/__12",
-    "/tracks/permalinktrack"
-  )
+  val numericPath = "/tracks/987"
+  val urnPath = "/tracks/soundcloud:tracks:987"
 
   trait Context extends HandlerSpecificationScope {
     val trackRepresentationsService = smartMock[TrackRepresentationsService]
@@ -57,26 +53,29 @@ class SingleTrackHandlerSpec extends UnitSpecification with TrackRepresentationS
     override def routingDefinitions = Routing.forSingleTrackHandler(handler)
   }
 
-  nonNumericPaths.foreach { path =>
-    s"returns 400 for non-numeric track identifier for path: $path" in new Context {
-      val response = get(path)
-      response.status ==== Status.BadRequest
-    }
-  }
-
   "passes secret token to tracks service" in new Context {
     when(trackRepresentationsService.track(session, TrackRequest(trackUrn, Some("s3cret"))))
       .thenReturn(Future.value(Some(trackRepresentation)))
 
-    get(path, Map("secret_token" -> "s3cret"))
+    get(urnPath, Map("secret_token" -> "s3cret"))
     verify(trackRepresentationsService).track(session, TrackRequest(trackUrn, Some("s3cret")))
   }
 
-  "it returns 200 when a track is found" in new Context {
+  "it returns 200 when a track urn is found" in new Context {
     when(trackRepresentationsService.track(session, TrackRequest(trackUrn, None)))
       .thenReturn(Future.value(Some(trackRepresentation)))
 
-    val response = get(path)
+    val response = get(urnPath)
+    response.status.code ==== 200
+
+    response.contentString ==== Json.stringify(Json.toJson(trackRepresentation))
+  }
+
+  "it returns 200 when a track id is found" in new Context {
+    when(trackRepresentationsService.track(session, TrackRequest(trackUrn, None)))
+      .thenReturn(Future.value(Some(trackRepresentation)))
+
+    val response = get(numericPath)
     response.status.code ==== 200
 
     response.contentString ==== Json.stringify(Json.toJson(trackRepresentation))
@@ -86,7 +85,7 @@ class SingleTrackHandlerSpec extends UnitSpecification with TrackRepresentationS
     when(trackRepresentationsService.track(session, TrackRequest(trackUrn, None)))
       .thenReturn(Future.None)
 
-    val response = get(path)
+    val response = get(urnPath)
     response.status.code ==== 404
   }
 }

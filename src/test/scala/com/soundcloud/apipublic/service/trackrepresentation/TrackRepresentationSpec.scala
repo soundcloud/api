@@ -612,6 +612,7 @@ class TrackRepresentationSpec extends UnitSpecification {
       val trackJson = Json.toJson(createTrackRepresentationFromVisibleTrack())
       trackJson \ "kind" ==== JsDefined(JsString("track"))
       trackJson \ "id" ==== JsDefined(JsNumber(1324))
+      trackJson \ "urn" ==== JsDefined(JsString("soundcloud:tracks:1324"))
       trackJson \ "created_at" ==== JsDefined(JsString("2015/02/15 16:47:27 +0000"))
       trackJson \ "duration" ==== JsDefined(JsNumber(60000))
       trackJson \ "commentable" ==== JsDefined(JsBoolean(false))

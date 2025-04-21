@@ -70,7 +70,9 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
 
     playlist.title ==== "playlist mix"
     playlist.id ==== 42703821
+    playlist.urn ==== Urn("soundcloud", "playlists", "42703821")
     playlist.userId ==== 3456
+    playlist.userUrn ==== Urn("soundcloud", "users", "3456")
     playlist.description ==== Some("cool playlist")
     playlist.createdAt ==== Some(playlistReleaseInstant)
     playlist.duration ==== 120

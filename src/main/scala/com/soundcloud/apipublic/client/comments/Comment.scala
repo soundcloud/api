@@ -8,12 +8,11 @@ import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import play.api.libs.json.{Json, Writes}
 case class Comment(
-    id: Long,
+    urn: Urn,
     body: String,
     createdAt: String,
     timestamp: Option[Int],
-    trackId: Long,
-    userId: Long,
+    trackUrn: Urn,
     user: UserRepresentation,
     secretToken: Option[String] = None
 ) {
@@ -21,6 +20,11 @@ case class Comment(
     val maybeToken = secretToken.map(secretTokenParam).getOrElse("")
     location + maybeToken
   }
+
+  def userUrn: Urn = user.urn
+
+  def id: Long = urn.identifier.toLong
+  def userId: Long = userUrn.identifier.toLong
 
   def location = s"https://api.soundcloud.com/comments/$id"
 
@@ -33,11 +37,14 @@ object Comment {
     Json.obj(
       "kind" -> "comment",
       "id" -> comment.id,
+      "urn" -> comment.urn.toString,
       "body" -> HtmlSanitizer.sanitize(comment.body),
       "created_at" -> comment.createdAt,
       "timestamp" -> comment.timestamp,
-      "track_id" -> comment.trackId,
+      "track_id" -> comment.trackUrn.identifier.toLong,
+      "track_urn" -> comment.trackUrn.toString,
       "user_id" -> comment.userId,
+      "user_urn" -> comment.userUrn.toString,
       "user" -> comment.user,
       "uri" -> comment.uri
     )
@@ -50,11 +57,10 @@ object Comment {
       user: UserRepresentation
   ): Comment =
     Comment(
-      id = commentUrn.identifier.toLong,
+      urn = commentUrn,
       body = params.body,
       createdAt = format(createdAtVasValueOverride),
-      trackId = params.trackUrn.identifier.toLong,
-      userId = user.urn.identifier.toLong,
+      trackUrn = params.trackUrn,
       user = user,
       timestamp = params.timestamp,
       secretToken = params.secretToken

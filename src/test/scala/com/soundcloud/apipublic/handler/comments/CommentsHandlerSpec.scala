@@ -29,7 +29,14 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
     val headers = Map[String, String]()
     val baseUrl = "https://api.example.com"
     val user = UserBuilder.user(1)
-    val comment = Comment(1, "hi", "2014/05/01 12:47:49 +0000", None, validTrackId, 20, UserBuilder.user(20))
+    val comment = Comment(
+      Urn("soundcloud", "comments", "1"),
+      "hi",
+      "2014/05/01 12:47:49 +0000",
+      None,
+      validTrackUrn,
+      UserBuilder.user(20)
+    )
 
     val params = Map(
       "client_id" -> validClientId,
@@ -259,13 +266,6 @@ class CommentsHandlerSpec extends UnitSpecification with Mockito {
 
         response.status ==== Status.TooManyRequests
         (Json.parse(response.contentString) \ "spam_warning_urn").get === JsString(spamUrn.toString)
-      }
-
-      "returns a 400 for an invalid track urn" in new PostContext {
-        val invalidTrackId = "1a2b3c"
-
-        val response = post(s"/tracks/$invalidTrackId/comments", Map.empty, headers, body)
-        response.status ==== Status.BadRequest
       }
     }
 

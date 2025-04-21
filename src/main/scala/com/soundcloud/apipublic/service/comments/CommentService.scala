@@ -104,11 +104,10 @@ class CommentService(
         val commentsResponse: Seq[Comment] = comments.collect({
           case comment: CommentFromVAS if urnToUserMap.contains(comment.user) =>
             Comment(
-              id = comment.urn.identifier.toLong,
+              urn = comment.urn,
               body = comment.body,
               createdAt = comment.createdAt.map(format).getOrElse(""),
-              trackId = comment.track.identifier.toLong,
-              userId = comment.user.identifier.toLong,
+              trackUrn = comment.track,
               user = urnToUserMap(comment.user),
               timestamp = CommentFromVAS.toInt(comment.timestamp)
             )

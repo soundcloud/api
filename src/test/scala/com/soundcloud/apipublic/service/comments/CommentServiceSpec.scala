@@ -85,12 +85,11 @@ class CommentServiceSpec extends UnitSpecification {
 
     def toResponseRepresentation(commentFromVAS: CommentFromVAS): Comment =
       Comment(
-        commentFromVAS.urn.identifier.toLong,
+        commentFromVAS.urn,
         commentFromVAS.body,
         commentFromVAS.createdAt.map(format).getOrElse(""),
         toInt(commentFromVAS.timestamp),
-        commentFromVAS.track.identifier.toLong,
-        commentFromVAS.user.identifier.toLong,
+        commentFromVAS.track,
         UserBuilder.user(commentFromVAS.user.identifier.toInt)
       )
 

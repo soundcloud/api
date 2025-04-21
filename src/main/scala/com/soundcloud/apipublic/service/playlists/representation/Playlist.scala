@@ -12,9 +12,9 @@ import java.time.{Instant, LocalDateTime, ZoneOffset}
 
 case class Playlist(
     title: String,
-    id: Long,
+    urn: Urn,
+    userUrn: Urn,
     duration: Long,
-    userId: Long,
     kind: String,
     releaseDay: Option[Int],
     permalinkUrl: String,
@@ -47,7 +47,10 @@ case class Playlist(
     tracks: Option[List[TrackRepresentation]] = None,
     secretUri: Option[String],
     secretToken: Option[String]
-)
+) {
+  def id: Long = urn.identifier.toLong
+  def userId: Long = user.urn.identifier.toLong
+}
 
 object Playlist {
   val formatter: DateTimeFormatter = DateTimeFormatter
@@ -73,12 +76,14 @@ object Playlist {
       "tag_list" -> playlist.tagList,
       "track_count" -> playlist.trackCount,
       "user_id" -> playlist.userId,
+      "user_urn" -> playlist.userUrn.toString,
       "last_modified" -> playlist.lastModified.map(formatter.format(_)),
       "license" -> playlist.license,
       "user" -> Json.toJson(playlist.user),
       "playlist_type" -> playlist.playlistType,
       "type" -> playlist.playlistType,
       "id" -> playlist.id,
+      "urn" -> playlist.urn.toString,
       "downloadable" -> playlist.downloadable,
       "likes_count" -> playlist.likesCount,
       "sharing" -> playlist.sharing,
@@ -116,9 +121,9 @@ object Playlist {
 
     Playlist(
       title = playlist.title,
-      id = Urn.parse(playlist.urn).get.identifier.toLong,
+      urn = Urn.parse(playlist.urn).get,
       duration = playlist.duration,
-      userId = Urn.parse(playlist.userUrn).get.identifier.toLong,
+      userUrn = Urn.parse(playlist.userUrn).get,
       kind = "playlist",
       genre = playlist.genre,
       releaseDay = releaseDay,
