@@ -8,6 +8,10 @@ properties:
     description: Full Name.
   id:
     type: integer
+    deprecated: true
+    description: Unique identifier
+  urn:
+    type: string
     description: Unique identifier
   kind:
     type: string

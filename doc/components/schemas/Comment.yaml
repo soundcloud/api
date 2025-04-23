@@ -9,19 +9,31 @@ properties:
     type: string
   id:
     description: Identifier.
+    deprecated: true
     type: integer
+  urn:
+    description: Identifier.
+    type: string
   kind:
     description: Kind (comment).
     type: string
   user_id:
     description: User's identifier.
+    deprecated: true
     type: integer
+  user_urn:
+    description: User's identifier.
+    type: string
   timestamp:
     description: Timestamp.
     type: string
   track_id:
     description: Track's identifier.
+    deprecated: true
     type: integer
+  track_urn:
+    description: Track's identifier.
+    type: string
   uri:
     description: Comment's URL.
     type: string
@@ -31,7 +43,11 @@ properties:
     properties:
       id:
         description: unique identifier
+        deprecated: true
         type: integer
+      urn:
+        description: unique identifier
+        type: string
       kind:
         description: kind of resource.
         type: string

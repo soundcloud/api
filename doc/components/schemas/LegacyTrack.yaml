@@ -43,7 +43,11 @@ properties:
     type: string
   id:
     description: Track identifier.
+    deprecated: true
     type: integer
+  urn:
+    description: Track identifier.
+    type: string
   isrc:
     description: ISRC code.
     type: string

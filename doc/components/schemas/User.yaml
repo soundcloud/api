@@ -31,7 +31,11 @@ properties:
     type: string
   id:
     description: unique identifier
+    deprecated: true
     type: integer
+  urn:
+    description: unique identifier
+    type: string
   kind:
     description: kind of resource
     type: string

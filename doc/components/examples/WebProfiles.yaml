@@ -1,6 +1,7 @@
 value:
   - created_at: 1995/10/20 12:10:39 +0000
     id: 1234
+    urn: soundcloud:users:1234
     kind: web-profile
     service: facebook
     title: my facebook

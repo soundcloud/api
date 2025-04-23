@@ -8,7 +8,11 @@ items:
       type: string
     id:
       description: Id
+      deprecated: true
       type: integer
+    urn:
+      description: Id
+      type: string
     kind:
       description: Kind
       type: string

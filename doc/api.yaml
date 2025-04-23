@@ -50,8 +50,8 @@ paths:
         - $ref: '#/components/parameters/client_id'
         - $ref: '#/components/parameters/redirect_uri'
         - $ref: '#/components/parameters/response_type'
-        # The scope parameter is usually empty for most of the clients. As different scopes are poorly supported, we shouldn't mention it here at all.
-        #        - $ref: '#/components/parameters/scope'
+# The scope parameter is usually empty for most of the clients. As different scopes are poorly supported, we shouldn't mention it here at all.
+#        - $ref: '#/components/parameters/scope'
         - $ref: '#/components/parameters/state'
       responses:
         302:
@@ -237,6 +237,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     put:
       summary: Follows a user.
+      deprecated: true
       tags:
         - me
       parameters:
@@ -252,10 +253,61 @@ paths:
           $ref: '#/components/responses/NotFound'
     delete:
       summary: Deletes a user who is followed by the authenticated user.
+      deprecated: true
       tags:
         - me
       parameters:
         - $ref: '#/components/parameters/user_id_to_follow'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json; charset=utf-8:
+              examples:
+                200:
+                  $ref: '#/components/examples/OK'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+        422:
+          $ref: '#/components/responses/UnprocessableEntity'
+  /me/followings/{user_urn}:
+    get:
+      summary: Returns a user who is followed by the authenticated user. (use /users/{user_urn} instead, to fetch the user details)
+      deprecated: true
+      tags:
+        - me
+      parameters:
+        - $ref: '#/components/parameters/user_urn'
+      responses:
+        200:
+          $ref: '#/components/responses/User'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Follows a user.
+      tags:
+        - me
+      parameters:
+        - $ref: '#/components/parameters/user_urn_to_follow'
+      responses:
+        200:
+          $ref: '#/components/responses/Successful'
+        201:
+          $ref: '#/components/responses/User'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Deletes a user who is followed by the authenticated user.
+      tags:
+        - me
+      parameters:
+        - $ref: '#/components/parameters/user_urn_to_follow'
       responses:
         200:
           description: Success
@@ -290,6 +342,19 @@ paths:
         - me
       parameters:
         - $ref: '#/components/parameters/follower_id'
+      responses:
+        200:
+          $ref: '#/components/responses/User'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+  /me/followers/{follower_urn}:
+    get:
+      summary: Returns a user who is following the authenticated user. (use /users/{user_urn} instead, to fetch the user details)
+      deprecated: true
+      tags:
+        - me
+      parameters:
+        - $ref: '#/components/parameters/follower_urn'
       responses:
         200:
           $ref: '#/components/responses/User'
@@ -333,6 +398,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/q"
         - $ref: "#/components/parameters/ids"
+        - $ref: "#/components/parameters/urns"
         - $ref: "#/components/parameters/genres"
         - $ref: "#/components/parameters/tags"
         - $ref: "#/components/parameters/bpm"
@@ -362,8 +428,8 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/TrackDataRequest'
                 - required:
-                    - track[title]
-                    - track[asset_data]
+                  - track[title]
+                  - track[asset_data]
             examples:
               default:
                 $ref: '#/components/examples/TrackDataRequest'
@@ -372,8 +438,8 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/TrackDataRequest'
                 - required:
-                    - track[title]
-                    - track[asset_data]
+                  - track[title]
+                  - track[asset_data]
       responses:
         201:
           $ref: '#/components/responses/Track'
@@ -420,7 +486,7 @@ paths:
               allOf:
                 - $ref: '#/components/schemas/CreateUpdatePlaylistFormRequest'
                 - required:
-                    - playlist[title]
+                  - playlist[title]
             examples:
               default:
                 $ref: "#/components/examples/CreateUpdatePlaylistFormRequest"
@@ -439,6 +505,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/q"
         - $ref: "#/components/parameters/ids"
+        - $ref: "#/components/parameters/urns"
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/offset'
         - $ref: '#/components/parameters/linked_partitioning'
@@ -452,6 +519,7 @@ paths:
   /playlists/{playlist_id}:
     get:
       summary: Returns a playlist.
+      deprecated: true
       tags:
         - playlists
       parameters:
@@ -468,6 +536,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
     put:
       summary: Updates a playlist.
+      deprecated: true
       tags:
         - playlists
       parameters:
@@ -490,6 +559,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     delete:
       summary: Deletes a playlist.
+      deprecated: true
       tags:
         - playlists
       parameters:
@@ -499,9 +569,60 @@ paths:
           description: Success
         404:
           $ref: '#/components/responses/NotFound'
+  /playlists/{playlist_urn}:
+    get:
+      summary: Returns a playlist.
+      tags:
+        - playlists
+      parameters:
+        - $ref: "#/components/parameters/playlist_urn"
+        - $ref: "#/components/parameters/secret_token"
+        - $ref: "#/components/parameters/access"
+        - $ref: "#/components/parameters/show_tracks"
+      responses:
+        200:
+          $ref: "#/components/responses/Playlist"
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+    put:
+      summary: Updates a playlist.
+      tags:
+        - playlists
+      parameters:
+        - $ref: "#/components/parameters/fake_playlist_urn"
+      requestBody:
+        description: Playlist payload
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUpdatePlaylistRequest'
+            examples:
+              default:
+                $ref: "#/components/examples/CreateUpdatePlaylistRequest"
+      responses:
+        200:
+          $ref: "#/components/responses/Playlist"
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Deletes a playlist.
+      tags:
+        - playlists
+      parameters:
+        - $ref: "#/components/parameters/fake_playlist_urn"
+      responses:
+        200:
+          description: Success
+        404:
+          $ref: '#/components/responses/NotFound'
   /playlists/{playlist_id}/tracks:
     get:
       summary: Returns tracks under a playlist.
+      deprecated: true
       tags:
         - playlists
       parameters:
@@ -516,9 +637,27 @@ paths:
           $ref: '#/components/responses/BadRequest'
         401:
           $ref: '#/components/responses/Unauthorized'
+  /playlists/{playlist_urn}/tracks:
+    get:
+      summary: Returns tracks under a playlist.
+      tags:
+        - playlists
+      parameters:
+        - $ref: "#/components/parameters/playlist_urn"
+        - $ref: "#/components/parameters/secret_token"
+        - $ref: "#/components/parameters/access"
+        - $ref: "#/components/parameters/linked_partitioning"
+      responses:
+        200:
+          $ref: "#/components/responses/Tracks"
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
   /playlists/{playlist_id}/reposters:
     get:
       summary: Returns a collection of playlist's reposters.
+      deprecated: true
       tags:
         - playlists
       parameters:
@@ -531,9 +670,25 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         404:
           $ref: '#/components/responses/NotFound'
+  /playlists/{playlist_urn}/reposters:
+    get:
+      summary: Returns a collection of playlist's reposters.
+      tags:
+        - playlists
+      parameters:
+        - $ref: '#/components/parameters/playlist_urn'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        200:
+          $ref: '#/components/responses/Users'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
   /tracks/{track_id}:
     get:
       summary: Returns a track.
+      deprecated: true
       tags:
         - tracks
       parameters:
@@ -548,6 +703,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     put:
       summary: Updates a track's information.
+      deprecated: true
       tags:
         - tracks
       parameters:
@@ -573,6 +729,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
     delete:
       summary: Deletes a track.
+      deprecated: true
       tags:
         - tracks
       parameters:
@@ -582,9 +739,61 @@ paths:
           description: Success
         404:
           $ref: '#/components/responses/NotFound'
+  /tracks/{track_urn}:
+    get:
+      summary: Returns a track.
+      tags:
+        - tracks
+      parameters:
+        - $ref: '#/components/parameters/track_urn'
+        - $ref: "#/components/parameters/secret_token"
+      responses:
+        200:
+          $ref: '#/components/responses/Track'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Updates a track's information.
+      tags:
+        - tracks
+      parameters:
+        - $ref: '#/components/parameters/track_urn'
+      requestBody:
+        description: Track payload
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TrackMetadataRequest"
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TrackDataRequest'
+          multipart/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TrackDataRequest'
+      responses:
+        200:
+          $ref: '#/components/responses/Track'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+    delete:
+      summary: Deletes a track.
+      tags:
+        - tracks
+      parameters:
+        - $ref: '#/components/parameters/track_urn'
+      responses:
+        200:
+          description: Success
+        404:
+          $ref: '#/components/responses/NotFound'
   /tracks/{track_id}/streams:
     get:
       summary: Returns a track's streamable URLs
+      deprecated: true
       tags:
         - tracks
       parameters:
@@ -597,9 +806,25 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         404:
           $ref: '#/components/responses/NotFound'
+  /tracks/{track_urn}/streams:
+    get:
+      summary: Returns a track's streamable URLs
+      tags:
+        - tracks
+      parameters:
+        - $ref: '#/components/parameters/track_urn'
+        - $ref: "#/components/parameters/secret_token"
+      responses:
+        200:
+          $ref: '#/components/responses/Streams'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
   /tracks/{track_id}/comments:
     get:
       summary: Returns the comments posted on the track(track_id).
+      deprecated: true
       tags:
         - tracks
       parameters:
@@ -616,6 +841,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     post:
       summary: Returns the newly created comment on success
+      deprecated: true
       tags:
         - tracks
       parameters:
@@ -650,9 +876,63 @@ paths:
           $ref: '#/components/responses/UnprocessableEntity'
         429:
           $ref: '#/components/responses/TooManyRequests'
+  /tracks/{track_urn}/comments:
+    get:
+      summary: Returns the comments posted on the track(track_urn).
+      tags:
+        - tracks
+      parameters:
+        - $ref: '#/components/parameters/track_urn'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/linked_partitioning'
+      responses:
+        200:
+          $ref: '#/components/responses/Comments'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+    post:
+      summary: Returns the newly created comment on success
+      tags:
+        - tracks
+      parameters:
+        - $ref: '#/components/parameters/track_urn'
+      requestBody:
+        description: |
+          Body of a comment
+        required: true
+        content:
+          application/json; charset=utf-8:
+            schema:
+              type: object
+              properties:
+                comment:
+                  type: object
+                  properties:
+                    body:
+                      type: string
+                      description: Comment's content
+                      example: test comment
+                    timestamp:
+                      description: Timestamp of a comment. String or float representation is supported
+                      oneOf:
+                        - type: string
+                        - type: number
+                  required:
+                    - body
+      responses:
+        201:
+          $ref: '#/components/responses/Comment'
+        422:
+          $ref: '#/components/responses/UnprocessableEntity'
+        429:
+          $ref: '#/components/responses/TooManyRequests'
   /tracks/{track_id}/favoriters:
     get:
       summary: Returns a list of users who have favorited or liked the track.
+      deprecated: true
       tags:
         - tracks
       parameters:
@@ -666,9 +946,26 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         404:
           $ref: '#/components/responses/NotFound'
+  /tracks/{track_urn}/favoriters:
+    get:
+      summary: Returns a list of users who have favorited or liked the track.
+      tags:
+        - tracks
+      parameters:
+        - $ref: '#/components/parameters/track_urn'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/linked_partitioning'
+      responses:
+        200:
+          $ref: "#/components/responses/Users"
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
   /tracks/{track_id}/reposters:
     get:
       summary: Returns a collection of track's reposters.
+      deprecated: true
       tags:
         - tracks
       parameters:
@@ -681,13 +978,47 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         404:
           $ref: '#/components/responses/NotFound'
+  /tracks/{track_urn}/reposters:
+    get:
+      summary: Returns a collection of track's reposters.
+      tags:
+        - tracks
+      parameters:
+        - $ref: '#/components/parameters/track_urn'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        200:
+          $ref: '#/components/responses/Users'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
   /tracks/{track_id}/related:
+    get:
+      summary: Returns all related tracks of track on SoundCloud.
+      deprecated: true
+      tags:
+        - tracks
+      parameters:
+        - $ref: '#/components/parameters/track_id'
+        - $ref: '#/components/parameters/access'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/linked_partitioning'
+      responses:
+        200:
+          $ref: '#/components/responses/Tracks'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+  /tracks/{track_urn}/related:
     get:
       summary: Returns all related tracks of track on SoundCloud.
       tags:
         - tracks
       parameters:
-        - $ref: '#/components/parameters/track_id'
+        - $ref: '#/components/parameters/track_urn'
         - $ref: '#/components/parameters/access'
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/offset'
@@ -714,10 +1045,25 @@ paths:
   /users/{user_id}:
     get:
       summary: Returns a user.
+      deprecated: true
       tags:
         - users
       parameters:
         - $ref: '#/components/parameters/user_id'
+      responses:
+        200:
+          $ref: '#/components/responses/User'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+  /users/{user_urn}:
+    get:
+      summary: Returns a user.
+      tags:
+        - users
+      parameters:
+        - $ref: '#/components/parameters/user_urn'
       responses:
         200:
           $ref: '#/components/responses/User'
@@ -740,9 +1086,25 @@ paths:
           $ref: "#/components/responses/Tracks"
         401:
           $ref: '#/components/responses/Unauthorized'
+  /users/{user_urn}/favorites:
+    get:
+      summary: Returns a list of user's favorited or liked tracks. (use /users/:userId/likes/tracks instead, to fetch a user's likes)
+      deprecated: true
+      tags:
+        - users
+      parameters:
+        - $ref: '#/components/parameters/user_urn'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/linked_partitioning'
+      responses:
+        200:
+          $ref: "#/components/responses/Tracks"
+        401:
+          $ref: '#/components/responses/Unauthorized'
   /users/{user_id}/followers:
     get:
       summary: Returns a list of user’s followers.
+      deprecated: true
       description: Returns a list of users that follows (user_id).
       tags:
         - users
@@ -754,14 +1116,43 @@ paths:
           $ref: "#/components/responses/Users"
         401:
           $ref: '#/components/responses/Unauthorized'
+  /users/{user_urn}/followers:
+    get:
+      summary: Returns a list of user’s followers.
+      description: Returns a list of users that follows (user_urn).
+      tags:
+        - users
+      parameters:
+        - $ref: '#/components/parameters/user_urn'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        200:
+          $ref: "#/components/responses/Users"
+        401:
+          $ref: '#/components/responses/Unauthorized'
   /users/{user_id}/followings:
     get:
       summary: Returns a list of user’s followings.
+      deprecated: true
       description: Returns list of users that (user_id) follows.
       tags:
         - users
       parameters:
         - $ref: '#/components/parameters/user_id'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        200:
+          $ref: "#/components/responses/Users"
+        401:
+          $ref: '#/components/responses/Unauthorized'
+  /users/{user_urn}/followings:
+    get:
+      summary: Returns a list of user’s followings.
+      description: Returns list of users that (user_urn) follows.
+      tags:
+        - users
+      parameters:
+        - $ref: '#/components/parameters/user_urn'
         - $ref: '#/components/parameters/limit'
       responses:
         200:
@@ -785,9 +1176,27 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         404:
           $ref: '#/components/responses/NotFound'
+  /users/{user_urn}/followings/{following_urn}:
+    get:
+      summary: Returns a user's following. (use /users/{user_urn} instead, to fetch the user details)
+      description: Returns (following_id) that is followed by (user_urn).
+      deprecated: true
+      tags:
+        - users
+      parameters:
+        - $ref: '#/components/parameters/user_urn'
+        - $ref: '#/components/parameters/following_urn'
+      responses:
+        200:
+          $ref: '#/components/responses/User'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
   /users/{user_id}/playlists:
     get:
       summary: Returns a list of user's playlists.
+      deprecated: true
       tags:
         - users
       parameters:
@@ -801,9 +1210,26 @@ paths:
           $ref: "#/components/responses/Playlists"
         401:
           $ref: '#/components/responses/Unauthorized'
+  /users/{user_urn}/playlists:
+    get:
+      summary: Returns a list of user's playlists.
+      tags:
+        - users
+      parameters:
+        - $ref: '#/components/parameters/user_urn'
+        - $ref: '#/components/parameters/access'
+        - $ref: "#/components/parameters/show_tracks"
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/linked_partitioning'
+      responses:
+        200:
+          $ref: "#/components/responses/Playlists"
+        401:
+          $ref: '#/components/responses/Unauthorized'
   /users/{user_id}/tracks:
     get:
       summary: Returns a list of user's tracks.
+      deprecated: true
       tags:
         - users
       parameters:
@@ -816,9 +1242,25 @@ paths:
           $ref: "#/components/responses/Tracks"
         401:
           $ref: '#/components/responses/Unauthorized'
+  /users/{user_urn}/tracks:
+    get:
+      summary: Returns a list of user's tracks.
+      tags:
+        - users
+      parameters:
+        - $ref: '#/components/parameters/user_urn'
+        - $ref: '#/components/parameters/access'
+        - $ref: '#/components/parameters/limit'
+        - $ref: "#/components/parameters/linked_partitioning"
+      responses:
+        200:
+          $ref: "#/components/responses/Tracks"
+        401:
+          $ref: '#/components/responses/Unauthorized'
   /users/{user_id}/web-profiles:
     get:
       summary: Returns list of user's links added to their profile (website, facebook, instagram).
+      deprecated: true
       tags:
         - users
       parameters:
@@ -829,13 +1271,46 @@ paths:
           $ref: '#/components/responses/WebProfiles'
         401:
           $ref: '#/components/responses/Unauthorized'
+  /users/{user_urn}/web-profiles:
+    get:
+      summary: Returns list of user's links added to their profile (website, facebook, instagram).
+      tags:
+        - users
+      parameters:
+        - $ref: '#/components/parameters/user_urn'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        200:
+          $ref: '#/components/responses/WebProfiles'
+        401:
+          $ref: '#/components/responses/Unauthorized'
   /users/{user_id}/likes/tracks:
+    get:
+      summary: Returns a list of user's liked tracks.
+      deprecated: true
+      tags:
+        - users
+      parameters:
+        - $ref: '#/components/parameters/user_id'
+        - $ref: '#/components/parameters/access'
+        - $ref: '#/components/parameters/limit'
+        - $ref: "#/components/parameters/linked_partitioning"
+      responses:
+        200:
+          $ref: "#/components/responses/Tracks"
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+  /users/{user_urn}/likes/tracks:
     get:
       summary: Returns a list of user's liked tracks.
       tags:
         - users
       parameters:
-        - $ref: '#/components/parameters/user_id'
+        - $ref: '#/components/parameters/user_urn'
         - $ref: '#/components/parameters/access'
         - $ref: '#/components/parameters/limit'
         - $ref: "#/components/parameters/linked_partitioning"
@@ -851,6 +1326,7 @@ paths:
   /users/{user_id}/likes/playlists:
     get:
       summary: Returns a list of user's liked playlists.
+      deprecated: true
       tags:
         - users
       parameters:
@@ -866,9 +1342,28 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         404:
           $ref: '#/components/responses/NotFound'
+  /users/{user_urn}/likes/playlists:
+    get:
+      summary: Returns a list of user's liked playlists.
+      tags:
+        - users
+      parameters:
+        - $ref: '#/components/parameters/user_urn'
+        - $ref: '#/components/parameters/limit'
+        - $ref: "#/components/parameters/linked_partitioning"
+      responses:
+        200:
+          $ref: "#/components/responses/Playlists"
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
   /likes/tracks/{track_id}:
     post:
       summary: Likes a track.
+      deprecated: true
       tags:
         - likes
       parameters:
@@ -886,6 +1381,7 @@ paths:
           $ref: '#/components/responses/TooManyRequests'
     delete:
       summary: Unlikes a track.
+      deprecated: true
       tags:
         - likes
       parameters:
@@ -897,9 +1393,41 @@ paths:
           $ref: '#/components/responses/BadRequest'
         404:
           $ref: '#/components/responses/NotFound'
+  /likes/tracks/{track_urn}:
+    post:
+      summary: Likes a track.
+      tags:
+        - likes
+      parameters:
+        - $ref: '#/components/parameters/test_track_urn'
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+        429:
+          $ref: '#/components/responses/TooManyRequests'
+    delete:
+      summary: Unlikes a track.
+      tags:
+        - likes
+      parameters:
+        - $ref: '#/components/parameters/test_track_urn'
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
   /likes/playlists/{playlist_id}:
     post:
       summary: Likes a playlist.
+      deprecated: true
       tags:
         - likes
       parameters:
@@ -917,6 +1445,7 @@ paths:
           $ref: '#/components/responses/TooManyRequests'
     delete:
       summary: Unlikes a playlist.
+      deprecated: true
       tags:
         - likes
       parameters:
@@ -928,9 +1457,41 @@ paths:
           $ref: '#/components/responses/BadRequest'
         404:
           $ref: '#/components/responses/NotFound'
+  /likes/playlists/{playlist_urn}:
+    post:
+      summary: Likes a playlist.
+      tags:
+        - likes
+      parameters:
+        - $ref: '#/components/parameters/playlist_urn'
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+        429:
+          $ref: '#/components/responses/TooManyRequests'
+    delete:
+      summary: Unlikes a playlist.
+      tags:
+        - likes
+      parameters:
+        - $ref: '#/components/parameters/playlist_urn'
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
   /reposts/tracks/{track_id}:
     post:
       summary: Reposts a track as the authenticated user
+      deprecated: true
       tags:
         - reposts
       parameters:
@@ -942,12 +1503,27 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         404:
           $ref: '#/components/responses/NotFound'
-    delete:
-      summary: Removes a repost on a track as the authenticated user
+  /reposts/tracks/{track_urn}:
+    post:
+      summary: Reposts a track as the authenticated user
       tags:
         - reposts
       parameters:
-        - $ref: '#/components/parameters/test_track_id'
+        - $ref: '#/components/parameters/test_track_urn'
+      responses:
+        201:
+          description: Created
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Removes a repost on a track as the authenticated user
+      deprecated: true
+      tags:
+        - reposts
+      parameters:
+        - $ref: '#/components/parameters/test_track_urn'
       responses:
         200:
           description: Success
@@ -958,6 +1534,7 @@ paths:
   /reposts/playlists/{playlist_id}:
     post:
       summary: Reposts a playlist as the authenticated user
+      deprecated: true
       tags:
         - reposts
       parameters:
@@ -971,10 +1548,38 @@ paths:
           $ref: '#/components/responses/NotFound'
     delete:
       summary: Removes a repost on a playlist as the authenticated user
+      deprecated: true
       tags:
         - reposts
       parameters:
         - $ref: '#/components/parameters/repost_playlist_id'
+      responses:
+        200:
+          description: Success
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+  /reposts/playlists/{playlist_urn}:
+    post:
+      summary: Reposts a playlist as the authenticated user
+      tags:
+        - reposts
+      parameters:
+        - $ref: '#/components/parameters/repost_playlist_urn'
+      responses:
+        201:
+          description: Created
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Removes a repost on a playlist as the authenticated user
+      tags:
+        - reposts
+      parameters:
+        - $ref: '#/components/parameters/repost_playlist_urn'
       responses:
         200:
           description: Success

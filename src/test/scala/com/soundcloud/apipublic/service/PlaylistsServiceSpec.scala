@@ -565,7 +565,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
     val createOrUpdatePlaylist = PlaylistCreateOrUpdate(
       public = Value(true),
       title = Value("title"),
-      tracks = Value(Seq(Map("id" -> "1")))
+      tracks = Value(Seq(Map("urn" -> "soundcloud:tracks:1")))
     )
 
     val playlistRequest =

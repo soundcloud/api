@@ -46,7 +46,12 @@ case class PlaylistCreateOrUpdate(
         case NullValue => Some(ProtoTracks(urns = Seq.empty))
         case Value(trackMaps) =>
           Some(
-            ProtoTracks(urns = trackMaps.map(trackMap => Urn("soundcloud", "tracks", trackMap("id")).toString))
+            ProtoTracks(urns = trackMaps.map(trackMap => {
+              if (trackMap.contains("id"))
+                Urn("soundcloud", "tracks", trackMap("id"))
+              else
+                Urn.parse(trackMap("urn")).get
+            }.toString))
           )
       }
     )

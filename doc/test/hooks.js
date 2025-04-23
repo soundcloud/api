@@ -4,20 +4,31 @@ const fs = require('fs');
 
 var responseStash = {};
 var skipDeprecatedTransactionIds = [
+    "PUT (200) /me/followings/743372812", // skipping as tested with urn
+    "PUT (201) /me/followings/743372812", // skipping as tested with urn
+    "DELETE (200) /me/followings/743372812", // skipping as tested with urn
     "GET (200) /users/948745750/followings/25219981",
     "GET (200) /users/948745750/followers/743372812",
     "GET (200) /me/followers/743372812",
-    "GET (200) /me/followings/948745750"
+    "GET (200) /me/followings/948745750",
+    "GET (200) /users/soundcloud%3Ausers%3A948745750/followings/soundcloud%3Ausers%3A25219981",
+    "GET (200) /users/soundcloud%3Ausers%3A948745750/followers/soundcloud%3Ausers%3A743372812",
+    "GET (200) /me/followers/soundcloud%3Ausers%3A743372812",
+    "GET (200) /me/followings/soundcloud%3Ausers%3A948745750"
 ];
 var skipTransactionIds = [
     "POST (200) /oauth2/token",
     "POST (401) /oauth2/token",
     "PUT (200) /tracks/308946187",
-    "POST (201) /tracks/308946187/comments"
+    "POST (201) /tracks/308946187/comments",
+    "PUT (200) /tracks/soundcloud%3Atracks%3A308946187",
+    "POST (201) /tracks/soundcloud%3Atracks%3A308946187/comments"
 ];
 var replacePlaylistIdTransactionIds = [
     "PUT (200) /playlists/10",
-    "DELETE (200) /playlists/10"
+    "DELETE (200) /playlists/10",
+    "PUT (200) /playlists/soundcloud%3Aplaylists%3A10",
+    "DELETE (200) /playlists/soundcloud%3Aplaylists%3A10"
 ];
 var skippedStatuses = ["400", "403", "404", "422", "429", "500"];
 
@@ -50,11 +61,11 @@ hooks.beforeEach((transaction, done) => {
         replaceId(transaction, '10', responseStash.playlist_id);
     }
 
-    if (transaction.id == "PUT (200) /me/followings/743372812") {
+    if (transaction.id == "PUT (200) /me/followings/soundcloud%3Ausers%3A743372812") {
         replaceId(transaction, '743372812', '25219981');
     }
 
-    if (transaction. id == "PUT (200) /tracks/308946187" || transaction.id == "DELETE (200) /tracks/308946187") {
+    if (transaction. id == "PUT (200) /tracks/308946187" || transaction.id == "DELETE (200) /tracks/308946187" || transaction. id == "PUT (200) /tracks/soundcloud%3Atracks%3A308946187"|| transaction.id == "DELETE (200) /tracks/soundcloud%3Atracks%3A308946187") {
         replaceId(transaction, '308946187', responseStash.track_id);
     }
     done();
@@ -79,7 +90,7 @@ hooks.before("/playlists > Creates a playlist. > 201 > application/json; charset
     const form = new Multipart();
     form.append('playlist[title]', 'Test title');
     form.append('playlist[sharing]', 'private');
-    form.append('playlist[tracks][][id]', [219787221,783019264,870073492]);
+    form.append('playlist[tracks][][urn]', [`soundcloud:tracks:219787221`,`soundcloud:tracks:783019264`,`soundcloud:tracks:870073492`]);
 
     transaction.request.body = (await form.buffer()).toString('base64');
     transaction.request.bodyEncoding = 'base64';

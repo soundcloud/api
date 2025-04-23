@@ -4,6 +4,6 @@ value:
     description: Playlist for test purposes
     sharing: private
     tracks:
-      - id: 219787221
-      - id: 783019264
-      - id: 870073492
+      - urn: soundcloud:tracks:219787221
+      - urn: soundcloud:tracks:783019264
+      - urn: soundcloud:tracks:870073492

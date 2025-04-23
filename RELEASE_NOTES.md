@@ -1,4 +1,4 @@
 <!--- Remove everything below and start over --->
 
-Introduce strings URN that replace current numeric id in requests and responses 
+Updated Swagger and Open Api Spec: deprecation of numeric IDs, replaced by string URN 
 

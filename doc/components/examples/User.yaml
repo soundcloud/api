@@ -10,6 +10,7 @@ value:
   followings_count: 0
   full_name: Full Name
   id: 12345
+  urn: soundcloud:users:12345
   kind: user
   last_modified: 2020/01/03 12:08:25 +0000
   last_name: Last_name

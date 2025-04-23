@@ -10,9 +10,9 @@ properties:
     default: public
   playlist[description]:
     type: string
-  playlist[tracks][][id]:
+  playlist[tracks][][urn]:
     type: string
-    description: To pass multiple tracks, pass multiple comma-separated values, e.g. -F "playlist[tracks][][id]=111,222"
+    description: To pass multiple tracks, pass multiple comma-separated values, e.g. -F "playlist[tracks][][urn]=soundcloud:tracks:111,soundcloud:tracks:222"
   playlist[artwork_data]:
     title: The playlist artwork in binary format. Supported formats are gif, jpeg and png
     type: string

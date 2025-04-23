@@ -21,10 +21,10 @@ properties:
         items:
           type: object
           required:
-            - id
+            - urn
           properties:
-            id:
-              description: SoundCloud track id
+            urn:
+              description: SoundCloud track urn
               type: string
       artwork_data:
         title: Only for POST
