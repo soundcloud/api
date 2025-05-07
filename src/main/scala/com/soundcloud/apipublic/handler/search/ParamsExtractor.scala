@@ -1,6 +1,7 @@
 package com.soundcloud.apipublic.handler.search
 
 import com.soundcloud.apipublic.client.search.{PlaylistsParams, SearchDurationFilters, TracksParams, UsersParams}
+import com.soundcloud.jvmkit.module.util.Urn
 import com.twitter.finagle.http.ParamMap
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
@@ -23,7 +24,15 @@ object ParamsExtractor {
       createdAt = params.get("created_at"),
       createdAtFrom = params.get("created_at[from]").map(mapCreatedAt),
       createdAtTo = params.get("created_at[to]").map(mapCreatedAt),
-      ids = params.get("ids").map(_.split(",").toList),
+      ids = params
+        .get("urns")
+        .map(_.split(",").toList)
+        .map(_.map(Urn.parse(_).get.identifier))
+        .orElse(
+          params
+            .get("ids")
+            .map(_.split(",").toList)
+        ),
       clientId = params.get("client_id"),
       genres = params.get("genres").map(_.split(",").toList),
       tags = params.get("tags").map(_.split(",").toList),
@@ -40,7 +49,15 @@ object ParamsExtractor {
       createdAt = params.get("created_at"),
       createdAtFrom = params.get("created_at[from]").map(mapCreatedAt),
       createdAtTo = params.get("created_at[to]").map(mapCreatedAt),
-      ids = params.get("ids").map(_.split(",").toList),
+      ids = params
+        .get("urns")
+        .map(_.split(",").toList)
+        .map(_.map(Urn.parse(_).get.identifier))
+        .orElse(
+          params
+            .get("ids")
+            .map(_.split(",").toList)
+        ),
       clientId = params.get("client_id"),
       place = params.get("place")
     )
@@ -63,7 +80,15 @@ object ParamsExtractor {
       durationTo = params.get("duration[to]").map(_.toInt),
       genres = params.get("genres").map(_.split(",").toList),
       tags = params.get("tags").map(_.split(",").toList),
-      ids = params.get("ids").map(_.split(",").toList),
+      ids = params
+        .get("urns")
+        .map(_.split(",").toList)
+        .map(_.map(Urn.parse(_).get.identifier))
+        .orElse(
+          params
+            .get("ids")
+            .map(_.split(",").toList)
+        ),
       license = params.get("license"),
       clientId = params.get("client_id"),
       place = params.get("place"),
