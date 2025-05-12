@@ -37,7 +37,7 @@ class ResolveService(
           case Some(urn) =>
             val preservedQueryParams = ResourceURLs.queryParams(url, permalink.secretToken)
             urn.collection match {
-              case "users" => Future.value(Some(buildUserUrl(urn.identifier, preservedQueryParams)))
+              case "users" => Future.value(Some(buildUserUrl(urn, preservedQueryParams)))
               case "tracks" => fetchAndBuildTrackUrl(session, permalink, urn, preservedQueryParams)
               case "playlists" => fetchAndBuildPlaylistUrl(session, permalink, urn, preservedQueryParams)
               case _ => Future.value(None)
@@ -58,7 +58,7 @@ class ResolveService(
     trackVisibilityService
       .visibleTracks(session, List(trackRequest), TrackWithTranscodingsFieldMask, AccessParams.explicitAccess)
       .map { tracks =>
-        if (tracks.nonEmpty) Some(buildTrackUrl(urn.identifier, preservedQueryParams)) else None
+        if (tracks.nonEmpty) Some(buildTrackUrl(urn, preservedQueryParams)) else None
       }
   }
 
@@ -72,22 +72,22 @@ class ResolveService(
     playlistsService
       .fetchPlaylistsMetadataOnly(session, List(playlistRequest))
       .map { playlists =>
-        if (playlists.nonEmpty) Some(buildPlaylistUrl(urn.identifier, preservedQueryParams))
+        if (playlists.nonEmpty) Some(buildPlaylistUrl(urn, preservedQueryParams))
         else None
       }
   }
 
-  private def buildUserUrl(urnIdentifier: String, queryParams: String): String = {
-    s"$baseUrl${Routing.userIdPath.replace(":id", urnIdentifier)}" + queryParams
+  private def buildUserUrl(urn: Urn, queryParams: String): String = {
+    s"$baseUrl${Routing.userIdPath.replace(":id", urn.toString)}" + queryParams
   }
 
-  private def buildTrackUrl(urnIdentifier: String, queryParams: String): String = {
-    val base = s"$baseUrl${Routing.trackIdPath.replace(":trackId", urnIdentifier)}"
+  private def buildTrackUrl(urn: Urn, queryParams: String): String = {
+    val base = s"$baseUrl${Routing.trackIdPath.replace(":trackId", urn.toString)}"
     base + queryParams
   }
 
-  private def buildPlaylistUrl(urnIdentifier: String, queryParams: String): String = {
-    val base = s"$baseUrl${Routing.playlistIdPath.replace(":id", urnIdentifier)}"
+  private def buildPlaylistUrl(urn: Urn, queryParams: String): String = {
+    val base = s"$baseUrl${Routing.playlistIdPath.replace(":id", urn.toString)}"
     base + queryParams
   }
 }
