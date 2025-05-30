@@ -28,7 +28,10 @@ metadata:
       title: Runbook
       link: alert
   annotations:
-    gocd.org/pipelines: api-public-asset-uploads
+    github.com/project-slug: soundcloud/api-public
+    'backstage.io/kubernetes-id': api-public
+    'backstage.io/kubernetes-namespace': api-public
+    'backstage.io/kubernetes-label-selector': 'system=api-public,component=asset-uploads-api'
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component
@@ -53,7 +56,10 @@ metadata:
       title: Contact Email
       link: help
   annotations:
-    gocd.org/pipelines: api-public
+    github.com/project-slug: soundcloud/api-public
+    'backstage.io/kubernetes-id': api-public
+    'backstage.io/kubernetes-namespace': api-public
+    'backstage.io/kubernetes-label-selector': 'system=api-public,component=doc'
     soundcloud.com/contact-channel: api-team-alerts
 ---
 apiVersion: backstage.io/v1alpha1
@@ -95,7 +101,10 @@ metadata:
       title: Contact Email
       link: help
   annotations:
-    gocd.org/pipelines: api-public
+    github.com/project-slug: soundcloud/api-public
+    'backstage.io/kubernetes-id': api-public
+    'backstage.io/kubernetes-namespace': api-public
+    'backstage.io/kubernetes-label-selector': 'system=api-public,component=api'
     soundcloud.com/contact-channel: api-team-alerts
 ---
 apiVersion: backstage.io/v1alpha1
