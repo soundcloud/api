@@ -135,7 +135,7 @@ class PlaylistsHandlerSpec extends UnitSpecification {
         "on success adds the location header" in new CreatePlaylistContext with ValidPostBody {
           stubService(maybeArtworkRequest = None)
           val response = post(path, Map.empty, Map(), playlistCreateBody)
-          response.headerMap("location") ==== s"$baseUrl/playlists/${playlist.id.toString}"
+          response.headerMap("location") ==== s"$baseUrl/playlists/${playlist.urn}"
         }
       }
     }
@@ -200,7 +200,7 @@ class PlaylistsHandlerSpec extends UnitSpecification {
         "on success adds the location header" in new CreatePlaylistContext with ValidPostBody {
           stubService(playlistCreateOrUpdate = expectedPlaylistCreate)
           val response = postForm(path, body = playlistCreateBody, maybeFile = Some(file), isMultipart = true)
-          response.headerMap("location") ==== s"$baseUrl/playlists/${playlist.id.toString}"
+          response.headerMap("location") ==== s"$baseUrl/playlists/${playlist.urn}"
         }
       }
     }
@@ -264,7 +264,7 @@ class PlaylistsHandlerSpec extends UnitSpecification {
         "on success adds the location header" in new CreatePlaylistContext with ValidPostBody {
           stubService(playlistCreateOrUpdate = expectedPlaylistCreate, maybeArtworkRequest = None)
           val response = postForm(path, body = playlistCreateBody)
-          response.headerMap("location") ==== s"$baseUrl/playlists/${playlist.id.toString}"
+          response.headerMap("location") ==== s"$baseUrl/playlists/${playlist.urn}"
         }
       }
     }

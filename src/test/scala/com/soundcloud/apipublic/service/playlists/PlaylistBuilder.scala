@@ -20,7 +20,7 @@ class PlaylistBuilder {
   private var purchaseUrl: Option[String] = Some("http://test.api/purchase")
   private var releaseMonth: Option[Int] = Some(1)
   private var description: Option[String] = Some("best playlist ever")
-  private var uri: String = "https://soundcloud.com/playlists/123"
+  private var uri: String = "https://soundcloud.com/playlists/soundcloud:playlists:123"
   private var labelName: Option[String] = Some("red eye records")
   private var label: Option[UserRepresentation] = None
   private var tagList: String = "beats techno slapper"

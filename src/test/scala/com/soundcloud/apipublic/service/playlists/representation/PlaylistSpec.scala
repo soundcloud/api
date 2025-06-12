@@ -45,7 +45,7 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
         purchaseUrl = None,
         ean = Some("7641825109894"),
         streamable = Some(false),
-        uri = "https://api.soundcloud.com/playlists/42703821?secret_token=secret",
+        uri = "https://api.soundcloud.com/playlists/soundcloud:playlists:42703821?secret_token=secret",
         trackRequests = PlaylistTrackRequests(requests = List.empty, pagination = None),
         counts = Some(PlaylistCounts(Some(2)))
       )
@@ -89,7 +89,7 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
     playlist.downloadable === None
     playlist.ean ==== Some("7641825109894")
     playlist.streamable ==== Some(false)
-    playlist.uri ==== "https://api.soundcloud.com/playlists/42703821?secret_token=secret"
+    playlist.uri ==== "https://api.soundcloud.com/playlists/soundcloud:playlists:42703821?secret_token=secret"
     playlist.user ==== defaultUser
     playlist.tracks ==== None
     playlist.secretUri ==== None
@@ -124,7 +124,9 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
   "owner only fields are added when requesting user owns playlist" in new Context {
 
     playlist.secretToken ==== Some("secret")
-    playlist.secretUri ==== Some("https://api.soundcloud.com/playlists/42703821?secret_token=secret")
+    playlist.secretUri ==== Some(
+      "https://api.soundcloud.com/playlists/soundcloud:playlists:42703821?secret_token=secret"
+    )
   }
 
   "Json representation has correct track_uri with secret_token" in new Context {
@@ -132,7 +134,8 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
     val enrichedPlaylist = Playlist.enrichPlaylistWithTracks(playlist, List(trackRepresentation))
 
     val json = Json.toJson(enrichedPlaylist)
-    (json \ "tracks_uri").as[String] ==== "https://api.soundcloud.com/playlists/42703821/tracks?secret_token=secret"
+    (json \ "tracks_uri")
+      .as[String] ==== "https://api.soundcloud.com/playlists/soundcloud:playlists:42703821/tracks?secret_token=secret"
   }
 
   "Json representation has correct track_uri without secret_token" in new Context {
@@ -149,7 +152,7 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
     val enrichedPlaylist = Playlist.enrichPlaylistWithTracks(playlist, List(trackRepresentation))
 
     val json = Json.toJson(enrichedPlaylist)
-    (json \ "tracks_uri").as[String] ==== "https://api.soundcloud.com/playlists/42703821/tracks"
+    (json \ "tracks_uri").as[String] ==== "https://api.soundcloud.com/playlists/soundcloud:playlists:42703821/tracks"
   }
 
   "returns 0 likes_count if not returned from VisiblePlaylist" in new Context {

@@ -526,22 +526,26 @@ class TrackRepresentationSpec extends UnitSpecification {
       }
 
       "adds secret token stuff" in new UrlsPresentContext {
-        json \ "secret_uri" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/1324?secret_token=bl3rkbi3"))
+        json \ "secret_uri" ==== JsDefined(
+          JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:1324?secret_token=bl3rkbi3")
+        )
       }
 
       "adds the secret token to the URI" in new UrlsPresentContext {
-        json \ "uri" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/1324?secret_token=bl3rkbi3"))
+        json \ "uri" ==== JsDefined(
+          JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:1324?secret_token=bl3rkbi3")
+        )
       }
 
       "adds the secret token to the stream_url" in new UrlsPresentContext {
         json \ "stream_url" ==== JsDefined(
-          JsString("https://api.soundcloud.com/tracks/1324/stream?secret_token=bl3rkbi3")
+          JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:1324/stream?secret_token=bl3rkbi3")
         )
       }
 
       "adds the secret token to the download_url" in new UrlsPresentContext {
         json \ "download_url" ==== JsDefined(
-          JsString("https://api.soundcloud.com/tracks/1324/download?secret_token=bl3rkbi3")
+          JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:1324/download?secret_token=bl3rkbi3")
         )
       }
 
@@ -566,7 +570,7 @@ class TrackRepresentationSpec extends UnitSpecification {
 
         "correctly encodes it into the URI" in new BadlyFormedSecretTokenContext {
           json \ "uri" ==== JsDefined(
-            JsString("https://api.soundcloud.com/tracks/1324?secret_token=badgers%3Fformat%3Djson")
+            JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:1324?secret_token=badgers%3Fformat%3Djson")
           )
         }
 
@@ -630,10 +634,14 @@ class TrackRepresentationSpec extends UnitSpecification {
       trackJson \ "release_month" ==== JsDefined(JsNumber(1))
       trackJson \ "release_day" ==== JsDefined(JsNumber(2))
       trackJson \ "license" ==== JsDefined(JsString("all-rights-reserved"))
-      trackJson \ "uri" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/1324"))
+      trackJson \ "uri" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:1324"))
       trackJson \ "permalink_url" ==== JsDefined(JsString("http://soundcloud.com/nirvana/plsty-remix"))
-      trackJson \ "stream_url" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/1324/stream"))
-      trackJson \ "download_url" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/1324/download"))
+      trackJson \ "stream_url" ==== JsDefined(
+        JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:1324/stream")
+      )
+      trackJson \ "download_url" ==== JsDefined(
+        JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:1324/download")
+      )
       trackJson \ "purchase_url" ==== JsDefined(JsString("http://example.com/buy/7890"))
       trackJson \ "purchase_title" ==== JsDefined(JsString("buy me pls"))
       trackJson \ "bpm" ==== JsDefined(JsNumber(120.7))
@@ -644,7 +652,7 @@ class TrackRepresentationSpec extends UnitSpecification {
       val userJson = trackJson \ "user"
       userJson \ "id" ==== JsDefined(JsNumber(3456))
       userJson \ "kind" ==== JsDefined(JsString("user"))
-      userJson \ "uri" ==== JsDefined(JsString("https://api.soundcloud.com/users/3456"))
+      userJson \ "uri" ==== JsDefined(JsString("https://api.soundcloud.com/users/soundcloud:users:3456"))
       userJson \ "permalink_url" ==== JsDefined(JsString("https://soundcloud.com/denis"))
       userJson \ "avatar_url" ==== JsDefined(JsString("https://example.com/giraffe.jpg"))
     }
@@ -783,13 +791,17 @@ class TrackRepresentationSpec extends UnitSpecification {
       trackJson \ "release_month" ==== JsDefined(JsNumber(2))
       trackJson \ "release_day" ==== JsDefined(JsNumber(1))
       trackJson \ "license" ==== JsDefined(JsString("all-rights-reserved"))
-      trackJson \ "uri" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/174088262"))
+      trackJson \ "uri" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:174088262"))
       trackJson \ "artwork_url" === JsDefined(JsString("https://i1.sndcdn.com/artworks-000095281756-51d163-large.jpg"))
       trackJson \ "permalink_url" ==== JsDefined(
         JsString("https://soundcloud.com/imprisonedprecision/awesome-track-2014-10-27-17-25-29-66")
       )
-      trackJson \ "stream_url" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/174088262/stream"))
-      trackJson \ "download_url" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/174088262/download"))
+      trackJson \ "stream_url" ==== JsDefined(
+        JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:174088262/stream")
+      )
+      trackJson \ "download_url" ==== JsDefined(
+        JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:174088262/download")
+      )
       trackJson \ "purchase_url" ==== JsDefined(JsString("http://buy.that.com"))
       trackJson \ "purchase_title" ==== JsDefined(JsString("buy123"))
       trackJson \ "bpm" ==== JsDefined(JsNumber(123.0))
@@ -801,7 +813,7 @@ class TrackRepresentationSpec extends UnitSpecification {
       userJson \ "id" ==== JsDefined(JsNumber(3456))
       userJson \ "kind" ==== JsDefined(JsString("user"))
       userJson \ "permalink" ==== JsDefined(JsString("giraffe"))
-      userJson \ "uri" ==== JsDefined(JsString("https://api.soundcloud.com/users/3456"))
+      userJson \ "uri" ==== JsDefined(JsString("https://api.soundcloud.com/users/soundcloud:users:3456"))
       userJson \ "permalink_url" ==== JsDefined(JsString("https://soundcloud.com/denis"))
       userJson \ "avatar_url" ==== JsDefined(JsString("https://example.com/giraffe.jpg"))
       userJson \ "last_modified" ==== JsDefined(JsString("2016/10/10 11:21:36 +0000"))
@@ -815,18 +827,20 @@ class TrackRepresentationSpec extends UnitSpecification {
       )
       val trackJson = Json.toJson(trackRepresentation)
 
-      trackJson \ "uri" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/174088262?secret_token=s-8USae"))
+      trackJson \ "uri" ==== JsDefined(
+        JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:174088262?secret_token=s-8USae")
+      )
       trackJson \ "secret_uri" ==== JsDefined(
-        JsString("https://api.soundcloud.com/tracks/174088262?secret_token=s-8USae")
+        JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:174088262?secret_token=s-8USae")
       )
       trackJson \ "permalink_url" ==== JsDefined(
         JsString("https://soundcloud.com/imprisonedprecision/awesome-track-2014-10-27-17-25-29-66/s-8USae")
       )
       trackJson \ "stream_url" ==== JsDefined(
-        JsString("https://api.soundcloud.com/tracks/174088262/stream?secret_token=s-8USae")
+        JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:174088262/stream?secret_token=s-8USae")
       )
       trackJson \ "download_url" ==== JsDefined(
-        JsString("https://api.soundcloud.com/tracks/174088262/download?secret_token=s-8USae")
+        JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:174088262/download?secret_token=s-8USae")
       )
     }
   }

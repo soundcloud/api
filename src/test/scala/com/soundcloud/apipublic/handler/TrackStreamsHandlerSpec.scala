@@ -52,12 +52,12 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
   "with single stream request" >> {
     Fragments.foreach(
       Seq(
-        (Method.Head, "/tracks/5/stream"),
-        (Method.Get, "/tracks/5/stream")
+        (Method.Head, "/tracks/soundcloud:tracks:5/stream"),
+        (Method.Get, "/tracks/soundcloud:tracks:5/stream")
       )
     ) {
       case (method, path) =>
-        "GET /tracks/5/stream" in new MediaServiceContext {
+        "GET /tracks/soundcloud:tracks:5/stream" in new MediaServiceContext {
           streamService.fetchUrls(session, trackUrn, None, singleStream = true) returns
             Future.value(RedirectStreamResponse(httpMp3).good)
 
@@ -77,7 +77,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
       streamService.fetchUrls(session, trackUrn, None, singleStream = true) returns
         Future.value(RedirectStreamResponse(httpMp3).good)
 
-      get("/tracks/5/stream")
+      get("/tracks/soundcloud:tracks:5/stream")
       there was one(trackAccessClient).recordAccess(
         ===(session),
         ===(trackUrn),
@@ -91,8 +91,8 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
   "with multiple stream requests" >> {
     Fragments.foreach(
       Seq(
-        (Method.Head, "/tracks/5/streams"),
-        (Method.Get, "/tracks/5/streams")
+        (Method.Head, "/tracks/soundcloud:tracks:5/streams"),
+        (Method.Get, "/tracks/soundcloud:tracks:5/streams")
       )
     ) {
       case (method, path) =>
@@ -120,7 +120,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
         MediaStreamUrls(httpMp3, hlsMp3, Some(hlsOpus), Some(httpPreviewMp3)).good
       )
 
-      get("/tracks/5/streams")
+      get("/tracks/soundcloud:tracks:5/streams")
       there was one(trackAccessClient).recordAccess(
         ===(session),
         ===(trackUrn),
@@ -139,7 +139,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     }
 
     s"should return 302" in new WithSecretTokenContext {
-      val resp = get("/tracks/5/stream?secret_token=itsasecret")
+      val resp = get("/tracks/soundcloud:tracks:5/stream?secret_token=itsasecret")
       resp.status ==== Status.Found
       resp.headerMap("Location") ==== "http://mp3-progressive"
     }
@@ -151,7 +151,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     }
 
     s"should return 404" in new StreamingNotAllowedContext {
-      val resp = get("/tracks/5/stream")
+      val resp = get("/tracks/soundcloud:tracks:5/stream")
       resp.status ==== Status.NotFound
     }
   }
@@ -164,7 +164,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     }
 
     s"should return 404" in new StreamingNotAllowedContext {
-      val resp = get("/tracks/5/stream")
+      val resp = get("/tracks/soundcloud:tracks:5/stream")
       resp.status ==== Status.Forbidden
       (Json.parse(resp.contentString) \ "message").as[String] ==== "Sorry, this track is not available in your area."
     }

@@ -1,11 +1,6 @@
 package com.soundcloud.apipublic.handler
 
 import cats.implicits._
-import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
-import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
-import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
-import com.soundcloud.periskop.client.Severity
 import com.soundcloud.apipublic.client.playlists.PlaylistDeletionClient
 import com.soundcloud.apipublic.handler.support.error.UnhandledOutcomeException
 import com.soundcloud.apipublic.handler.support.requestParser.{AccessParamsExtractor, PlaylistFormParamsExtractor}
@@ -15,6 +10,11 @@ import com.soundcloud.apipublic.service.playlists.representation.PlaylistCreateO
 import com.soundcloud.apipublic.service.representation.collection.Collection
 import com.soundcloud.apipublic.support.PlaylistUrnUtil.getPlaylistUrn
 import com.soundcloud.apipublic.support.{ErrorResponse, PlaylistUrnUtil}
+import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
+import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBuilder}
+import com.soundcloud.jvmkit.module.outcome._
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
+import com.soundcloud.periskop.client.Severity
 import com.twitter.finagle.http._
 import com.twitter.util.{Future, Return, Throw, Try}
 import play.api.libs.json.{JsObject, Json}
@@ -39,7 +39,7 @@ class PlaylistsHandler(
         case Good(playlist) =>
           JsonResponseBuilder(
             status = Status.Created,
-            headers = Map("location" -> playlistLocation(playlist.id.toString)),
+            headers = Map("location" -> playlistLocation(playlist.urn.toString)),
             body = Json.stringify(Json.toJson(playlist))
           ).build
         case Bad(NotValid(msg)) => {
@@ -114,7 +114,9 @@ class PlaylistsHandler(
       Try(getPlaylistUrn(request)) match {
         case Return(urn) =>
           playlistsService.fetchPlaylist(session, urn, candidateSecretToken, access, pagination, showTracks).map {
-            case Good(playlist) => JsonResponseBuilder.ok(body = Json.stringify(Json.toJson(playlist)))
+            case Good(playlist) => {
+              JsonResponseBuilder.ok(body = Json.stringify(Json.toJson(playlist)))
+            }
             case Bad(NotFound(_)) => ErrorResponse.notFound()
             case _ => throw new UnhandledOutcomeException
           }

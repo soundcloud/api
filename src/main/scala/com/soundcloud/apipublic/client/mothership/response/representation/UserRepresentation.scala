@@ -68,7 +68,7 @@ object UserRepresentation {
       "urn" -> user.urn.toString,
       "kind" -> "user",
       "permalink_url" -> user.permalink_url,
-      "uri" -> s"https://api.soundcloud.com/users/${user.urn.identifier}",
+      "uri" -> s"https://api.soundcloud.com/users/${user.urn}",
       "username" -> HtmlSanitizer.sanitize(user.username),
       "permalink" -> user.permalink,
       "created_at" -> user.created_at,

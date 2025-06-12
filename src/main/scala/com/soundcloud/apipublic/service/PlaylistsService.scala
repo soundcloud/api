@@ -102,7 +102,6 @@ class PlaylistsService(
   ): Future[List[Playlist]] = {
     val playlistPagination =
       pagination.map(p => PlaylistPagination(cursor = p.offset.map(_.toString), limit = p.limit))
-
     for {
       visiblePlaylistObjects <- getPlaylistObjects(
         session,

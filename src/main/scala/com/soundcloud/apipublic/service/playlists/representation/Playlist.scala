@@ -1,9 +1,9 @@
 package com.soundcloud.apipublic.service.playlists.representation
 
-import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.apipublic.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.apipublic.service.trackrepresentation.TrackRepresentation
 import com.soundcloud.apipublic.support.HtmlSanitizer
+import com.soundcloud.jvmkit.module.util.Urn
 import play.api.libs.json._
 
 import java.net.URLEncoder
@@ -187,8 +187,9 @@ object Playlist {
 
   private val baseUrl = "https://api.soundcloud.com/playlists"
 
-  private def trackUri(playlist: Playlist) =
-    secretUrl(s"$baseUrl/${playlist.id}/tracks", playlist)
+  private def trackUri(playlist: Playlist) = {
+    secretUrl(s"$baseUrl/${playlist.urn}/tracks", playlist)
+  }
 
   private def secretUrl(url: String, playlist: Playlist): String = {
     playlist.secretToken.map(token => s"$url?secret_token=$token").getOrElse(url)

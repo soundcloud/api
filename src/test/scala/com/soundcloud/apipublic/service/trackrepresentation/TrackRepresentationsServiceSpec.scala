@@ -248,12 +248,14 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
           trackRepLike match {
             case Some(rep) =>
               val json = Json.toJson(rep)
-              json \ "uri" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/987?secret_token=secr3t-Token"))
+              json \ "uri" ==== JsDefined(
+                JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:987?secret_token=secr3t-Token")
+              )
               json \ "stream_url" ==== JsDefined(
-                JsString("https://api.soundcloud.com/tracks/987/stream?secret_token=secr3t-Token")
+                JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:987/stream?secret_token=secr3t-Token")
               )
               json \ "download_url" ==== JsDefined(
-                JsString("https://api.soundcloud.com/tracks/987/download?secret_token=secr3t-Token")
+                JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:987/download?secret_token=secr3t-Token")
               )
               json \ "permalink_url" ==== JsDefined(JsString("http://soundcloud.com/foo/bar/secr3t-Token"))
             case None =>

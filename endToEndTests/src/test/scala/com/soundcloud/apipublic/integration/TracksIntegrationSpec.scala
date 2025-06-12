@@ -16,7 +16,7 @@ class TracksIntegrationSpec extends IntegrationTest {
       response.status === 200
 
       (response.json \ "stream_url").as[String] must equalTo(
-        s"https://api.soundcloud.com/tracks/$freeTierTrackId/stream"
+        s"https://api.soundcloud.com/tracks/soundcloud:tracks:$freeTierTrackId/stream"
       )
       (response.json \ "duration").as[Int] must equalTo(189613)
       (response.json \ "streamable").as[Boolean] must equalTo(true)
@@ -29,7 +29,7 @@ class TracksIntegrationSpec extends IntegrationTest {
       response.status === 200
 
       (response.json \ "stream_url").as[String] must equalTo(
-        s"https://api.soundcloud.com/tracks/$highTierTrackId/stream"
+        s"https://api.soundcloud.com/tracks/soundcloud:tracks:$highTierTrackId/stream"
       )
       (response.json \ "duration").as[Int] must equalTo(30000)
       (response.json \ "streamable").as[Boolean] must equalTo(true)

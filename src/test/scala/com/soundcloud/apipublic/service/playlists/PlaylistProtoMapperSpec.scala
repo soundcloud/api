@@ -67,7 +67,7 @@ class PlaylistProtoMapperSpec extends Specification {
       purchaseUrl = Some("http://foo.bar.com"),
       ean = Some("ean"),
       streamable = Some(true),
-      uri = "uri",
+      uri = "https://api.soundcloud.com/playlists/soundcloud:playlists:123",
       counts = Some(ProtoCounts(Some(2)))
     )
   }
@@ -122,7 +122,7 @@ class PlaylistProtoMapperSpec extends Specification {
       visiblePlaylist.purchaseUrl ==== Some("http://foo.bar.com")
       visiblePlaylist.ean ==== Some("ean")
       visiblePlaylist.streamable ==== Some(true)
-      visiblePlaylist.uri ==== "uri"
+      visiblePlaylist.uri ==== "https://api.soundcloud.com/playlists/soundcloud:playlists:123"
       visiblePlaylist.counts.get ==== PlaylistCounts(Some(2))
     }
 

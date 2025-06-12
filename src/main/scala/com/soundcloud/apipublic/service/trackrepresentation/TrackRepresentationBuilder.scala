@@ -146,8 +146,7 @@ object TrackRepresentationBuilder {
 
   private def getSecretUri(visibleTrack: VisibleTrack): Option[String] = {
     if (!visibleTrack.public)
-      visibleTrack.secretToken.map(token =>
-        s"https://api.soundcloud.com/tracks/${visibleTrack.urn.identifier}?secret_token=$token"
+      visibleTrack.secretToken.map(token => s"https://api.soundcloud.com/tracks/${visibleTrack.urn}?secret_token=$token"
       )
     else None
   }
@@ -177,10 +176,10 @@ object TrackRepresentationBuilder {
   }
 
   private def urlFor(urn: Urn, isPublic: Boolean, subresource: String, secretParam: Option[String]) =
-    secretUrl(s"$baseUrl/${urn.identifier.toLong}/$subresource", isPublic, secretParam)
+    secretUrl(s"$baseUrl/$urn/$subresource", isPublic, secretParam)
 
   private def urlFor(urn: Urn, isPublic: Boolean, secretParam: Option[String]) =
-    secretUrl(s"$baseUrl/${urn.identifier.toLong}", isPublic, secretParam)
+    secretUrl(s"$baseUrl/$urn", isPublic, secretParam)
 
   private def secretUrl(url: String, isPublic: Boolean, secretParam: Option[String]): Option[String] = {
     if (!isPublic && secretParam.isDefined) {
