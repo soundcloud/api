@@ -26,6 +26,7 @@ object Fixtures {
   lazy val followsAgeUnknownError = contentsOf("follows", "follow_failed_age_unknown")
 
   lazy val trackCoordinatorTrack = contentsOf("track-coordinator", "track")
+  lazy val trackCoordinatorTrackNoCounts = contentsOf("track-coordinator", "trackNoCounts")
   lazy val trackCoordinatorUploadQuota = contentsOf("track-coordinator", "upload-quota")
 
   lazy val consumerSubscription = contentsOf("subscriptions", "consumer-subscription")

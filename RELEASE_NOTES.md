@@ -1,4 +1,2 @@
 <!--- Remove everything below and start over --->
-
-Updated Swagger and Open Api Spec: deprecation of numeric IDs, replaced by string URN 
-
+downloadCounts is deprecated in the response for write operations on tracks (create, update) and will be removed soon

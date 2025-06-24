@@ -46,6 +46,8 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
       TrackAssetDataCreateRequest(original_filename = "filename", uid = "uid")
 
     val expectedResponse = Json.parse(Json.stringify(Fixtures.trackCoordinatorTrack)).as[TrackCoordinatorTrack]
+    val expectedResponseNoCounts =
+      Json.parse(Json.stringify(Fixtures.trackCoordinatorTrackNoCounts)).as[TrackCoordinatorTrack]
     val uploadQuota = UserUploadQuota(196, Some(21600))
   }
 
@@ -87,6 +89,13 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
           )
       }
 
+      trait SuccessNoCountsContext extends CreateContext {
+        when(jsonClient.postWithSession(session, path, Params.empty, Headers.empty, Some(requestBody)))
+          .thenReturn(
+            Future(jsonResponse(Status.Created, Fixtures.trackCoordinatorTrackNoCounts))
+          )
+      }
+
       trait NotFoundContext extends CreateContext {
         when(jsonClient.postWithSession(session, path, Params.empty, Headers.empty, Some(requestBody)))
           .thenReturn(
@@ -115,6 +124,20 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
           )
 
         result mustEqual Good(expectedResponse)
+      }
+
+      "Successfully creates track metadata without counts" in new SuccessNoCountsContext {
+        val result =
+          Await.result(
+            client.createTrack(
+              session,
+              trackAssetDataCreateRequest,
+              trackMetadataCreateRequest,
+              Some(trackArtworkMetaResponse)
+            )
+          )
+
+        result mustEqual Good(expectedResponseNoCounts)
       }
 
       "Returns 404 when not found" in new NotFoundContext {
@@ -239,6 +262,13 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
           )
       }
 
+      trait SuccessNoCountsContext extends UpdateContext {
+        when(jsonClient.putWithSession(session, path, Params.empty, Headers.empty, Some(requestBody)))
+          .thenReturn(
+            Future(jsonResponse(Status.Ok, Fixtures.trackCoordinatorTrackNoCounts))
+          )
+      }
+
       trait NotFoundContext extends UpdateContext {
         when(jsonClient.putWithSession(session, path, Params.empty, Headers.empty, Some(requestBody)))
           .thenReturn(
@@ -265,6 +295,21 @@ class TrackCoordinatorClientSpec extends UnitSpecification {
           )
 
         result mustEqual Good(expectedResponse)
+      }
+
+      "Successfully updates track metadata without counts" in new SuccessNoCountsContext {
+        val result =
+          Await.result(
+            client.updateTrack(
+              session,
+              trackUrn,
+              Some(trackAssetDataUpdateRequest),
+              trackMetadataUpdateRequest,
+              Some(trackArtworkMetaResponse)
+            )
+          )
+
+        result mustEqual Good(expectedResponseNoCounts)
       }
 
       "Update metadata returns 404 when not found" in new NotFoundContext {

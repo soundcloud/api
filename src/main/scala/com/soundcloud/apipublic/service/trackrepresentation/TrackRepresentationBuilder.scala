@@ -52,7 +52,7 @@ object TrackRepresentationBuilder {
       isrc = trackCoordinatorTrack.isrc,
       availableCountries = getAvailableCountryNodes(trackCoordinatorTrack.geo_blockings.getOrElse(List.empty)),
       playbackCount = Some(trackCoordinatorTrack.playback_count),
-      downloadCount = Some(trackCoordinatorTrack.downloads_count),
+      downloadCount = trackCoordinatorTrack.downloads_count.map(x => x.longValue),
       favoritingsCount = Some(trackCoordinatorTrack.favoritings_count),
       repostsCount = None,
       releaseDay = trackCoordinatorTrack.release_day,
