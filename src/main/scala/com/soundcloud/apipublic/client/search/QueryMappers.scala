@@ -15,7 +15,7 @@ object QueryMappers {
         "filter.created_at[from]" -> params.createdAtFrom.map(_.formatted("yyyy-MM-dd HH:mm:ss")),
         "filter.created_at[to]" -> params.createdAtTo.map(_.formatted("yyyy-MM-dd HH:mm:ss"))
       ).collect { case (k, Some(v)) => k -> StringParam(v) } ++ Map(
-        "filter.id" -> params.ids,
+        "filter.id" -> params.ids.map(_.map(_.toString)),
         "filter.tag" -> params.tags,
         "filter.genre" -> params.genres
       ).collect { case (k, Some(v)) => k -> ListParam(v) }
@@ -45,7 +45,7 @@ object QueryMappers {
         "filter.content_tier" -> params.contentTier,
         "filter.content_country" -> params.contentCountry
       ).collect { case (k, Some(v)) => k -> StringParam(v) } ++ Map(
-        "filter.id" -> params.ids,
+        "filter.id" -> params.ids.map(_.map(_.toString)),
         "filter.tag" -> params.tags,
         "filter.genre" -> params.genres
       ).collect { case (k, Some(v)) => k -> ListParam(v) }
@@ -75,7 +75,7 @@ object QueryMappers {
         "filter.content_tier" -> params.contentTier,
         "filter.content_country" -> params.contentCountry
       ).collect { case (k, Some(v)) => k -> StringParam(v) } ++ Map(
-        "filter.id" -> params.ids,
+        "filter.id" -> params.ids.map(_.map(_.toString)),
         "filter.tag" -> params.tags,
         "filter.genre" -> params.genres
       ).collect { case (k, Some(v)) => k -> ListParam(v) }
@@ -94,7 +94,7 @@ object QueryMappers {
         "filter.created_at[from]" -> params.createdAtFrom.map(_.toString),
         "filter.created_at[to]" -> params.createdAtTo.map(_.toString)
       ).collect { case (k, Some(v)) => k -> StringParam(v) } ++ Map(
-        "filter.id" -> params.ids
+        "filter.id" -> params.ids.map(_.map(_.toString))
       ).collect { case (k, Some(v)) => k -> ListParam(v) }
   }
 }

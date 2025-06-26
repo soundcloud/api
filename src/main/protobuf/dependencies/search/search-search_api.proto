@@ -82,6 +82,8 @@ message SearchRequest {
     google.protobuf.BoolValue fail_on_error = 17;
     // System sending the request (optional - but should be required soon)
     google.protobuf.StringValue sc_system = 18;
+    // Ads context for GDPR compliance (optional)
+    AdsContext ads_context = 19;
 }
 
 // Request body for simple search requests
@@ -284,13 +286,13 @@ message SearchFilters {
     google.protobuf.StringValue content_country = 10;
 
     // Filter by user ids
-    repeated google.protobuf.StringValue user_ids = 11;
+    repeated google.protobuf.Int64Value user_ids = 11;
 
     // Filter by license
     License license = 12;
 
     // Filter by id
-    repeated google.protobuf.StringValue ids = 13;
+    repeated google.protobuf.Int64Value ids = 13;
 
     // Filter by places[london, berlin, paris, etc...]
     repeated google.protobuf.StringValue places = 14;
@@ -361,6 +363,28 @@ message SearchResponse {
     repeated Entity entities = 4;
     // A map of all links that exist in the response
     map<string, Link> links = 5;
+    // Tracking information for the request
+    Tracking tracking = 6;
+}
+
+// Tracking information that are calculated for the request
+message Tracking {
+    Impressions impressions = 1;
+}
+
+// User Impression tracking information for the request.
+// The app clients are using this information to know what events to trigger to
+// track user impressions on the UI.
+message Impressions {
+    enum Level {
+        // Track user impressions on section level
+        SECTION = 0;
+        // Track user impressions for the objects inside the sections
+        OBJECT = 1;
+        // Track user impressions for the links inside the sections
+        LINK = 2;
+    }
+    repeated Level levels = 1;
 }
 
 // Search simple response body
@@ -581,4 +605,25 @@ message ExplanationResponse {
 message Explanation {
     string urn = 1;
     string data = 2;
+}
+
+message AdsContext {
+    // The version of the Transparency and Consent Framework (TCF) for GDPR compliance.
+    google.protobuf.StringValue tcf_version = 1;
+    // The consent string for GDPR compliance.
+    google.protobuf.StringValue tcf_consent = 2;
+    // The Real-IP of the request. From the X-Real-IP header.
+    google.protobuf.StringValue real_ip = 3;
+    // The user agent string of the client making the request. From the SC-User-Agent header.)
+    google.protobuf.StringValue sc_user_agent = 4;
+    // The unique identifier for the ad. From the SC-ADID header.
+    google.protobuf.StringValue adid = 5;
+    // The tracking status of the ad identifier. From the SC-ADID-Tracking header.
+    google.protobuf.StringValue adid_tracking = 6;
+    // A Soundcloud User Identifier. From the SC-UDID header.
+    google.protobuf.StringValue udid = 7;
+    // The Device name(iOS, Android) of the application. From the SC-Device header.
+    google.protobuf.StringValue scDevice = 8;
+    // The version of the application. From the SC-App-Version header.
+    google.protobuf.StringValue scAppVersion = 9;
 }

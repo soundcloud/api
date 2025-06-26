@@ -254,7 +254,7 @@ class SearchClientSpec extends Specification with Mockito {
       )
       override lazy val filters: SearchFilters = SearchFilters(
         contentType = SearchFilters.ContentType.TRACKS,
-        ids = Seq("1", "2", "3")
+        ids = Seq(1L, 2L, 3L)
       )
 
       Right(expected) === result
@@ -331,7 +331,7 @@ class SearchClientSpec extends Specification with Mockito {
 
       override lazy val filters: SearchFilters = SearchFilters(
         contentType = SearchFilters.ContentType.USERS,
-        ids = Seq("1", "2", "3")
+        ids = Seq(1L, 2L, 3L)
       )
 
       Right(expected) === result

@@ -32,7 +32,8 @@ object ParamsExtractor {
           params
             .get("ids")
             .map(_.split(",").toList)
-        ),
+        )
+        .map(_.map(_.toLong)),
       clientId = params.get("client_id"),
       genres = params.get("genres").map(_.split(",").toList),
       tags = params.get("tags").map(_.split(",").toList),
@@ -57,7 +58,8 @@ object ParamsExtractor {
           params
             .get("ids")
             .map(_.split(",").toList)
-        ),
+        )
+        .map(_.map(_.toLong)),
       clientId = params.get("client_id"),
       place = params.get("place")
     )
@@ -88,7 +90,8 @@ object ParamsExtractor {
           params
             .get("ids")
             .map(_.split(",").toList)
-        ),
+        )
+        .map(_.map(_.toLong)),
       license = params.get("license"),
       clientId = params.get("client_id"),
       place = params.get("place"),

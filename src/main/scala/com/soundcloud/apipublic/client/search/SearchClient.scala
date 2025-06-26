@@ -74,7 +74,7 @@ case class UsersParams(
     createdAt: Option[String] = None,
     createdAtFrom: Option[DateTime] = None,
     createdAtTo: Option[DateTime] = None,
-    ids: Option[List[String]] = None,
+    ids: Option[List[Long]] = None,
     clientId: Option[String] = None,
     place: Option[String] = None
 )
@@ -87,7 +87,7 @@ case class PlaylistsParams(
     createdAt: Option[String] = None,
     createdAtFrom: Option[DateTime] = None,
     createdAtTo: Option[DateTime] = None,
-    ids: Option[List[String]] = None,
+    ids: Option[List[Long]] = None,
     clientId: Option[String] = None,
     genres: Option[List[String]] = None,
     tags: Option[List[String]] = None,
@@ -115,7 +115,7 @@ case class TracksParams(
     license: Option[String] = None,
     genres: Option[List[String]] = None,
     tags: Option[List[String]] = None,
-    ids: Option[List[String]] = None,
+    ids: Option[List[Long]] = None,
     clientId: Option[String] = None,
     place: Option[String] = None
 )
@@ -141,7 +141,7 @@ case class SearchQueryParams(
     license: Option[String] = None,
     genres: Option[List[String]] = None,
     tags: Option[List[String]] = None,
-    ids: Option[List[String]] = None,
+    ids: Option[List[Long]] = None,
     clientId: Option[String] = None,
     place: Option[String] = None
 )
