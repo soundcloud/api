@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"regexp"
@@ -99,6 +100,13 @@ func (s service) rewriteMultipartRequest(r *http.Request, boundary string, fn re
 			return nil, err
 		}
 
+		// for debug: AUTH-2326
+		if p.FormName() == "oauth_token" {
+			if r.Header != nil && r.Header.Get("client_id") != "" {
+				log.Printf("oauth_token multipart param is coming from client %s", r.Header.Get("client_id"))
+			}
+		}
+
 		if err := fn(p, writer, header); err != nil {
 			_ = writer.Close()
 			return nil, err
@@ -172,8 +180,9 @@ func (s service) rewriteGenericPart(p *multipart.Part, w *multipart.Writer, head
 		if err != nil {
 			return err
 		}
-
 		if token.Len() > 0 {
+			// for debug: AUTH-2326
+			log.Printf("setting Authorization header as OAuth %s", maskToken(token.String()))
 			header.Add("Authorization", "OAuth "+token.String())
 		}
 
@@ -192,6 +201,13 @@ func (s service) modifyRequest(r *http.Request, header http.Header, body *bytes.
 	for h := range header {
 		r.Header.Set(h, header.Get(h))
 	}
+	// for debugging AUTH-2326
+	if oauthHeader := header.Get("OAuth"); oauthHeader != "" {
+		log.Printf("in modifyRequest OAuth %s", maskToken(oauthHeader))
+	}
+	if bearerHeader := header.Get("Bearer"); bearerHeader != "" {
+		log.Printf("in modifyRequest Bearer %s", maskToken(bearerHeader))
+	}
 
 	r.ContentLength = int64(body.Len())
 	r.Body = io.NopCloser(body)
@@ -199,20 +215,62 @@ func (s service) modifyRequest(r *http.Request, header http.Header, body *bytes.
 	return r
 }
 
+func maskToken(token string) string {
+	if len(token) <= 20 {
+		return "****"
+	}
+	return token[:20] + strings.Repeat("*", 10) + token[len(token)-3:]
+}
+
+// AUTH-2326 helper struct for logging
+type authTokenLogger struct {
+	total uint64
+}
+
+func (p *authTokenLogger) Write(b []byte) (int, error) {
+	if len(b) > 0 {
+		log.Printf("auth token before limit: %s, number of bytes %d", maskToken(string(b)), len(b))
+		return len(b), nil
+	} else {
+		return 0, nil
+	}
+}
+
+type artworkDataLogger struct {
+	total uint64
+}
+
+func (p *artworkDataLogger) Write(b []byte) (int, error) {
+	if len(b) > 8 {
+		log.Printf("track[artwork_data] bytes start: %x | end: %x, number of bytes %d", b[:8], b[len(b)-8:], len(b))
+		return len(b), nil
+	} else {
+		return 0, nil
+	}
+}
+
 func (s service) extractAuthToken(p *multipart.Part) (*bytes.Buffer, error) {
 	const (
 		maxTokenBytes = 1024
 	)
 
+	// for debugging AUTH-2326
+	teeReader := io.TeeReader(p, &authTokenLogger{})
+
 	// Because the token is extracted to be propagated outside of the request
 	// body, we're restricting its maximum length.
-	lr := io.LimitReader(p, maxTokenBytes)
+	lr := io.LimitReader(teeReader, maxTokenBytes)
 
 	// Exceeding maxTokenBytes is currently not an error condition.
 	// We'll use what fits into maxTokenBytes.
+
+	log.Println("starting to read auth token")
+
 	buffer := &bytes.Buffer{}
-	if _, err := buffer.ReadFrom(lr); err != nil {
+	if readBytesN, err := buffer.ReadFrom(lr); err != nil {
 		return nil, err
+	} else {
+		log.Printf("auth token after limit: %s, number of bytes %d", maskToken(buffer.String()), readBytesN)
 	}
 
 	return buffer, nil
@@ -259,8 +317,17 @@ func (s service) copyPart(p *multipart.Part, w *multipart.Writer) error {
 		return err
 	}
 
-	if _, err := io.Copy(dst, p); err != nil {
-		return err
+	// for debug: AUTH-2326
+	if p.FormName() == "track[artwork_data]" {
+		log.Printf("copyPart track[artwork_data]")
+		teeReader := io.TeeReader(p, &artworkDataLogger{})
+		if _, err := io.Copy(dst, teeReader); err != nil {
+			return err
+		}
+	} else {
+		if _, err := io.Copy(dst, p); err != nil {
+			return err
+		}
 	}
 
 	return nil

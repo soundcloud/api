@@ -11,7 +11,9 @@ import com.soundcloud.apipublic.client.tracks.TrackRequest
 import com.soundcloud.apipublic.handler.support.error.UnhandledOutcomeException
 import com.soundcloud.apipublic.handler.support.requestParser._
 import com.soundcloud.apipublic.service.artwork.HocuspocusUtils
+import com.soundcloud.jvmkit.module.util.logging.SoundCloudLoggerFactory
 import com.twitter.util.Future
+import org.slf4j.Logger
 
 import scala.collection.immutable.HashSet
 
@@ -21,6 +23,8 @@ class TrackUpdateService(
     hocuspocusService: HocuspocusService,
     trackRepresentationsService: TrackRepresentationsService
 ) {
+  lazy val logger: Logger = SoundCloudLoggerFactory.getLogger(this.getClass)
+
   def updateTrack(
       maybeUpdateAlbumArt: Option[TrackArtworkUpdateRequest],
       maybeUpdateTrackAsset: Option[TrackAssetDataUpdateRequest],
@@ -73,8 +77,18 @@ class TrackUpdateService(
   ): Future[Option[TrackArtworkUpdateResult]] = {
     maybeUpdateAlbumArt match {
       case Some(artworkMetadata) =>
+        val hocuspocusReq = HocuspocusUtils.toRaw(artworkMetadata.imageData, Some(session))
+        // for debugging AUTH-2326
+        if (hocuspocusReq.image.size() > 8) {
+          val img = hocuspocusReq.image
+          logger.info(
+            s"calling hocuspocus with artwork bytes start: ${img.substring(0, 8)} | " +
+              s"end: ${img.substring(hocuspocusReq.image.size() - 8, img.size())} | "
+          ) +
+            s"actor: ${session.getUser.toString}"
+        }
         hocuspocusService
-          .storeImage(HocuspocusUtils.toRaw(artworkMetadata.imageData, Some(session)))
+          .storeImage(hocuspocusReq)
           .map(image => createTrackArtworkUpdate(image))
 
       case _ => Future.None
