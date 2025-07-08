@@ -202,11 +202,8 @@ func (s service) modifyRequest(r *http.Request, header http.Header, body *bytes.
 		r.Header.Set(h, header.Get(h))
 	}
 	// for debugging AUTH-2326
-	if oauthHeader := header.Get("OAuth"); oauthHeader != "" {
-		log.Printf("in modifyRequest OAuth %s", maskToken(oauthHeader))
-	}
-	if bearerHeader := header.Get("Bearer"); bearerHeader != "" {
-		log.Printf("in modifyRequest Bearer %s", maskToken(bearerHeader))
+	if authorizationHeader := header.Get("Authorization"); authorizationHeader != "" {
+		log.Printf("in modifyRequest Authorization %s", maskToken(authorizationHeader))
 	}
 
 	r.ContentLength = int64(body.Len())
