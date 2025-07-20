@@ -4,6 +4,7 @@ const fs = require('fs');
 
 var responseStash = {};
 var skipDeprecatedTransactionIds = [
+    "POST (200) /sign-out", // this is a virtual endpoint mapped through Tyk
     "PUT (200) /me/followings/743372812", // skipping as tested with urn
     "PUT (201) /me/followings/743372812", // skipping as tested with urn
     "DELETE (200) /me/followings/743372812", // skipping as tested with urn

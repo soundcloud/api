@@ -1587,6 +1587,12 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         404:
           $ref: '#/components/responses/NotFound'
+  /sign-out:
+    post:
+      summary: invalidates session associated with current token
+      responses:
+        200:
+          description: Success
 components:
   parameters:
     $ref: './components/parameters.yaml'
