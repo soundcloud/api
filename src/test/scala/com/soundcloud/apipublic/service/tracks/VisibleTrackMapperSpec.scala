@@ -4,6 +4,7 @@ import com.soundcloud.jvmkit.module.twirp.proto.WellKnownOps._
 import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.apipublic.authorization.policies._
 import com.soundcloud.apipublic.client.tracks._
+import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import org.joda.time.LocalDateTime
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
@@ -23,7 +24,10 @@ class VisibleTrackMapperSpec extends Specification {
   trait Context extends Scope {
     val trackUrn = Urn("soundcloud", "tracks", "432")
     val userUrn = Urn("soundcloud", "users", "123")
+    val clientApplication = Urn("soundcloud", "applications", "999")
     val mapper = new VisibleTrackMapper()
+    val session =
+      (new UserSessionBuilder).setUser(userUrn).setAgent(clientApplication).build()
 
     val protoTrack = ProtoTrack(
       metadata = Some(
@@ -100,7 +104,7 @@ class VisibleTrackMapperSpec extends Specification {
 
   "apply" >> {
     "correctly maps a proto track to visible track" in new Context {
-      val visibleTrack = mapper(protoTrack)
+      val visibleTrack = mapper(protoTrack, session)
       visibleTrack.urn ==== trackUrn
       visibleTrack.userUrn ==== userUrn
       visibleTrack.uid ==== None
@@ -112,7 +116,9 @@ class VisibleTrackMapperSpec extends Specification {
       visibleTrack.commentable ==== true
       visibleTrack.genre ==== None
       visibleTrack.public ==== false
-      visibleTrack.permalinkUrl ==== Some(s"https://soundcloud.com/owner-perma/lost-ii-by-dead-battery-dabin")
+      visibleTrack.permalinkUrl ==== Some(
+        s"https://soundcloud.com/owner-perma/lost-ii-by-dead-battery-dabin?utm_medium=api&utm_campaign=social_sharing&utm_source=id_999"
+      )
       visibleTrack.userTags ==== List.empty
       visibleTrack.description ==== None
       visibleTrack.secretToken ==== None
@@ -171,7 +177,7 @@ class VisibleTrackMapperSpec extends Specification {
         val metadata = Some(protoTrack.metadata.get.copy(downloadable = true))
         val downloadMetadata = Some(DownloadMetadata(allowed = true))
         val track = protoTrack.copy(metadata = metadata, downloadMetadata = downloadMetadata)
-        val visibleTrack = mapper(track)
+        val visibleTrack = mapper(track, session)
 
         visibleTrack.downloadable === true
       }
@@ -180,7 +186,7 @@ class VisibleTrackMapperSpec extends Specification {
         val metadata = Some(protoTrack.metadata.get.copy(downloadable = false))
         val downloadMetadata = Some(DownloadMetadata(allowed = true))
         val track = protoTrack.copy(metadata = metadata, downloadMetadata = downloadMetadata)
-        val visibleTrack = mapper(track)
+        val visibleTrack = mapper(track, session)
 
         visibleTrack.downloadable === false
       }
@@ -189,7 +195,7 @@ class VisibleTrackMapperSpec extends Specification {
         val metadata = Some(protoTrack.metadata.get.copy(downloadable = true))
         val downloadMetadata = Some(DownloadMetadata(allowed = false))
         val track = protoTrack.copy(metadata = metadata, downloadMetadata = downloadMetadata)
-        val visibleTrack = mapper(track)
+        val visibleTrack = mapper(track, session)
 
         visibleTrack.downloadable === false
       }
@@ -198,7 +204,7 @@ class VisibleTrackMapperSpec extends Specification {
         val metadata = Some(protoTrack.metadata.get.copy(downloadable = true))
         val downloadMetadata = None
         val track = protoTrack.copy(metadata = metadata, downloadMetadata = downloadMetadata)
-        val visibleTrack = mapper(track)
+        val visibleTrack = mapper(track, session)
 
         visibleTrack.downloadable === true
       }

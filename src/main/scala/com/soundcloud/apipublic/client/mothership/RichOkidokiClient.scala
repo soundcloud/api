@@ -61,7 +61,10 @@ class RichOkidokiClient(service: JsonClient, exceptionCollector: ExceptionCollec
           .map { response: Response =>
             response.status match {
               case Successful(_) =>
-                Json.parse(response.contentString).as[List[JsValue]].map(UserRepresentationMapper(_))
+                Json
+                  .parse(response.contentString)
+                  .as[List[JsValue]]
+                  .map(UserRepresentationMapper(_, loggedinApplicaton = Some(session.getAgent)))
               case _ => List.empty
             }
           }

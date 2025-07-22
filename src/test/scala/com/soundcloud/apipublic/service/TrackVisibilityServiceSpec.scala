@@ -62,7 +62,7 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
     tracksTwinagleClient.getVisibleTracks(request) returns Future.value(
       GetVisibleTracksResponse(tracks = Seq(protoTrack))
     )
-    mapper.apply(protoTrack) returns visibleTrack
+    mapper.apply(protoTrack, session) returns visibleTrack
   }
 
   "#tracks" >> {

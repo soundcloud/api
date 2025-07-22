@@ -59,7 +59,9 @@ class PlaylistsService(
 
     for {
       visiblePlaylistObject <- getPlaylistObjects(session, List(playlistRequest), playlistPagination)
-      visiblePlaylist = visiblePlaylistObject.flatMap(response => playlistProtoMapper.apply(response, pagination))
+      visiblePlaylist = visiblePlaylistObject.flatMap(response =>
+        playlistProtoMapper.apply(response, session, pagination)
+      )
       playlistTrackRequests = visiblePlaylist.map(_.trackRequests).headOption
       tracks <- playlistTrackRequests
         .map(trackRequests => tracksService.tracks(session, trackRequests.requests, access))
@@ -109,7 +111,9 @@ class PlaylistsService(
         playlistPagination,
         Some(PlaylistsService.playlistWithCountsFieldMask)
       )
-      visiblePlaylists = visiblePlaylistObjects.flatMap(response => playlistProtoMapper.apply(response, pagination))
+      visiblePlaylists = visiblePlaylistObjects.flatMap(response =>
+        playlistProtoMapper.apply(response, session, pagination)
+      )
       playlists <- resolvePlaylists(visiblePlaylists, session, access, showTracks.getOrElse(true))
     } yield playlists
   }
@@ -122,7 +126,7 @@ class PlaylistsService(
   ): Future[List[Playlist]] = {
     for {
       playlists <- resolvePlaylists(
-        List(playlistProtoMapper(protoPlaylist, tracks.map(_.urns.map(ProtoTrackRequest(_))))),
+        List(playlistProtoMapper(protoPlaylist, session, tracks.map(_.urns.map(ProtoTrackRequest(_))))),
         session,
         access,
         true
@@ -145,7 +149,7 @@ class PlaylistsService(
         Some(playlistPagination),
         Some(PlaylistsService.playlistWithCountsFieldMask)
       )
-      visiblePlaylists = visiblePlaylistObjects.flatMap(response => playlistProtoMapper.apply(response, None))
+      visiblePlaylists = visiblePlaylistObjects.flatMap(response => playlistProtoMapper.apply(response, session, None))
       playlists <- resolvePlaylists(visiblePlaylists, session, AccessParams.defaultAccess, showTracks = false)
     } yield playlists
   }

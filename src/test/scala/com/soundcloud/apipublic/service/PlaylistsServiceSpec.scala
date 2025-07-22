@@ -51,6 +51,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
     val offsetBasedPagination =
       OffsetBasedPagination("https://api.soundcloud.com", "/playlists", ParamMap(), Some(2), 2)
     val requestingUserUrn = Urn("soundcloud", "users", "1")
+    val clientApplication = Urn("soundcloud", "applications", "999")
     val playlistOwner = defaultUser
     val requestedPlaylistUrn = Urn("soundcloud", "playlists", "1")
 
@@ -65,7 +66,7 @@ class PlaylistsServiceSpec extends UnitSpecification {
     val candidateSecretToken = Some("s3creT")
     val pagination = PlaylistPagination(cursor = Some("2"), limit = 2)
 
-    val session: UserSession = new UserSessionBuilder().setUser(requestingUserUrn).build()
+    val session: UserSession = new UserSessionBuilder().setUser(requestingUserUrn).setAgent(clientApplication).build()
     val protoSession: ProtoUserSession = session.asProtoSession
 
     val playlistsTwirpServiceMock = mock[PlaylistsTwirpService]

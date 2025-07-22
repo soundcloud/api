@@ -60,7 +60,9 @@ class TrackVisibilityService(
 
     tracksTwinagleClient.getVisibleTracks(request).map { tracksResponse =>
       tracksResponse.tracks.toList
-        .map(visibleTrackMapper.apply)
+        .map { track =>
+          visibleTrackMapper.apply(track, session)
+        }
         .filter(visibleTrack => visibleTrack.disabledAt.isEmpty)
         .map(applyRules(session.getAgent, _, access.access))
     }

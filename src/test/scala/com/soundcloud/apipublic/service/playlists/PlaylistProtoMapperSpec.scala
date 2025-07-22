@@ -6,6 +6,7 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.apipublic.client.tracks.TrackRequest
 import com.soundcloud.apipublic.service.pagination.OffsetBasedPagination
 import com.soundcloud.apipublic.service.playlists.representation.PlaylistCounts
+import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
 import com.twitter.finagle.http.ParamMap
 import org.specs2.matcher.Scope
 import org.specs2.mutable.Specification
@@ -21,10 +22,11 @@ class PlaylistProtoMapperSpec extends Specification {
   trait Context extends Scope {
     val defaultInstant = Instant.now()
     val defaultProtoDate = defaultInstant.asProto
-
     val trackUrn = Urn("soundcloud", "tracks", "1")
+    val clientApplication = Urn("soundcloud", "applications", "2")
     val trackSecret = Some("s3creT")
     val protoTrackRequests = Seq(ProtoTrackRequest(urn = trackUrn.toString, secretToken = trackSecret))
+    val session = (new UserSessionBuilder).setAgent(clientApplication).build()
 
     val currentPagination = Some(
       OffsetBasedPagination(
@@ -81,6 +83,7 @@ class PlaylistProtoMapperSpec extends Specification {
           trackRequests = protoTrackRequests,
           pagination = nextPagination
         ),
+        session,
         currentPagination
       )
 
@@ -101,7 +104,7 @@ class PlaylistProtoMapperSpec extends Specification {
       visiblePlaylist.duration ==== 1111
       visiblePlaylist.genre ==== "music?"
       visiblePlaylist.permalink ==== "my_favourite_music"
-      visiblePlaylist.permalinkUrl ==== "http://api.soundcloud.com/my_favourite_music"
+      visiblePlaylist.permalinkUrl ==== "http://api.soundcloud.com/my_favourite_music?utm_medium=api&utm_campaign=social_sharing&utm_source=id_2"
       visiblePlaylist.artworkUrl ==== Some("http://foo.com/artwork")
       visiblePlaylist.trackCount ==== 5
       visiblePlaylist.releaseDate ==== Some(defaultInstant)
@@ -128,7 +131,7 @@ class PlaylistProtoMapperSpec extends Specification {
 
     "returns None when no visible playlist supplied" in new Context {
       val mapper = new PlaylistProtoMapper
-      val result = mapper(PlaylistResponse(playlist = None), pagination = None)
+      val result = mapper(PlaylistResponse(playlist = None), session = session, pagination = None)
       result must beEmpty
     }
   }

@@ -55,6 +55,7 @@ class UserRepresentationsService(
           Some(repostsCountsMap),
           Some(totalLikesCountMap),
           session.user,
+          session.agent,
           Some(subscriptionsResponse)
         )
       )

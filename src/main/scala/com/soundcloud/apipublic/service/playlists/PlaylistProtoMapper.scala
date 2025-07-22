@@ -7,6 +7,8 @@ import com.soundcloud.apipublic.service.playlists.representation.{
   PlaylistTrackRequests,
   VisiblePlaylist
 }
+import com.soundcloud.apipublic.utilities.TrackingExtensions.StringExtension
+import com.soundcloud.jvmkit.module.util.session.UserSession
 import proto.soundcloud.playlists.api.{
   Playlist,
   PlaylistPagination,
@@ -17,6 +19,7 @@ import proto.soundcloud.playlists.api.{
 class PlaylistProtoMapper {
   def createPlaylist(
       playlist: Playlist,
+      session: UserSession,
       trackRequests: Seq[ProtoTrackRequest],
       currentPagination: Option[OffsetBasedPagination],
       nextPagination: Option[PlaylistPagination]
@@ -29,7 +32,7 @@ class PlaylistProtoMapper {
       duration = playlist.duration,
       genre = playlist.genre,
       permalink = playlist.permalink,
-      permalinkUrl = playlist.permalinkUrl,
+      permalinkUrl = playlist.permalinkUrl.annotate(session.getAgent),
       artworkUrl = if (playlist.artworkUrl.nonEmpty) Some(playlist.artworkUrl) else None,
       trackCount = playlist.trackCount,
       userTags = playlist.userTags.toList,
@@ -59,19 +62,21 @@ class PlaylistProtoMapper {
 
   def apply(
       protoPlaylist: PlaylistResponse,
+      session: UserSession,
       pagination: Option[OffsetBasedPagination]
   ): Option[VisiblePlaylist] = {
     protoPlaylist.playlist match {
       case Some(playlist) =>
-        Some(createPlaylist(playlist, protoPlaylist.trackRequests, pagination, protoPlaylist.pagination))
+        Some(createPlaylist(playlist, session, protoPlaylist.trackRequests, pagination, protoPlaylist.pagination))
       case _ => None
     }
   }
 
   def apply(
       protoPlaylist: Playlist,
+      session: UserSession,
       trackRequests: Option[Seq[ProtoTrackRequest]]
   ): VisiblePlaylist = {
-    createPlaylist(protoPlaylist, trackRequests.getOrElse(List()), None, None)
+    createPlaylist(protoPlaylist, session, trackRequests.getOrElse(List()), None, None)
   }
 }

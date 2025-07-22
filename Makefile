@@ -79,6 +79,7 @@ docker-down:
 stop-containers:
 	CONFIG= VERSION=$(API_PUBLIC_VERSION) docker compose rm -s -f
 
+test: unit-test
 unit-test:
 	$(SBT) test
 

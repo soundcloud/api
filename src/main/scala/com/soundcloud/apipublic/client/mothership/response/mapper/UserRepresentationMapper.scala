@@ -9,6 +9,7 @@ import com.soundcloud.apipublic.client.mothership.response.representation.{
 }
 import com.soundcloud.apipublic.service.users.UserUploadQuota
 import com.soundcloud.apipublic.subscriptions.{SubmarineCreatorSubscription, SubmarineToLegacyMapper}
+import com.soundcloud.apipublic.utilities.TrackingExtensions.StringExtension
 import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import play.api.libs.json.{JsObject, JsValue}
@@ -65,6 +66,7 @@ object UserRepresentationMapper {
       maybeRepostsCounts: Option[Map[Urn, Long]] = None,
       maybeTotalLikesCounts: Option[Map[Urn, Long]] = None,
       loggedInUser: Option[Urn] = None,
+      loggedinApplicaton: Option[Urn] = None,
       maybeSubscriptions: Option[Map[Urn, Option[SubmarineCreatorSubscription]]] = None
   ): UserRepresentation = {
     val urn = (json \ "self" \ "urn").as[Urn]
@@ -80,7 +82,7 @@ object UserRepresentationMapper {
       permalink = (json \ "permalink").as[String],
       username = (json \ "username").as[String],
       avatar_url = (json \ "avatar_url").as[String],
-      permalink_url = (json \ "permalink_url").as[String],
+      permalink_url = (json \ "permalink_url").as[String].annotate(loggedinApplicaton),
       city = (json \ "city").asOpt[String],
       country = (json \ "country").asOpt[String],
       tracks_count = (json \ "tracks_count").as[Int],
