@@ -102,8 +102,12 @@ func (s service) rewriteMultipartRequest(r *http.Request, boundary string, fn re
 
 		// for debug: AUTH-2326
 		if p.FormName() == "oauth_token" {
-			if r.Header != nil && r.Header.Get("client_id") != "" {
-				log.Printf("oauth_token multipart param is coming from client %s", r.Header.Get("client_id"))
+			if r.Header != nil {
+				if r.Header.Get("Authorization") != "" {
+					log.Printf("oauth_token part comes with Authorization %s header", maskToken(r.Header.Get("Authorization")))
+				} else {
+					log.Printf("oauth_token part comes without Authorization header")
+				}
 			}
 		}
 
