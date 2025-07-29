@@ -70,7 +70,7 @@ class PlaylistProtoMapperSpec extends Specification {
       ean = Some("ean"),
       streamable = Some(true),
       uri = "https://api.soundcloud.com/playlists/soundcloud:playlists:123",
-      counts = Some(ProtoCounts(Some(2)))
+      counts = Some(ProtoCounts(Some(2), Some(3)))
     )
   }
 
@@ -126,7 +126,7 @@ class PlaylistProtoMapperSpec extends Specification {
       visiblePlaylist.ean ==== Some("ean")
       visiblePlaylist.streamable ==== Some(true)
       visiblePlaylist.uri ==== "https://api.soundcloud.com/playlists/soundcloud:playlists:123"
-      visiblePlaylist.counts.get ==== PlaylistCounts(Some(2))
+      visiblePlaylist.counts.get ==== PlaylistCounts(Some(2), Some(3))
     }
 
     "returns None when no visible playlist supplied" in new Context {

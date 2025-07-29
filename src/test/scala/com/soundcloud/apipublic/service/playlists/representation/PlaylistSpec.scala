@@ -47,7 +47,7 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
         streamable = Some(false),
         uri = "https://api.soundcloud.com/playlists/soundcloud:playlists:42703821?secret_token=secret",
         trackRequests = PlaylistTrackRequests(requests = List.empty, pagination = None),
-        counts = Some(PlaylistCounts(Some(2)))
+        counts = Some(PlaylistCounts(Some(2), Some(3)))
       )
 
     val playlist =

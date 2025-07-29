@@ -44,6 +44,7 @@ class PlaylistBuilder {
   private var secretUri: Option[String] = Some("https://soundcloud.com/user1212/my-playlist?secret_token=s3creT")
   private var secretToken: Option[String] = Some("s3creT")
   private var likesCount: Long = 808
+  private val repostCount: Long = 404
 
   def setTitle(value: String) = { title = value; this }
   def setUrn(value: Urn) = { urn = value; this }
@@ -118,7 +119,8 @@ class PlaylistBuilder {
       tracks = this.tracks,
       secretUri = this.secretUri,
       secretToken = this.secretToken,
-      likesCount = this.likesCount
+      likesCount = this.likesCount,
+      repostCount = this.repostCount
     )
   }
 }
