@@ -23,7 +23,6 @@ func (f fakeS3Manager) Upload(i *s3manager.UploadInput, opts ...func(*s3manager.
 }
 
 type fakeMediaServiceClient struct {
-	mediaServiceClientAPI
 	uid string
 }
 
@@ -83,6 +82,10 @@ func TestControllerServiceS3Integration(t *testing.T) {
 			statusCode: http.StatusCreated,
 			result: []byte(
 				"--------------------------6808b4f61ea0e5a2" +
+					crlf + "Content-Disposition: form-data; name=\"track[title]\"" +
+					crlf + "" +
+					crlf + "My Track" +
+					crlf + "--------------------------6808b4f61ea0e5a2" +
 					crlf + "Content-Disposition: form-data; name=\"track[original_filename]\"" +
 					crlf + "" +
 					crlf + "my_track.wav" +
@@ -90,10 +93,6 @@ func TestControllerServiceS3Integration(t *testing.T) {
 					crlf + "Content-Disposition: form-data; name=\"track[uid]\"" +
 					crlf + "" +
 					crlf + "testUid" +
-					crlf + "--------------------------6808b4f61ea0e5a2" +
-					crlf + "Content-Disposition: form-data; name=\"track[title]\"" +
-					crlf + "" +
-					crlf + "My Track" +
 					crlf + "--------------------------6808b4f61ea0e5a2--" +
 					crlf),
 		},
