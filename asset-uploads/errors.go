@@ -15,3 +15,11 @@ type fileNameValidationError struct{}
 func (e fileNameValidationError) Error() string {
 	return "file name validation error"
 }
+
+type authorizationError struct {
+	cause error
+}
+
+func (e authorizationError) Error() string {
+	return fmt.Sprintf("authorization error: %v", e.cause)
+}

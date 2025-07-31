@@ -20,7 +20,9 @@ type serviceAPI interface {
 }
 
 type service struct {
-	upload uploaderAPI
+	upload              uploaderAPI
+	gatekeeperClient    gatekeeperAPI
+	authenticatorClient authenticatorAPI
 }
 
 type createTrackRequest struct {
@@ -226,8 +228,14 @@ func (s service) copyToUploadTrackRequest(p *multipart.Part) (*uploadTrackReques
 }
 
 func (s service) uploadTrackWithFields(r *rewriter) error {
-	//TODO - add step here to parse oauth token and call the authenticator client with gokit
-	//update uploadTrackRequest to take the user from the authenticator client and pass to track coordinator client
+	// TODO use headers to call track-coordinator
+
+	//session, err := s.GetSessionWithFeatures(r.ctx, r.authHeader)
+	//if err != nil {
+	//	return err
+	//}
+	//_ = CreateSessionHeaders(session)
+
 	upload, err := s.uploadTrackAssetData(r.uploadTrackRequest, r.writer)
 	if err != nil {
 		return err

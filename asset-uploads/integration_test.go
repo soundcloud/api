@@ -3,6 +3,8 @@ package main
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -156,4 +158,77 @@ func TestControllerServiceS3Integration(t *testing.T) {
 		}
 	}
 
+}
+
+func TestAuthorizationErrorConversion(t *testing.T) {
+	tests := []struct {
+		name           string
+		error          error
+		expectedStatus int
+		description    string
+	}{
+		{
+			name:           "direct authorizationError (no auth header)",
+			error:          authorizationError{errors.New("no authorization header in request")},
+			expectedStatus: http.StatusUnauthorized,
+			description:    "Direct authorizationError for missing header should convert to 401",
+		},
+		{
+			name:           "direct authorizationError (gatekeeper failure)",
+			error:          authorizationError{fmt.Errorf("call to gatekeeperClient failed: %w", errors.New("gatekeeper unavailable"))},
+			expectedStatus: http.StatusUnauthorized,
+			description:    "Direct authorizationError with wrapped cause should convert to 401",
+		},
+		{
+			name:           "clientError",
+			error:          clientError{errors.New("bad request")},
+			expectedStatus: http.StatusBadRequest,
+			description:    "clientError should convert to 400",
+		},
+		{
+			name:           "fileNameValidationError",
+			error:          fileNameValidationError{},
+			expectedStatus: http.StatusUnprocessableEntity,
+			description:    "fileNameValidationError should convert to 422",
+		},
+		{
+			name:           "generic error (parse token)",
+			error:          fmt.Errorf("error while parsing token from Authorization header: %w", errors.New("splitting Authorization header should result in 2 parts")),
+			expectedStatus: http.StatusInternalServerError,
+			description:    "Generic parse error should default to 500",
+		},
+		{
+			name:           "authenticator client error",
+			error:          errors.New("authenticator GET session endpoint returned 400 or 401"),
+			expectedStatus: http.StatusInternalServerError,
+			description:    "Authenticator client error should default to 500",
+		},
+		{
+			name:           "generic network error",
+			error:          errors.New("network timeout"),
+			expectedStatus: http.StatusInternalServerError,
+			description:    "Generic error should default to 500",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create a test response recorder
+			w := httptest.NewRecorder()
+			r := httptest.NewRequest("POST", "/test", nil)
+
+			handleProxyError(w, r, tt.error)
+
+			// Check the status code
+			if w.Code != tt.expectedStatus {
+				t.Errorf("%s: expected status %d, got %d", tt.description, tt.expectedStatus, w.Code)
+			}
+
+			// Verify that the response body is empty (as per the function implementation)
+			body := w.Body.String()
+			if body != "\n" {
+				t.Errorf("%s: expected empty response body, got %q", tt.description, body)
+			}
+		})
+	}
 }

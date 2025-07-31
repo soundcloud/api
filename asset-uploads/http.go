@@ -67,6 +67,8 @@ func handleProxyError(w http.ResponseWriter, r *http.Request, err error) {
 		status = http.StatusBadRequest
 	} else if _, ok := err.(fileNameValidationError); ok {
 		status = http.StatusUnprocessableEntity
+	} else if _, ok := err.(authorizationError); ok {
+		status = http.StatusUnauthorized
 	}
 	http.Error(w, emptyResponse, status)
 }
