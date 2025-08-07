@@ -35,8 +35,7 @@ func main() {
 		adminAddr = flag.String("admin-addr", ":5000", "Listen address admin server")
 
 		mediaServiceAddr = flag.String("media-service-addr", os.Getenv("MEDIA_SERVICE_ADDRESS"), "media service address")
-
-		apiGatewayAddr = flag.String("apiGatewayAddr", os.Getenv("API_PUBLIC_GATEWAY"), "API Public Gateway service address")
+		apiGatewayAddr = flag.String("apiGatewayAddr", os.Getenv("API_PUBLIC_GATEWAY_ADDRESS"), "API Public Gateway service address")
 
 		awsKey    = flag.String("aws-key", os.Getenv("AWS_ACCESS_KEY_ID"), "AWS access key ID")
 		awsSecret = flag.String("aws-secret", os.Getenv("AWS_SECRET_ACCESS_KEY"), "AWS secret access key")
@@ -91,9 +90,7 @@ func main() {
 		},
 	}
 
-	// Parse the target URL and configure the ReverseProxy for API Gateway
-	// TODO move to api-production config and api-production-secrets.enc
-	apiPublic, err := initializeReverseProxy("https://api.soundcloud.com", http.DefaultTransport)
+	apiPublic, err := initializeReverseProxy(*apiGatewayAddr, http.DefaultTransport)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -101,7 +98,6 @@ func main() {
 	controller := &controller{
 		maxRequestBytes: *maxRequestBytes,
 		proxy:           apiPublic,
-		targetUrl:       *apiGatewayAddr,
 		service:         service,
 	}
 

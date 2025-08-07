@@ -12,14 +12,34 @@ We recommend reading about our BFFs before making changes to our codebase, espec
 
 Set the `USE_CRUN` environment variable to `false` to avoid using sc crun when possible.
 
-## Running API Public locally
+## Running locally
 
+### API Public using SBT
 ```
 make run
 curl "http://localhost:5000/tracks" -H "Authorization: OAuth ACCESS_TOKEN"
 ```
-
 This runs against production servers.
+
+### Asset-Uploads and API Public in dockerized containers
+The dockerized containers can be started with either `make docker-up-e2e` or `make docker-up-development`.
+Sending requests to the dockerized asset-uploads application, will forward requests to the dockerized api-public
+application - **all other internal requests will be against production systems**.
+
+Example curl:
+```
+curl -vi \                                    
+-H "Authorization: OAuth `scripts/sc-token <sc-user-id>`" \
+-F "track[asset_data]=@<path-to-audio-file>" \
+-F "track[sharing]=private" \
+-F "track[title]=My Track" \
+http://localhost:5005/tracks
+```
+
+By default, the log-level for api-public is WARN; to see the DEBUG logs when testing locally, run:
+```
+curl -X POST http://localhost:5001/-/log-level/DEBUG
+```
 
 ## Debugging
 

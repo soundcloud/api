@@ -11,7 +11,6 @@ import (
 type controller struct {
 	maxRequestBytes int64
 	proxy           *httputil.ReverseProxy
-	targetUrl       string
 	service         serviceAPI
 }
 
