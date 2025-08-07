@@ -110,9 +110,17 @@ service Writes {
     rpc UpdatePlaylistArtwork (UpdatePlaylistArtworkRequest) returns (UpdatePlaylistArtworkResponse) {}
 }
 
+enum Source {
+    USER = 0;
+    DJ = 1;
+    EXTERNAL_PLATFORM_SYNC = 2;
+    UNKNOWN = 3;
+}
+
 message CreatePlaylistRequest {
     PlaylistCreateOrUpdate playlist = 1;
     proto.soundcloud.common.session.UserSession user_session = 3;
+    optional Source source = 4;
 }
 
 message CreatePlaylistResponse {
@@ -124,6 +132,7 @@ message UpdatePlaylistRequest {
     PlaylistCreateOrUpdate playlist = 1;
     string urn = 2;
     proto.soundcloud.common.session.UserSession user_session = 3;
+    optional Source source = 4;
 }
 
 message UpdatePlaylistResponse {

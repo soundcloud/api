@@ -7,6 +7,7 @@ import com.soundcloud.apipublic.client.follows.FollowsClient
 import com.soundcloud.apipublic.client.media.TrackAccessRecorderClient
 import com.soundcloud.apipublic.client.mothership.{MoshimoshiClient, OkidokiClient, RichOkidokiClient}
 import com.soundcloud.apipublic.client.playlists.PlaylistDeletionClient
+import com.soundcloud.apipublic.client.profile.ProfilesClient
 import com.soundcloud.apipublic.client.reposts.RepostsClient
 import com.soundcloud.apipublic.client.search.SearchApiClient
 import com.soundcloud.apipublic.client.secure.SecureClient
@@ -47,6 +48,7 @@ import proto.soundcloud.playlists.api.{
   WritesClientProtobuf,
   LikesClientProtobuf => PlaylistLikesClientProtobuf
 }
+import proto.soundcloud.profiles.api.ProfilesClientProtobuf
 import proto.soundcloud.search.api.SearchClientProtobuf
 import proto.soundcloud.tracks.api.{
   MediaClientProtobuf,
@@ -176,6 +178,13 @@ class Clients(
     new WritesClientProtobuf(_, _)
   )
 
+  val profilesTwirpClient = TwirpClient(
+    ResourceName("profiles"),
+    config,
+    telemetry,
+    new ProfilesClientProtobuf(_, _)
+  )
+
   val trackAccessRecorderService =
     new TrackAccessRecorderService(new TrackAccessRecorderClient(jsonClient("track_access_recorder")))
 
@@ -194,13 +203,13 @@ class Clients(
     richOkidokiClient,
     likedTracksService
   )
-
+  private val profilesClient = new ProfilesClient(profilesTwirpClient)
   private val hocuspocusConfig = HttpClientConfig.from(ResourceName("hocuspocus"), config)
   private val hocuspocusHttpClient = HttpClient[String](hocuspocusConfig, telemetry)
   private val hocuspocusTelemetry = ClientTelemetry.from(hocuspocusConfig, telemetry)
   val hocuspocusClient = new HocuspocusClientProtobuf(hocuspocusHttpClient.httpService, hocuspocusTelemetry)
 
-  val userTracksService = new UserTracksService(tracksService, trackmetadataClient)
+  val userTracksService = new UserTracksService(tracksService, profilesClient)
   val trackUpdateService =
     new TrackUpdateService(trackCoordinatorClient, okidokiClient, hocuspocusClient, tracksService)
   val similarTracksService = new SimilarTracksService(tracksService, systemPlaylistsClient)

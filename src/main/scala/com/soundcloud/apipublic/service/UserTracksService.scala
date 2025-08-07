@@ -2,18 +2,18 @@ package com.soundcloud.apipublic.service
 
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.apipublic.client.chrono.ChronoItem
-import com.soundcloud.apipublic.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.apipublic.client.tracks.TrackRequest
+import com.soundcloud.apipublic.client.profile.ProfilesClient
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
 import com.soundcloud.apipublic.service.pagination.CursorBasedPagination
 import com.soundcloud.apipublic.service.representation.collection.Collection
 import com.soundcloud.apipublic.service.trackrepresentation.{TrackRepresentation, TrackRepresentationsService}
 import com.twitter.util.Future
+import proto.soundcloud.profiles.api.ChronoItem
 
 class UserTracksService(
     trackRepresentationsService: TrackRepresentationsService,
-    trackmetadataClient: TrackmetadataClient
+    profilesClient: ProfilesClient
 ) {
 
   def userTracks(
@@ -23,10 +23,15 @@ class UserTracksService(
       pagination: CursorBasedPagination
   ): Future[Collection[TrackRepresentation]] = {
     for {
-      userTracksResponse <- trackmetadataClient.userTracks(session, userUrn, pagination)
+      userTracksResponse <- profilesClient.fetchTracksUploadedByUserFromProfiles(
+        session,
+        userUrn,
+        pagination.pageSize,
+        pagination.cursor.getOrElse("")
+      )
       enrichedTracks <- trackRepresentationsService.tracks(
         session,
-        userTracksResponse.items.map(item => TrackRequest(item.urn, None)),
+        userTracksResponse.items.toList.map(item => TrackRequest(Urn.parse(item.urn).get, Option.empty)),
         access
       )
     } yield {
@@ -34,7 +39,7 @@ class UserTracksService(
     }
   }
 
-  private def userTracksNextHref(items: List[ChronoItem], pagination: CursorBasedPagination): Option[String] = {
+  private def userTracksNextHref(items: Seq[ChronoItem], pagination: CursorBasedPagination): Option[String] = {
     if (items.nonEmpty) {
       Some(
         pagination
@@ -42,7 +47,7 @@ class UserTracksService(
           .normalizedHref
       )
     } else {
-      None
+      Option.empty
     }
   }
 }

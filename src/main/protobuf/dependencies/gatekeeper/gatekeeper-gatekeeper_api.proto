@@ -10,10 +10,12 @@ enum Plan {
     GO = 1;
     GO_PLUS = 2;
     GO_PLUS_DJ = 3;
-    PRO = 4;
     PRO_UNLIMITED = 5;
-    PRO_DISTRO = 6;
     CREATOR_MID_TIER = 7;
+    CREATOR_FREE = 8;
+
+    DEPRECATED_PRO = 4;
+    DEPRECATED_PRO_DISTRO = 6;
 }
 
 enum UpdateCacheAction {

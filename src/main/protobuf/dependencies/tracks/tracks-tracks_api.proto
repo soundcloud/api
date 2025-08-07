@@ -468,6 +468,7 @@ message Metadata {
     google.protobuf.Int64Value contentSize = 43; // optional
     string profileUrn = 44; //deprecated
     google.protobuf.StringValue originalFilename = 45; // optional
+    google.protobuf.StringValue disabled_reason = 46; // optional
 }
 
 message ContentAuthorization {
@@ -495,6 +496,7 @@ message Transcoding {
     google.protobuf.Int64Value duration_snippet_ms = 8; // optional
     google.protobuf.Int64Value file_size = 9; // optional
     LoudnessNormalization loudness = 10; // optional
+    google.protobuf.BoolValue isLegacyTranscoding = 11; // optional
 }
 
 message LoudnessNormalization {

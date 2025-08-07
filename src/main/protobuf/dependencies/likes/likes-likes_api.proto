@@ -64,6 +64,17 @@ message BatchLikeRequest {
     proto.soundcloud.common.session.UserSession user_session = 3;
 }
 
+message InternalBatchUnlikeRequest {
+    repeated string urns = 1;
+    proto.soundcloud.common.session.UserSession user_session = 2;
+    google.protobuf.Timestamp min_created_at = 3;
+}
+
+message InternalBatchUnlikeResponse {
+    string source_urn = 1;
+    int64 count = 2;
+}
+
 message BatchLikeResponse {
     repeated string target_urns = 1;
     string source_urn = 2;
@@ -171,11 +182,43 @@ message BatchGetUserLikeCountResponse {
     repeated GetUserLikeCountResponse users = 1;
 }
 
+message GetLikesByTargetBatchRequest {
+    repeated string target_urns = 1;
+    google.protobuf.Int32Value limit = 2;
+}
+
+message GetLikesByTargetBatchResponse {
+    repeated TargetLikes target_likes = 1;
+}
+
+message TargetLikes {
+    string target_urn = 1;
+    repeated string user_urns = 2;
+}
+
+message GetLikerIdsByTargetBatchRequest {
+    repeated string target_urns = 1;
+    google.protobuf.Int32Value limit = 2;
+}
+
+message TargetLikerIds {
+    string target_urn = 1;
+    repeated google.protobuf.Int64Value user_ids = 2;
+}
+
+message GetLikerIdsByTargetBatchResponse {
+    repeated TargetLikerIds target_liker_ids = 1;
+}
+
 service Likes {
     // Like a track, playlist or system-playlist.
     rpc Like (LikeRequest) returns (LikeResponse) {}
     // Like a list of system playlists.
     rpc LikeBatch(BatchLikeRequest) returns (BatchLikeResponse) {}
+    // Like a list of tracks - only for use by internal services.
+    rpc InternalBatchTrackLike(BatchLikeRequest) returns (BatchLikeResponse) {}
+    // Like a list of tracks - only for use by internal services.
+    rpc InternalBatchTrackUnlike(InternalBatchUnlikeRequest) returns (InternalBatchUnlikeResponse) {}
     // Unlike a track, playlist or system-playlist.
     rpc Unlike (UnlikeRequest) returns (UnlikeResponse) {}
     // Unlike a list of system playlists.
@@ -195,4 +238,9 @@ service Likes {
     rpc IsTargetLikedBatch (IsTargetLikedBatchRequest) returns (IsTargetLikedBatchResponse) {}
     // Get likes count for a list of users. Counts tracks and playlist likes by user.
     rpc GetUserLikeCountBatch (BatchGetUserLikeCountRequest) returns (BatchGetUserLikeCountResponse) {}
+    // DEPRECATED: will be removed in the future.
+    // Returns list of likes for each requested target in a batch, limit is applied on each track equally
+    rpc GetLikesByTargetBatch (GetLikesByTargetBatchRequest) returns (GetLikesByTargetBatchResponse) {}
+    // Returns list of like Ids instead of urns for each requested target in a batch, limit is applied on each track equally
+    rpc GetLikerIdsByTargetBatch (GetLikerIdsByTargetBatchRequest) returns (GetLikerIdsByTargetBatchResponse) {}
 }

@@ -154,6 +154,10 @@ message SearchFilters {
         ALBUMS = 3;
         USERS = 4;
         PLAYLISTS_WITHOUT_ALBUMS = 6;
+        DJ_SETS = 7;
+        TRACKS_WITHOUT_DJ_SETS = 8;
+        SINGLES = 9;
+        ALBUMS_WITHOUT_SINGLES = 10;
     }
 
     enum ContentTier {
@@ -610,7 +614,7 @@ message Explanation {
 message AdsContext {
     // The version of the Transparency and Consent Framework (TCF) for GDPR compliance.
     google.protobuf.StringValue tcf_version = 1;
-    // The consent string for GDPR compliance.
+    // The consent string for GDPR compliance. 
     google.protobuf.StringValue tcf_consent = 2;
     // The Real-IP of the request. From the X-Real-IP header.
     google.protobuf.StringValue real_ip = 3;

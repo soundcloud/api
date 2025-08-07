@@ -70,6 +70,8 @@ MOSHIMOSHI_SRV_RECORD=dnssrv!_first16.http.moshimoshi.prod.mothership.srv.db.s-c
 
 COMMENTS_SRV_RECORD=dnssrv!_first16.http.api.prod.comments.srv.db.s-cloud.net.
 
+PROFILES_SRV_RECORD=dnssrv!http.api.prod.profiles.srv.db.s-cloud.net.
+
 SUBMARINE_SRV_RECORD="dnssrv!_first16.http.api.staging.submarine.srv.db.s-cloud.net."
 
 IS_DEVELOPMENT_MODE=true

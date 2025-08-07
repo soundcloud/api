@@ -41,6 +41,8 @@ PLAYLIST_SRV_RECORD="dnssrv!_first16.http.moshimoshi.prod.mothership.srv.db.s-cl
 
 OKIDOKI_SRV_RECORD=dnssrv!_first16.http.okidoki.prod.moshimoshi.srv.db.s-cloud.net.
 
+PROFILES_SRV_RECORD=dnssrv!http.api.prod.profiles.srv.db.s-cloud.net.
+
 TIMELINE_CLIENT_REQUEST_TIMEOUT_MILLIS=2000
 
 TIMELINE_SRV_RECORD=dnssrv!_first16.http.api.prod.timeline.srv.db.s-cloud.net.

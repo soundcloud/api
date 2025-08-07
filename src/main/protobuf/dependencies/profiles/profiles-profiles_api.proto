@@ -1,0 +1,181 @@
+// DO NOT EDIT
+// This file has been automatically downloaded via 'sc idl fetch' from an upstream dependency.
+
+syntax = "proto3";
+
+package proto.soundcloud.profiles.api;
+
+import "common_session.proto";
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/timestamp.proto";
+
+service Profiles {
+    rpc GetTracksChrono (GetTracksChronoRequest) returns (ChronoResponse) { }
+    rpc GetTracksChronoLegacy (LegacyGetTracksChronoRequest) returns (LegacyChronoResponse) { }
+    rpc GetProfilesForTracks (GetProfilesForTracksRequest) returns (ProfilesForTracksResponse) { }
+    // dedicated endpoint for Search: sends requests to a primary mysql node to get the current state
+    rpc GetProfilesForTracksPrimary (GetProfilesForTracksPrimaryRequest) returns (ProfilesForTracksPrimaryResponse) { }
+    // Exchange a full permalink url for a urn associated to that permalink. https://soundcloud.com/{permalinkSlug}
+    rpc ResolvePermalink (ResolvePermalinkRequest) returns (ResolvePermalinkResponse) { }
+    rpc GetTracksCount (GetTracksCountRequest) returns (TracksCountResponse) { }
+    rpc GetTrackProfileHistory (GetTrackProfileHistoryRequest) returns (TrackProfileHistoryResponse) { }
+}
+
+message GetTracksCountRequest {
+    string user_urn = 2;
+}
+
+message TracksCountResponse {
+    int32 count = 1;
+}
+
+message GetTracksChronoRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1;
+    string user_urn = 2;
+    ChronoParams chrono_params = 3;
+}
+
+
+message ChronoResponse {
+    repeated ChronoItem items = 1;
+    ChronoMeta meta = 2;
+}
+
+message LegacyGetTracksChronoRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1;
+    string user_urn = 2;
+    LegacyChronoParams legacy_chrono_params = 3;
+}
+
+message LegacyChronoResponse {
+    repeated string track_urns = 1;
+    LegacyChronoMeta meta = 2;
+}
+
+// these values are unprefixed and lowercase for a direct mapping to chronological apis
+// https://eng-doc.soundcloud.org/standards/chronological-apis/
+enum ChronoDirection {
+    none = 0;
+    asc = 1;
+    desc = 2;
+}
+
+message ChronoParams {
+    ChronoDirection direction = 1;
+    int32 limit = 2;
+    string cursor = 3;
+}
+
+message LegacyChronoParams {
+    google.protobuf.Int32Value limit = 1; // optional, defaults to 50
+    google.protobuf.Int64Value before = 2; // id of the oldest track which was returned. Optional, defaults to getting the latest page
+}
+
+message ChronoMeta {
+    ChronoParams params = 1;
+    repeated string warnings = 2;
+    repeated string errors = 3;
+    bool valid_for_caching = 4;
+}
+
+message LegacyChronoMeta {
+    LegacyChronoParams params = 1;
+}
+
+message ChronoItem {
+    string urn = 1;
+    string type = 2;
+    string timestamp = 3;
+    string cursor = 4;
+    string permalink_track_part = 6;
+    string permalink_user_part = 7;
+    string url = 8;
+}
+
+message GetProfilesForTracksRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1;
+    repeated string track_urns = 2;
+}
+
+message ProfilesForTracksResponse {
+    repeated ProfileForTrack profiles_for_tracks = 1;
+}
+
+message GetProfilesForTracksPrimaryRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1;
+    repeated string track_urns = 2;
+}
+
+message ProfilesForTracksPrimaryResponse {
+    repeated ProfileForTrack profiles_for_tracks = 1;
+}
+
+message ProfileForTrack {
+    string track_urn = 1;
+    string profile_urn = 2;
+    string track_permalink = 3;
+    string profile_permalink = 4;
+}
+
+message ResolvePermalinkRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1;
+    string permalink = 2;
+}
+
+message ResolvePermalinkResponse {
+    google.protobuf.StringValue urn = 1;
+}
+
+service ProfilesAdmin {
+    rpc CreateTrackProfileAssociation (CreateTrackProfileAssociationRequest) returns (CreateTrackProfileAssociationResponse) { }
+    rpc GetProfileAssociation (GetProfileAssociationRequest) returns (GetProfileAssociationResponse) { }
+}
+
+/* associate a track with a profile.
+   track_urn: urn of a track that exists in the mothership tracks table
+   profile_urn: urn of a user that exists in the mothership users table
+   use_track_published_or_created_at:
+     - if true, the track published_or_created_at time is used as the time the track moved to the new profile. this
+       is useful for fixing cases where a track exists but there is no profile association for it.
+     - if false (the default) the server's current time is used as the time the track moved to the new profile
+ */
+message CreateTrackProfileAssociationRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1;
+    string track_urn = 2;
+    string profile_urn = 3;
+    bool use_track_published_or_created_at = 4;
+    bool force_move_non_agp = 5;
+}
+
+message CreateTrackProfileAssociationResponse { }
+
+message GetProfileAssociationRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1;
+    string track_urn = 2;
+}
+
+message GetProfileAssociationResponse {
+    ProfileAssociation profile_association = 1;
+}
+
+message ProfileAssociation {
+    string track_urn = 1;
+    string profile_urn = 2;
+    string track_permalink = 3;
+    uint64 published_or_created_at_ms = 4;
+}
+
+message GetTrackProfileHistoryRequest {
+    string track_urn = 1;
+}
+
+message TrackMovement {
+    string old_profile_urn = 1;
+    string new_profile_urn = 2;
+    uint64 moved_at_ms = 3;
+}
+
+message TrackProfileHistoryResponse {
+    string track_urn = 1;
+    repeated TrackMovement history = 2;
+}

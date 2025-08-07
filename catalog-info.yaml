@@ -14,6 +14,7 @@ spec:
     - hocuspocus-hocuspocus.proto
     - likes-likes_api.proto
     - playlists-playlists_api.proto
+    - profiles-profiles_api.proto
     - tracks-tracks_api.proto
     - search-search_api.proto
     - follows-follows_api.proto
