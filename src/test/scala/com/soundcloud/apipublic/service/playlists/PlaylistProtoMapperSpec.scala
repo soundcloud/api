@@ -59,6 +59,7 @@ class PlaylistProtoMapperSpec extends Specification {
       userUrn = "soundcloud:users:1",
       isAlbum = false,
       setType = "set",
+      playlistType = "PLAYLIST",
       managedByFeeds = false,
       publishedAt = Some(defaultProtoDate),
       embeddableBy = "all",
@@ -74,6 +75,74 @@ class PlaylistProtoMapperSpec extends Specification {
     )
   }
 
+  "getPlaylist" >> {
+    val mapper = new PlaylistProtoMapper
+
+    "maps type based on setType" in new Context {
+      val result = mapper(
+        PlaylistResponse(
+          playlist = Some(playlistProto),
+          trackRequests = protoTrackRequests,
+          pagination = nextPagination
+        ),
+        session,
+        currentPagination
+      )
+
+      result.get.setType ==== "set"
+    }
+
+    "maps type based on playlistType" in new Context {
+
+      val playlistProto2 = new ProtoPlaylist(
+        setType = "",
+        playlistType = "PLAYLIST",
+        urn = playlistProto.urn,
+        title = playlistProto.title,
+        description = playlistProto.description,
+        createdAt = playlistProto.createdAt,
+        duration = playlistProto.duration,
+        genre = playlistProto.genre,
+        permalink = playlistProto.permalink,
+        permalinkUrl = playlistProto.permalinkUrl,
+        artworkUrl = playlistProto.artworkUrl,
+        trackCount = playlistProto.trackCount,
+        userTags = playlistProto.userTags,
+        releaseDate = playlistProto.releaseDate,
+        public = playlistProto.public,
+        sharing = playlistProto.sharing,
+        secretToken = playlistProto.secretToken,
+        updatedAt = playlistProto.updatedAt,
+        userUrn = playlistProto.userUrn,
+        isAlbum = playlistProto.isAlbum,
+        managedByFeeds = playlistProto.managedByFeeds,
+        publishedAt = playlistProto.publishedAt,
+        embeddableBy = playlistProto.embeddableBy,
+        license = playlistProto.license,
+        labelName = playlistProto.labelName,
+        labelId = playlistProto.labelId,
+        purchaseTitle = playlistProto.purchaseTitle,
+        purchaseUrl = playlistProto.purchaseUrl,
+        ean = playlistProto.ean,
+        streamable = playlistProto.streamable,
+        uri = playlistProto.uri,
+        counts = playlistProto.counts
+      )
+
+      val result = mapper(
+        PlaylistResponse(
+          playlist = Some(playlistProto2),
+          trackRequests = protoTrackRequests,
+          pagination = nextPagination
+        ),
+        session,
+        currentPagination
+      )
+
+      result.get.setType ==== "PLAYLIST"
+    }
+
+  }
   "createPlaylist" >> {
     "can create VisiblePlaylist" in new Context {
       val mapper = new PlaylistProtoMapper

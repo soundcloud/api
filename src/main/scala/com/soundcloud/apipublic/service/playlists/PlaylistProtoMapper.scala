@@ -43,7 +43,7 @@ class PlaylistProtoMapper {
       updatedAt = playlist.updatedAt.map(_.asInstant),
       userUrn = playlist.userUrn,
       isAlbum = playlist.isAlbum,
-      setType = playlist.setType,
+      setType = if (playlist.setType.isEmpty) playlist.playlistType else playlist.setType,
       managedByFeeds = playlist.managedByFeeds,
       publishedAt = playlist.publishedAt.map(_.asInstant),
       embeddableBy = playlist.embeddableBy,
