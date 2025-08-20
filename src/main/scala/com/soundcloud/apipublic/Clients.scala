@@ -201,6 +201,7 @@ class Clients(
   val tracksService = new TrackRepresentationsService(
     trackVisibilityService,
     richOkidokiClient,
+    followCountsClient,
     likedTracksService
   )
   private val profilesClient = new ProfilesClient(profilesTwirpClient)

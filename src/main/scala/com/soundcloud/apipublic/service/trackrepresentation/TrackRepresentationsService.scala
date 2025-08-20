@@ -1,5 +1,6 @@
 package com.soundcloud.apipublic.service.trackrepresentation
 
+import com.soundcloud.apipublic.client.followcounts.FollowCountsClient
 import com.soundcloud.apipublic.client.mothership.RichOkidokiClient
 import com.soundcloud.apipublic.client.mothership.response.representation.Geoblockings
 import com.soundcloud.apipublic.client.tracks.{TrackRequest, VisibleTrack}
@@ -15,6 +16,7 @@ import scala.util.control.NonFatal
 class TrackRepresentationsService(
     trackVisibilityService: TrackVisibilityService,
     okidokiClient: RichOkidokiClient,
+    followCountsClient: FollowCountsClient,
     likedTracksService: LikedTracksService
 ) {
 
@@ -42,22 +44,26 @@ class TrackRepresentationsService(
       visibleTracks: List[VisibleTrack]
   ): Future[List[TrackRepresentation]] = {
     val urns = visibleTracks.map(_.urn).toSet
-    val userUrns = visibleTracks.map(_.userUrn).toSet
+    val userUrns = visibleTracks.map(_.userUrn)
 
     Future
       .join(
-        okidokiClient.fetchUserObjects(session, userUrns).map(users => users.map(user => user.urn -> user).toMap),
+        okidokiClient.fetchUserObjects(session, userUrns.toSet).map(users => users.map(user => user.urn -> user).toMap),
         likedTracksService.getLikedTracks(session, urns.toSeq),
-        okidokiClient.fetchTrackGeoblockings(session, urns).handle { case NonFatal(_) => Map.empty[Urn, Geoblockings] }
+        okidokiClient.fetchTrackGeoblockings(session, urns).handle { case NonFatal(_) => Map.empty[Urn, Geoblockings] },
+        followCountsClient.counts(userUrns).map(userUrns.zip(_).toMap)
       )
       .map {
-        case (users, isLiked, geoBlockings) =>
+        case (users, isLiked, geoBlockings, followCounts) =>
           visibleTracks.map { visibleTrack =>
             TrackRepresentationBuilder.fromVisibleTrack(
               client = session.agent,
               sessionUser = session.user,
               visibleTrack = visibleTrack,
-              user = users(visibleTrack.userUrn),
+              user = users(visibleTrack.userUrn).copy(
+                followings_count = Some(followCounts.get(visibleTrack.userUrn).map(_.followings).getOrElse(0)),
+                followers_count = Some(followCounts.get(visibleTrack.userUrn).map(_.followers).getOrElse(0))
+              ),
               geoblockings = geoBlockings.getOrElse(visibleTrack.urn, List.empty),
               isLiked = isLiked.getOrElse(visibleTrack.urn, false)
             )

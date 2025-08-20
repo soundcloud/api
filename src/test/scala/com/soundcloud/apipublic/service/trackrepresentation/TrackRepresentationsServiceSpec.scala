@@ -1,5 +1,6 @@
 package com.soundcloud.apipublic.service.trackrepresentation
 
+import com.soundcloud.apipublic.client.followcounts.{FollowCounts, FollowCountsClient}
 import com.soundcloud.apipublic.client.mothership.RichOkidokiClient
 import com.soundcloud.apipublic.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.apipublic.client.tracks.{TrackRequest, VisibleTrack}
@@ -19,11 +20,13 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
     val okidokiClient = mock[RichOkidokiClient]
     val likedTracksService = mock[LikedTracksService]
     val trackmetadataClient = mock[TrackmetadataClient]
+    val followCountsClient = mock[FollowCountsClient]
     val trackPagination = mock[TrackPagination]
 
     val tracksService = new TrackRepresentationsService(
       trackVisibilityService,
       okidokiClient,
+      followCountsClient,
       likedTracksService
     )
 
@@ -41,6 +44,8 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
       when(okidokiClient.fetchUserObjects(session, Set(trackOwnerUrn))).thenReturn(Future.value(List(trackOwner)))
       when(okidokiClient.fetchTrackGeoblockings(session, Set(trackUrn))).thenReturn(Future.value(geoblockings))
       when(likedTracksService.getLikedTracks(session, Seq(trackUrn))).thenReturn(Future.value(Map(trackUrn -> true)))
+      when(followCountsClient.counts(Seq(trackOwnerUrn)))
+        .thenReturn(Future.value(Seq(FollowCounts(trackOwnerUrn, 0, 0))))
     }
 
     def setUpMocksForNonExistingTrack = {
