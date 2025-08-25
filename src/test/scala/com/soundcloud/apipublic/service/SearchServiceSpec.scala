@@ -78,6 +78,28 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
       usersCollection.items ==== List(user)
     }
 
+    "when data returns playlists as well" in new Context {
+      when(
+        searchClient.searchUsers(
+          ===(session),
+          ===(ParamMap("q" -> query).asUsersParams),
+          anyObject,
+          ===(accessParam)
+        )
+      ).thenReturn(
+        SearchResponse(query, queryUrn, 0, 5, 1, 1000, Seq(Doc(userUrn), Doc(playlistUrn)), None).goodF
+      )
+
+      when(userRepresentationsService.users(session, Seq(userUrn))).thenReturn(Future.value(List(user)))
+
+      val result =
+        Await.result(
+          searchService.searchUsers(session, params.asUsersParams, offsetBasedPagination, accessParam).value
+        )
+      val usersCollection = result.getOrElse(Collection(List.empty, None))
+      usersCollection.items ==== List(user)
+    }
+
     "when data is not available" in new Context {
       when(
         searchClient.searchUsers(
