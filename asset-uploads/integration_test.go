@@ -3,6 +3,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager/s3manageriface"
+	"github.com/soundcloud/gokit/v2/clients/authenticator"
 )
 
 type fakeS3Manager struct {
@@ -24,24 +26,47 @@ func (f fakeS3Manager) Upload(i *s3manager.UploadInput, opts ...func(*s3manager.
 	return &s3manager.UploadOutput{}, nil
 }
 
-type fakeMediaServiceClient struct {
-	uid string
+type fakeMediaServiceClient struct{}
+
+func (f fakeMediaServiceClient) createTranscoding(string, string) error { return nil }
+
+type alwaysProvideUidTrackCoordinator struct{ uid string }
+
+func (a alwaysProvideUidTrackCoordinator) createUserPolicy(filename string, fileSize int64, session *EnrichedSessionResponse) (string, error) {
+	return a.uid, nil
 }
 
-func (f fakeMediaServiceClient) createTranscoding(string, string) (string, error) { return f.uid, nil }
+type alwaysAllowedAuthenticator struct{}
+
+func (a alwaysAllowedAuthenticator) GetSessionByToken(ctx context.Context, token string, headers http.Header) (*authenticator.SessionResponse, error, int) {
+	sessionResponse := authenticator.SessionResponse{
+		CacheKey:          "someCacheKey",
+		ClientApplication: "soundcloud:clients:1",
+		Scope:             "stub-scope",
+		Session:           "stub-session",
+		Urn:               "soundcloud:users:1",
+	}
+	return &sessionResponse, nil, 200
+}
+
+type noFeaturesGatekeeper struct{}
+
+func (g noFeaturesGatekeeper) GetFeatures(ctx context.Context, user string) (*[]string, error) {
+	return &[]string{}, nil
+}
 
 func TestControllerServiceS3Integration(t *testing.T) {
 	uploader := &uploader{
-		mediaService: &fakeMediaServiceClient{uid: "testUid"},
-		s3Bucket:     "test-bucket",
-		s3Uploader:   &fakeS3Manager{},
-		s3KeyGenerator: func() string {
-			return "public-api/foobar"
-		},
+		mediaService:     &fakeMediaServiceClient{},
+		trackCoordinator: &alwaysProvideUidTrackCoordinator{uid: "testUid"},
+		s3Bucket:         "test-bucket",
+		s3Uploader:       &fakeS3Manager{},
 	}
 
 	service := &service{
-		upload: uploader,
+		authenticatorClient: alwaysAllowedAuthenticator{},
+		gatekeeperClient:    noFeaturesGatekeeper{},
+		upload:              uploader,
 	}
 
 	server := httptest.NewServer(http.HandlerFunc(
@@ -132,6 +157,7 @@ func TestControllerServiceS3Integration(t *testing.T) {
 		res := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/tracks", bytes.NewReader(tt.body))
 		req.Host = "api.sc.local"
+		req.Header.Set("Authorization", "OAuth some-token")
 		req.Header.Set("Content-Type", "multipart/form-data; boundary=------------------------6808b4f61ea0e5a2")
 
 		controller.tracks().ServeHTTP(res, req)

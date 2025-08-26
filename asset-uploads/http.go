@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/soundcloud/gokit/instrumenthttp"
+	"github.com/soundcloud/gokit/v2/instrumenthttp"
 	"github.com/streadway/handy/report"
 )
 

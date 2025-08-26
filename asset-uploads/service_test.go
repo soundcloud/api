@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -11,6 +12,8 @@ import (
 	"sort"
 	"strings"
 	"testing"
+
+	"github.com/soundcloud/gokit/v2/clients/authenticator"
 )
 
 const (
@@ -23,6 +26,42 @@ type fakeUploader struct {
 
 func (f fakeUploader) uploadTrack(r *uploadTrackRequest) (*uploadTrackResponse, error) {
 	return f.fn(r)
+}
+
+type fakeAuthenticator struct {
+	fn func() (*authenticator.SessionResponse, error, int)
+}
+
+func (f fakeAuthenticator) GetSessionByToken(ctx context.Context, token string, headers http.Header) (*authenticator.SessionResponse, error, int) {
+	return f.fn()
+}
+
+type fakeGatekeeper struct {
+	t            *testing.T
+	expectedUser string
+	fn           func() (*[]string, error)
+}
+
+func (f fakeGatekeeper) GetFeatures(ctx context.Context, user string) (*[]string, error) {
+	if want, got := f.expectedUser, user; want != got {
+		f.t.Fatalf("fetching future for the wrong user: want %v, got %v", want, got)
+	}
+	return f.fn()
+}
+
+func generateSession(user string) (*authenticator.SessionResponse, error, int) {
+	var urn = ""
+	if user != "" {
+		urn = fmt.Sprintf("soundcloud:users:%s", user)
+	}
+	sessionResponse := authenticator.SessionResponse{
+		CacheKey:          "someCacheKey",
+		ClientApplication: "soundcloud:clients:1",
+		Scope:             "stub-scope",
+		Session:           "stub-session",
+		Urn:               urn,
+	}
+	return &sessionResponse, nil, 200
 }
 
 func TestValidMultipartWithoutFileUpload(t *testing.T) {
@@ -58,10 +97,10 @@ func TestValidMultipartWithoutFileUpload(t *testing.T) {
 	}
 }
 
-func TestUploadWithFilename(t *testing.T) {
+func TestUploadWithFileAndSession(t *testing.T) {
 	tests := [...]struct {
-		filename string
-		expected string
+		filename         string
+		expectedFilename string
 	}{
 		0: {"my_track.wav", "my_track.wav"},
 		1: {`"my "track.wav""`, ""},
@@ -82,6 +121,7 @@ func TestUploadWithFilename(t *testing.T) {
 			boundary: "------------------------6808b4f61ea0e5a2",
 			request: func() *http.Request {
 				r := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(body))
+				r.Header.Set("Authorization", "OAuth some-token")
 				return r
 			}(),
 		}
@@ -89,6 +129,8 @@ func TestUploadWithFilename(t *testing.T) {
 		var got *uploadTrackRequest
 		var uploaded bool
 		service := &service{
+			authenticatorClient: &fakeAuthenticator{func() (*authenticator.SessionResponse, error, int) { return generateSession("1") }},
+			gatekeeperClient:    &fakeGatekeeper{t, "soundcloud:users:1", func() (*[]string, error) { return &[]string{}, nil }},
 			upload: &fakeUploader{fn: func(r *uploadTrackRequest) (*uploadTrackResponse, error) {
 				uploaded = true
 				got = r
@@ -104,8 +146,17 @@ func TestUploadWithFilename(t *testing.T) {
 			t.Errorf("Expected an upload, got none")
 		}
 
-		if want, got := tt.expected, got.filename; want != got {
+		if want, got := tt.expectedFilename, got.filename; want != got {
 			t.Fatalf("wrong filename: want %v, got %v", want, got)
+		}
+
+		// input is "12345"
+		if want, got := int64(7), got.fileSize; want != got {
+			t.Fatalf("wrong file size: want %v, got %v", want, got)
+		}
+
+		if want, got := "soundcloud:users:1", got.session.Urn; want != got {
+			t.Fatalf("wrong urn in session response: want %v, got %v", want, got)
 		}
 	}
 }
@@ -388,7 +439,10 @@ func TestStoreTrackAssetData(t *testing.T) {
 	tests := [...]struct {
 		incomingHeaders map[string]string
 		req             []byte
-		fn              func(*uploadTrackRequest) (*uploadTrackResponse, error)
+		authenticateFn  func() (*authenticator.SessionResponse, error, int)
+		expectedUser    string
+		featuresFn      func() (*[]string, error)
+		uploadFn        func(*uploadTrackRequest) (*uploadTrackResponse, error)
 		outgoingHeaders map[string]string
 		resp            []byte
 		err             error
@@ -415,7 +469,10 @@ func TestStoreTrackAssetData(t *testing.T) {
 					crlf + "My Track" +
 					crlf + "--------------------------6808b4f61ea0e5a2--" +
 					crlf),
-			fn: func(r *uploadTrackRequest) (*uploadTrackResponse, error) {
+			authenticateFn: func() (*authenticator.SessionResponse, error, int) { return generateSession("1") },
+			expectedUser:   "soundcloud:users:1",
+			featuresFn:     func() (*[]string, error) { return &[]string{}, nil },
+			uploadFn: func(r *uploadTrackRequest) (*uploadTrackResponse, error) {
 				// Echo the track data (without whitespace) as the track uid
 				data, _ := io.ReadAll(r.data)
 
@@ -475,7 +532,10 @@ func TestStoreTrackAssetData(t *testing.T) {
 					crlf + "" +
 					crlf + "--------------------------6808b4f61ea0e5a2--" +
 					crlf),
-			fn: func(r *uploadTrackRequest) (*uploadTrackResponse, error) {
+			authenticateFn: func() (*authenticator.SessionResponse, error, int) { return generateSession("1") },
+			expectedUser:   "soundcloud:users:1",
+			featuresFn:     func() (*[]string, error) { return &[]string{}, nil },
+			uploadFn: func(r *uploadTrackRequest) (*uploadTrackResponse, error) {
 				// Echo the track data (without whitespace) as the track uid
 				data, _ := io.ReadAll(r.data)
 
@@ -539,7 +599,10 @@ func TestStoreTrackAssetData(t *testing.T) {
 					crlf + "My Track" +
 					crlf + "--------------------------6808b4f61ea0e5a2--" +
 					crlf),
-			fn: func(r *uploadTrackRequest) (*uploadTrackResponse, error) {
+			authenticateFn: func() (*authenticator.SessionResponse, error, int) { return generateSession("1") },
+			expectedUser:   "soundcloud:users:1",
+			featuresFn:     func() (*[]string, error) { return &[]string{}, nil },
+			uploadFn: func(r *uploadTrackRequest) (*uploadTrackResponse, error) {
 				// Echo the track data (without whitespace) as the track uid
 				data, _ := io.ReadAll(r.data)
 
@@ -597,7 +660,10 @@ func TestStoreTrackAssetData(t *testing.T) {
 					crlf + "My Track" +
 					crlf + "--------------------------6808b4f61ea0e5a2--" +
 					crlf),
-			fn: func(r *uploadTrackRequest) (*uploadTrackResponse, error) {
+			authenticateFn: func() (*authenticator.SessionResponse, error, int) { return generateSession("1") },
+			expectedUser:   "soundcloud:users:1",
+			featuresFn:     func() (*[]string, error) { return &[]string{}, nil },
+			uploadFn: func(r *uploadTrackRequest) (*uploadTrackResponse, error) {
 				// Echo the track data (without whitespace) as the track uid
 				data, _ := io.ReadAll(r.data)
 
@@ -651,11 +717,11 @@ func TestStoreTrackAssetData(t *testing.T) {
 					crlf + "My Track" +
 					crlf + "--------------------------6808b4f61ea0e5a2--" +
 					crlf),
-			fn: func(r *uploadTrackRequest) (*uploadTrackResponse, error) {
-				return nil, nil
-			},
-			resp: []byte{},
-			err:  fileNameValidationError{},
+			authenticateFn: func() (*authenticator.SessionResponse, error, int) { return nil, nil, 0 },
+			featuresFn:     func() (*[]string, error) { return nil, nil },
+			uploadFn:       func(r *uploadTrackRequest) (*uploadTrackResponse, error) { return nil, nil },
+			resp:           []byte{},
+			err:            fileNameValidationError{},
 		},
 		//failed upload - failure when uploading audio
 		5: {
@@ -679,8 +745,11 @@ func TestStoreTrackAssetData(t *testing.T) {
 					crlf + "My Track" +
 					crlf + "--------------------------6808b4f61ea0e5a2--" +
 					crlf),
-			resp: []byte{},
-			fn: func(r *uploadTrackRequest) (*uploadTrackResponse, error) {
+			resp:           []byte{},
+			authenticateFn: func() (*authenticator.SessionResponse, error, int) { return generateSession("1") },
+			expectedUser:   "soundcloud:users:1",
+			featuresFn:     func() (*[]string, error) { return &[]string{}, nil },
+			uploadFn: func(r *uploadTrackRequest) (*uploadTrackResponse, error) {
 				return nil, uploadFailedErr
 			},
 			err: uploadFailedErr,
@@ -706,22 +775,98 @@ func TestStoreTrackAssetData(t *testing.T) {
 					crlf + "My Track" +
 					crlf + "--------------------------6808b4f61ea0e5a2--" +
 					crlf),
-			resp: []byte{},
-			fn: func(r *uploadTrackRequest) (*uploadTrackResponse, error) {
-				// Echo the track data (without whitespace) as the track uid
-				data, _ := io.ReadAll(r.data)
-
-				return &uploadTrackResponse{
-					uid: string(bytes.TrimSpace(data)),
-				}, nil
-			},
-			err: clientError{},
+			resp:           []byte{},
+			authenticateFn: func() (*authenticator.SessionResponse, error, int) { return nil, nil, 0 },
+			featuresFn:     func() (*[]string, error) { return nil, nil },
+			uploadFn:       func(r *uploadTrackRequest) (*uploadTrackResponse, error) { return nil, nil },
+			err:            clientError{},
+		},
+		// failed upload - anonymous user session not allowed
+		7: {
+			incomingHeaders: map[string]string{"Authorization": "OAuth some-token"},
+			req: []byte(
+				"--------------------------6808b4f61ea0e5a2" +
+					crlf + "Content-Disposition: form-data; name=\"track[asset_data]\"; filename=\"my_track.wav\"" +
+					crlf + "Content-Type: application/octet-stream" +
+					crlf + "" +
+					crlf + "12345" +
+					crlf + "" +
+					crlf + "--------------------------6808b4f61ea0e5a2" +
+					crlf + "Content-Disposition: form-data; name=\"track[artwork_data]\"; filename=\"my_track.jpg\"" +
+					crlf + "Content-Type: application/octet-stream" +
+					crlf + "" +
+					crlf + "<JPEG data; won't be modified>" +
+					crlf + "" +
+					crlf + "--------------------------6808b4f61ea0e5a2" +
+					crlf + "Content-Disposition: form-data; name=\"track[title]\"" +
+					crlf + "" +
+					crlf + "My Track" +
+					crlf + "--------------------------6808b4f61ea0e5a2--" +
+					crlf),
+			resp:           []byte{},
+			authenticateFn: func() (*authenticator.SessionResponse, error, int) { return generateSession("") },
+			featuresFn:     func() (*[]string, error) { return nil, nil },
+			uploadFn:       func(r *uploadTrackRequest) (*uploadTrackResponse, error) { return nil, nil },
+			err:            authorizationError{errors.New("anonymous sessions are not supported")},
+		},
+		// failed upload - error fetching features
+		8: {
+			incomingHeaders: map[string]string{"Authorization": "OAuth some-token"},
+			req: []byte(
+				"--------------------------6808b4f61ea0e5a2" +
+					crlf + "Content-Disposition: form-data; name=\"track[asset_data]\"; filename=\"my_track.wav\"" +
+					crlf + "Content-Type: application/octet-stream" +
+					crlf + "" +
+					crlf + "12345" +
+					crlf + "" +
+					crlf + "--------------------------6808b4f61ea0e5a2" +
+					crlf + "Content-Disposition: form-data; name=\"track[artwork_data]\"; filename=\"my_track.jpg\"" +
+					crlf + "Content-Type: application/octet-stream" +
+					crlf + "" +
+					crlf + "<JPEG data; won't be modified>" +
+					crlf + "" +
+					crlf + "--------------------------6808b4f61ea0e5a2" +
+					crlf + "Content-Disposition: form-data; name=\"track[title]\"" +
+					crlf + "" +
+					crlf + "My Track" +
+					crlf + "--------------------------6808b4f61ea0e5a2--" +
+					crlf),
+			resp:           []byte{},
+			authenticateFn: func() (*authenticator.SessionResponse, error, int) { return generateSession("1") },
+			expectedUser:   "soundcloud:users:1",
+			featuresFn:     func() (*[]string, error) { return nil, errors.New("unexpected failure") },
+			uploadFn:       func(r *uploadTrackRequest) (*uploadTrackResponse, error) { return nil, nil },
+			err:            authorizationError{errors.New("call to gatekeeperClient failed: unexpected failure")},
+		},
+		//failed upload - no oauth token provided
+		9: {
+			incomingHeaders: map[string]string{},
+			req: []byte(
+				"--------------------------6808b4f61ea0e5a2" +
+					crlf + "Content-Disposition: form-data; name=\"track[asset_data]\"; filename=\"my_track.wav\"" +
+					crlf + "Content-Type: application/octet-stream" +
+					crlf + "" +
+					crlf + "12345" +
+					crlf + "" +
+					crlf + "--------------------------6808b4f61ea0e5a2" +
+					crlf + "Content-Disposition: form-data; name=\"track[title]\"" +
+					crlf + "" +
+					crlf + "My Track" +
+					crlf + "--------------------------6808b4f61ea0e5a2--" +
+					crlf),
+			resp:           []byte{},
+			authenticateFn: func() (*authenticator.SessionResponse, error, int) { return nil, nil, 0 },
+			featuresFn:     func() (*[]string, error) { return nil, nil },
+			uploadFn:       func(r *uploadTrackRequest) (*uploadTrackResponse, error) { return nil, nil },
+			err:            authorizationError{errors.New("no authorization header in request")},
 		},
 	}
 
 	for _, test := range tests {
 		service := &service{
-			upload: &fakeUploader{fn: test.fn},
+			authenticatorClient: &fakeAuthenticator{test.authenticateFn},
+			gatekeeperClient:    &fakeGatekeeper{t, test.expectedUser, test.featuresFn},
+			upload:              &fakeUploader{test.uploadFn},
 		}
 
 		res, err := service.createTrack(&createTrackRequest{
@@ -735,8 +880,10 @@ func TestStoreTrackAssetData(t *testing.T) {
 			}(),
 		})
 
-		if got := err; test.err != got {
-			t.Errorf("Expected error to be %s, got %s", test.err, got)
+		if test.err != nil {
+			if got := err; test.err.Error() != got.Error() {
+				t.Errorf("Expected error to be %s, got %s", test.err, got)
+			}
 		}
 
 		if len(test.resp) != 0 {

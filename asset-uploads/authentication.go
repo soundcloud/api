@@ -5,7 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/soundcloud/gokit/clients/authenticator"
+	"github.com/soundcloud/gokit/v2/clients/authenticator"
 	"io"
 	"log"
 	"mime/multipart"
@@ -120,6 +120,10 @@ func ParseTokenFromAuthorization(authHeader string) (string, error) {
 
 func CreateSessionHeaders(session *EnrichedSessionResponse) map[string]string {
 	// Create the session data and write it to the headers
+	if session == nil {
+		return map[string]string{}
+	}
+
 	sessionData := SessionHeaders{
 		User:     session.Urn,
 		Agent:    session.ClientApplication,

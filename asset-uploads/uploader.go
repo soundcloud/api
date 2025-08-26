@@ -4,11 +4,11 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager/s3manageriface"
-	"github.com/google/uuid"
 )
 
 type uploaderAPI interface {
@@ -16,15 +16,17 @@ type uploaderAPI interface {
 }
 
 type uploader struct {
-	mediaService            mediaServiceClientAPI
-	s3Bucket                string
-	s3Uploader              s3manageriface.UploaderAPI
-	s3KeyGenerator			func() string
+	mediaService     mediaServiceClientAPI
+	trackCoordinator trackCoordinatorClientAPI
+	s3Bucket         string
+	s3Uploader       s3manageriface.UploaderAPI
 }
 
 type uploadTrackRequest struct {
 	data     io.Reader
+	session  *EnrichedSessionResponse
 	filename string
+	fileSize int64
 }
 
 type uploadTrackResponse struct {
@@ -34,21 +36,24 @@ type uploadTrackResponse struct {
 }
 
 func (u uploader) uploadTrack(req *uploadTrackRequest) (*uploadTrackResponse, error) {
-	key := u.s3KeyGenerator()
+	uid, err := u.trackCoordinator.createUserPolicy(req.filename, req.fileSize, req.session)
+	if err != nil {
+		log.Printf("Failed to generate user upload policy with error: %v", err)
+		return nil, err
+	}
 
 	md5 := md5.New()
 	tee := io.TeeReader(req.data, md5)
 	out, err := u.s3Uploader.Upload(&s3manager.UploadInput{
-		Bucket:             aws.String(u.s3Bucket),
-		Key:                aws.String(key),
-		Body:               tee,
+		Bucket: aws.String(u.s3Bucket),
+		Key:    aws.String(uid),
+		Body:   tee,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	uid, err := u.mediaService.createTranscoding(key, req.filename)
-	if err != nil {
+	if err := u.mediaService.createTranscoding(uid, req.filename); err != nil {
 		return nil, err
 	}
 
@@ -57,10 +62,6 @@ func (u uploader) uploadTrack(req *uploadTrackRequest) (*uploadTrackResponse, er
 		md5:      fmt.Sprintf("%x", md5.Sum(nil)),
 		uid:      uid,
 	}, nil
-}
-
-func generateS3Key() string {
-	return fmt.Sprintf("public-api/%s", uuid.New().String())
 }
 
 // Ensure that uploader implements uploaderAPI.

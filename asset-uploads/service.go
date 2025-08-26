@@ -49,8 +49,7 @@ type multiPartRequest struct {
 }
 
 type rewriter struct {
-	ctx context.Context //will be required to pass to the authclient provided by gokit:
-	// https://github.com/soundcloud/gokit/blob/master/clients/authenticator/README.md#func-client-getsessionbytoken
+	ctx                context.Context
 	authHeader         string
 	additionalHeaders  http.Header
 	body               *bytes.Buffer
@@ -199,8 +198,8 @@ func (s service) extractOAuth(p *multipart.Part, r *rewriter) error {
 		return err
 	}
 	if token.Len() > 0 {
-		r.authHeader = token.String()
-		r.additionalHeaders.Add("Authorization", "OAuth "+r.authHeader)
+		r.authHeader = fmt.Sprintf("OAuth %s", token.String())
+		r.additionalHeaders.Add("Authorization", r.authHeader)
 		// for debug: AUTH-2326
 		log.Printf("setting Authorization header as OAuth %s", maskToken(r.authHeader))
 	}
@@ -214,13 +213,15 @@ func (s service) copyToUploadTrackRequest(p *multipart.Part) (*uploadTrackReques
 	}
 
 	buf := &bytes.Buffer{}
-	if _, err := io.Copy(buf, p); err != nil {
+	bytes, err := io.Copy(buf, p)
+	if err != nil {
 		return nil, err
 	}
 
 	u := &uploadTrackRequest{
 		data:     buf,
 		filename: filename,
+		fileSize: bytes,
 	}
 
 	return u, nil
@@ -228,14 +229,12 @@ func (s service) copyToUploadTrackRequest(p *multipart.Part) (*uploadTrackReques
 }
 
 func (s service) uploadTrackWithFields(r *rewriter) error {
-	// TODO use headers to call track-coordinator
+	resp, err := s.GetSessionWithFeatures(r.ctx, r.authHeader)
+	if err != nil {
+		return err
+	}
 
-	//session, err := s.GetSessionWithFeatures(r.ctx, r.authHeader)
-	//if err != nil {
-	//	return err
-	//}
-	//_ = CreateSessionHeaders(session)
-
+	r.uploadTrackRequest.session = resp
 	upload, err := s.uploadTrackAssetData(r.uploadTrackRequest, r.writer)
 	if err != nil {
 		return err

@@ -20,9 +20,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/soundcloud/gokit/dnssrv"
-	"github.com/soundcloud/gokit/httpserver"
-	"github.com/soundcloud/gokit/instrumenthttp"
+	"github.com/soundcloud/gokit/v2/clients/authenticator"
+	"github.com/soundcloud/gokit/v2/clients/gatekeeper"
+	"github.com/soundcloud/gokit/v2/dnssrv"
+	"github.com/soundcloud/gokit/v2/httpserver"
+	"github.com/soundcloud/gokit/v2/instrumenthttp"
 )
 
 func main() {
@@ -34,8 +36,11 @@ func main() {
 		addr      = flag.String("addr", ":80", "Listen address")
 		adminAddr = flag.String("admin-addr", ":5000", "Listen address admin server")
 
-		mediaServiceAddr = flag.String("media-service-addr", os.Getenv("MEDIA_SERVICE_ADDRESS"), "media service address")
-		apiGatewayAddr = flag.String("apiGatewayAddr", os.Getenv("API_PUBLIC_GATEWAY_ADDRESS"), "API Public Gateway service address")
+		mediaServiceAddr     = flag.String("media-service-addr", os.Getenv("MEDIA_SERVICE_ADDRESS"), "media service address")
+		trackCoordinatorAddr = flag.String("track-coordinator-addr", os.Getenv("TRACK_COORDINATOR_ADDRESS"), "track coordinator address")
+		authenticatorAddr    = flag.String("authenticator-addr", os.Getenv("AUTHENTICATOR_ADDRESS"), "authenticator address")
+		gatekeeperAddr       = flag.String("gatekeeper-addr", os.Getenv("GATEKEEPER_ADDRESS"), "gatekeeper address")
+		apiGatewayAddr       = flag.String("apiGatewayAddr", os.Getenv("API_PUBLIC_GATEWAY_ADDRESS"), "API Public Gateway service address")
 
 		awsKey    = flag.String("aws-key", os.Getenv("AWS_ACCESS_KEY_ID"), "AWS access key ID")
 		awsSecret = flag.String("aws-secret", os.Getenv("AWS_SECRET_ACCESS_KEY"), "AWS secret access key")
@@ -81,12 +86,28 @@ func main() {
 		host:   *mediaServiceAddr,
 	}
 
+	trackCoordinatorClient := &trackCoordinatorClient{
+		client: &http.Client{
+			Transport: instrumenthttp.Tripperware(
+				"TRACK_COORDINATOR",
+				instrumenthttp.TripperwareOpts{},
+				dnssrv.DefaultTransport,
+			),
+		},
+		host: *trackCoordinatorAddr,
+	}
+
+	authenticator := authenticator.New(*authenticatorAddr)
+	gatekeeper := gatekeeper.New(*gatekeeperAddr)
+
 	service := &service{
+		authenticatorClient: authenticator,
+		gatekeeperClient:    gatekeeper,
 		upload: &uploader{
-			mediaService:   mediaService,
-			s3Uploader:     s3manager.NewUploaderWithClient(s3),
-			s3Bucket:       *s3Bucket,
-			s3KeyGenerator: generateS3Key,
+			mediaService:     mediaService,
+			trackCoordinator: trackCoordinatorClient,
+			s3Uploader:       s3manager.NewUploaderWithClient(s3),
+			s3Bucket:         *s3Bucket,
 		},
 	}
 

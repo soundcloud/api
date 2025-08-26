@@ -32,11 +32,7 @@ trap teardown EXIT
 env TAG="$tag" \
   docker compose logs --follow &
 
-sc crun -l base-dev:latest -- \
-  sc wait http asset_uploads/-/health
-
-sc crun -l base-dev:latest -- \
-  sc wait http media_service/-/health
+sc wait-for-compose 
 
 sc crun -l python-3.7:latest -- \
   python3 -m unittest -v "${tests[@]+"${tests[@]}"}"

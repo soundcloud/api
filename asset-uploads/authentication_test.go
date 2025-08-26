@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/soundcloud/gokit/clients/authenticator"
+	"github.com/soundcloud/gokit/v2/clients/authenticator"
 )
 
 type fakeAuthenticatorClient struct {

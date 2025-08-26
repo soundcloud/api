@@ -33,6 +33,10 @@ class Assertions:
     def assertBadRequest(self, request_dump):
         if not search(r'HTTP/1.1 400 Bad Request', request_dump):
             raise AssertionError('Expected response to be "Bad Request": ' + request_dump)
+   
+    def assertUnauthorizedRequest(self, request_dump):
+        if not search(r'HTTP/1.1 401 Unauthorized', request_dump):
+            raise AssertionError('Expected response to be "Unauthorized": ' + request_dump)
 
     def assertNoStore(self, request_dump):
         if not search(r'Cache-Control: no-store',
@@ -53,7 +57,7 @@ class Assertions:
 
     def assertTrackAssetLocation(self, request_dump):
         header = search(
-            r'X-Track-Asset-Location:.*\.amazonaws\.com/public-api/(?P<uuid>[0-9a-f-]{36})\r\n',
+            r'X-Track-Asset-Location:.*\.amazonaws\.com/(?P<uid>[0-9a-zA-Z_-]{12})\r\n',
             request_dump)
         if not header:
             raise AssertionError('Expected X-Track-Asset-Location: ' +

@@ -9,6 +9,8 @@ services:
       https_proxy: 'http://proxy.localproxy.sc:42043'
     extra_hosts:
       - proxy.localproxy.sc:host-gateway
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:80/-/health" ]
 
   media_service:
     image: docker.localproxy.sc:42042/go-1:latest-${HOSTARCH}
@@ -16,6 +18,35 @@ services:
       - ../testdata:/srv/test:ro
     working_dir: /srv/test
     command: go run media_service.go -listenAddr=:80
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:80/-/health" ]
+
+  authenticator:
+    image: docker.localproxy.sc:42042/go-1:latest-${HOSTARCH}
+    volumes:
+      - ../testdata:/srv/test:ro
+    working_dir: /srv/test
+    command: go run authenticator.go -listenAddr=:80
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:80/-/health" ]
+
+  gatekeeper:
+    image: docker.localproxy.sc:42042/go-1:latest-${HOSTARCH}
+    volumes:
+      - ../testdata:/srv/test:ro
+    working_dir: /srv/test
+    command: go run gatekeeper.go -listenAddr=:80
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:80/-/health" ]
+
+  track_coordinator:
+    image: docker.localproxy.sc:42042/go-1:latest-${HOSTARCH}
+    volumes:
+      - ../testdata:/srv/test:ro
+    working_dir: /srv/test
+    command: go run track_coordinator.go -listenAddr=:80
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:80/-/health" ]
 
   api_public:
     image: docker.localproxy.sc:42042/go-1:latest-${HOSTARCH}
@@ -23,3 +54,5 @@ services:
       - ../testdata:/srv/test:ro
     working_dir: /srv/test
     command: go run echo_service.go -listenAddr=:80
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:80/-/health" ]

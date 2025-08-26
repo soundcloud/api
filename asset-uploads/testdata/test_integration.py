@@ -50,6 +50,35 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
         self.assertTrackAssetLocation(res)
         self.assertTrackUID(res)
 
+    def test_chunk_for_no_upload_features_user(self):
+        asset = self.assets['1mb']
+        cmd = '''
+            curl --verbose \
+                -H "Host: api.sc.local" \
+                -H "Transfer-Encoding: chunked" \
+                -F "track[asset_data]=@{};filename=test_chunk.wav" \
+                -F "track[title]=123" \
+                -F "oauth_token=valid-token-no-features-user" \
+                asset_uploads/tracks
+        '''.format(asset.name)
+        res = check_output(cmd, shell=True, stderr=STDOUT).decode('ascii')
+        self.assertUnauthorizedRequest(res)
+
+    def test_invalid_field_provided(self):
+        asset = self.assets['1mb']
+        cmd = '''
+            curl --verbose \
+                -H "Host: api.sc.local" \
+                -H "Transfer-Encoding: chunked" \
+                -F "track[asset_data]=@{};filename=test_chunk.wav" \
+                -F "track[title]=123" \
+                -F "track[uid]=should-not-be-here" \
+                -F "oauth_token=valid-token-no-features-user" \
+                asset_uploads/tracks
+        '''.format(asset.name)
+        res = check_output(cmd, shell=True, stderr=STDOUT).decode('ascii')
+        self.assertBadRequest(res)
+
     def test_alternate_routes(self):
         paths = ["/v1/tracks/", "/tracks", "/tracks.json",
                 "/tracks.json/", "/users/123/tracks", "/tracks/2",
@@ -153,6 +182,20 @@ class TestIntegration(unittest.TestCase, assertions.Assertions):
         self.assertTrackOriginalFilename(res, '')
         self.assertTrackAssetLocation(res)
         self.assertTrackUID(res)
+
+    def test_chunk_with_bad_token(self):
+        asset = self.assets['1mb']
+        cmd = '''
+            curl --verbose \
+                -H "Host: api.sc.local" \
+                -H "Transfer-Encoding: chunked" \
+                -F "track[asset_data]=@{};filename=test_chunk.wav" \
+                -F "track[title]=123" \
+                -F "oauth_token=bad-token" \
+                asset_uploads/tracks
+        '''.format(asset.name)
+        res = check_output(cmd, shell=True, stderr=STDOUT).decode('ascii')
+        self.assertUnauthorizedRequest(res)
 
     def test_generic(self):
         token = '04u7h-t0k3n'

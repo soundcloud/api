@@ -1,6 +1,9 @@
 source api-production-secrets
 
 MEDIA_SERVICE_ADDRESS=dnssrv!coordinator.media-streaming.euc1.aws.s-cloud.net
+TRACK_COORDINATOR_ADDRESS="http://dnssrv!http.coordinator.prod.tracks.srv.db.s-cloud.net."
+AUTHENTICATOR_ADDRESS="http://http.api.prod.authenticator.srv.db.s-cloud.net"
+GATEKEEPER_ADDRESS="http://http.api.prod.gatekeeper.srv.db.s-cloud.net"
 API_PUBLIC_GATEWAY_ADDRESS="http://apipublic:5000"
 
 MAX_REQUEST_BYTES=524288000

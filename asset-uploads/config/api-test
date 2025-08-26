@@ -4,6 +4,9 @@ PORT=80
 TELE_PORT=8080
 
 MEDIA_SERVICE_ADDRESS=media_service
+TRACK_COORDINATOR_ADDRESS="http://track_coordinator"
+AUTHENTICATOR_ADDRESS="http://authenticator"
+GATEKEEPER_ADDRESS="http://gatekeeper"
 API_PUBLIC_GATEWAY_ADDRESS="http://api_public"
 
 MAX_REQUEST_BYTES=5242880
