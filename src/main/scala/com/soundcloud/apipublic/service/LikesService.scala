@@ -2,11 +2,13 @@ package com.soundcloud.apipublic.service
 
 import com.soundcloud.apipublic.client.tracks.TrackRequest
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
+import com.soundcloud.apipublic.service.likes.{LikeItem, LikesComparisonUtil}
 import com.soundcloud.apipublic.service.pagination.CursorBasedPagination
 import com.soundcloud.apipublic.service.playlists.PlaylistRequest
 import com.soundcloud.apipublic.service.playlists.representation.Playlist
 import com.soundcloud.apipublic.service.representation.collection.Collection
 import com.soundcloud.apipublic.service.trackrepresentation.{TrackRepresentation, TrackRepresentationsService}
+import com.soundcloud.periskop.client.Severity.Info
 import com.soundcloud.jvmkit.module.outcome.{
   ApplicationError,
   GoodOps,
@@ -17,13 +19,29 @@ import com.soundcloud.jvmkit.module.outcome.{
   NotValid,
   Outcome
 }
+import com.soundcloud.jvmkit.module.rollout.{Rollout, RolloutFeature}
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
-import proto.soundcloud.likes.{api => likes}
+import proto.soundcloud.likes.api.{
+  LikesClientProtobuf => LikesClient,
+  GetLikesByUserChronoRequest,
+  GetLikesByUserChronoResponse,
+  ChronoParams,
+  ChronoDirection,
+  Collection => likesCollection
+}
+import proto.soundcloud.likes.api.v2.{
+  LikesService => v2LikesClient,
+  ChronoParams => v2ChronoParams,
+  ChronoResponse => v2ChronoResponse,
+  Collection => v2likesCollection,
+  GetLikesByUserChronoRequest => v2GetLikesByUserChronoRequest
+}
 import proto.soundcloud.playlists.api.{LikePlaylistRequest, LikesClientProtobuf => PlaylistLikesClientProtobuf}
 import proto.soundcloud.tracks.api.{
   GetTrackLikersPagination,
@@ -31,6 +49,9 @@ import proto.soundcloud.tracks.api.{
   LikeTrackRequest,
   LikesClientProtobuf => TrackLikesClientProtobuf
 }
+
+import java.time.Instant
+import scala.util.control.NonFatal
 
 case class CreateLikeResponse()
 
@@ -41,10 +62,15 @@ case class TrackLikersResponse(urns: Seq[Urn], nextHRef: Option[String])
 class LikesService(
     trackRepresentationsService: TrackRepresentationsService,
     playlistsService: PlaylistsService,
-    likesClient: likes.LikesClientProtobuf,
+    likesClient: LikesClient,
+    v2LikesClient: v2LikesClient,
     tracksClient: TrackLikesClientProtobuf,
-    playlistsClient: PlaylistLikesClientProtobuf
+    playlistsClient: PlaylistLikesClientProtobuf,
+    exceptionCollector: ExceptionCollector,
+    rollout: Rollout,
+    likesComparisonUtil: LikesComparisonUtil
 ) {
+  private def useLikesV2RolloutFlag = RolloutFeature("use_likes_v2")
 
   def createTrackLike(
       session: UserSession,
@@ -129,30 +155,47 @@ class LikesService(
       access: AccessParams,
       pagination: CursorBasedPagination
   ): Future[Collection[TrackRepresentation]] = {
-    val request = likes.GetLikesByUserChronoRequest(
+    def toCollection(likesPage: GetLikesByUserChronoResponse): Future[Collection[TrackRepresentation]] = {
+      val trackRequests = likesPage.items.map(like => TrackRequest(Urn.parse(like.targetUrn).get, None)).toList
+      for {
+        enrichedTracks <- trackRepresentationsService.tracks(session, trackRequests, access)
+      } yield {
+        val nextHref =
+          if (likesPage.items.isEmpty) None
+          else Some(pagination.nextPage(likesPage.items.last.cursor).normalizedHref)
+
+        Collection(enrichedTracks, nextHref)
+      }
+    }
+
+    val request = GetLikesByUserChronoRequest(
       userUrn = userUrn.toString,
       chronoParams = Some(
-        likes.ChronoParams(
-          direction = likes.ChronoDirection.DESC,
+        ChronoParams(
+          direction = ChronoDirection.DESC,
           limit = Some(pagination.pageSize),
           cursor = pagination.cursor
         )
       ),
-      collections = Seq(likes.Collection.TRACKS)
+      collections = Seq(likesCollection.TRACKS)
     )
-    for {
-      likesPage <- likesClient.getLikesByUserChrono(request)
-      enrichedTracks <- trackRepresentationsService.tracks(
-        session,
-        likesPage.items.map(like => TrackRequest(Urn.parse(like.targetUrn).get, None)).toList,
-        access
-      )
-    } yield {
-      val nextHref =
-        if (likesPage.items.isEmpty) None
-        else Some(pagination.nextPage(likesPage.items.last.cursor).normalizedHref)
+    rollout.isActive(useLikesV2RolloutFlag).flatMap {
+      case true =>
+        fetchAndCompareResults(
+          request,
+          Some(
+            v2ChronoParams(
+              direction = v2ChronoParams.Direction.DESC,
+              limit = Some(pagination.pageSize),
+              cursor = pagination.cursor
+            )
+          )
+        ).flatMap(toCollection)
 
-      Collection(enrichedTracks, nextHref)
+      case false =>
+        likesClient
+          .getLikesByUserChrono(request)
+          .flatMap(toCollection)
     }
   }
 
@@ -161,16 +204,16 @@ class LikesService(
       userUrn: Urn,
       pagination: CursorBasedPagination
   ): Future[Collection[Playlist]] = {
-    val request = likes.GetLikesByUserChronoRequest(
+    val request = GetLikesByUserChronoRequest(
       userUrn = userUrn.toString,
       chronoParams = Some(
-        likes.ChronoParams(
-          direction = likes.ChronoDirection.DESC,
+        ChronoParams(
+          direction = ChronoDirection.DESC,
           limit = Some(pagination.pageSize),
           cursor = pagination.cursor
         )
       ),
-      collections = Seq(likes.Collection.PLAYLISTS)
+      collections = Seq(likesCollection.PLAYLISTS)
     )
     for {
       likesPage <- likesClient.getLikesByUserChrono(request)
@@ -184,6 +227,60 @@ class LikesService(
         else Some(pagination.nextPage(likesPage.items.last.cursor).normalizedHref)
 
       Collection(playlists, nextHref)
+    }
+  }
+
+  private def fetchAndCompareResults(
+      request: GetLikesByUserChronoRequest,
+      v2ChronoParams: Option[v2ChronoParams]
+  ): Future[GetLikesByUserChronoResponse] = {
+    for {
+      (likes, v2Likes) <- Future.join(
+        likesClient.getLikesByUserChrono(request).handle {
+          case NonFatal(_) =>
+            exceptionCollector
+              .addMessage("likes_getLikesByUserChrono", "error fetching from likes", Info, collectRequestBody = true)
+            GetLikesByUserChronoResponse()
+        },
+        v2LikesClient
+          .getLikesByUserChrono(
+            v2GetLikesByUserChronoRequest(request.userUrn, v2ChronoParams, Seq(v2likesCollection.TRACKS))
+          )
+          .handle {
+            case NonFatal(_) =>
+              exceptionCollector
+                .addMessage(
+                  "v2likes_getLikesByUserChrono",
+                  "error fetching from likes v2",
+                  Info,
+                  collectRequestBody = true
+                )
+              v2ChronoResponse()
+          }
+      )
+      _ = likesComparisonUtil.compareAndReport(
+        "getLikesByUserChrono",
+        request.userUrn,
+        likeItemsFromLikes(likes),
+        likeItemsFromLikesV2(v2Likes)
+      )
+    } yield likes
+  }
+
+  private def likeItemsFromLikes(likesChronoResponse: GetLikesByUserChronoResponse): Seq[LikeItem] = {
+    likesChronoResponse.items.map { item =>
+      LikeItem(item.`type`, item.userUrn, item.targetUrn, item.timestamp)
+    }
+  }
+
+  private def likeItemsFromLikesV2(likesV2ChronoResponse: v2ChronoResponse): Seq[LikeItem] = {
+    likesV2ChronoResponse.items.map { item =>
+      LikeItem(
+        item.`type`,
+        item.userUrn,
+        item.targetUrn,
+        Instant.ofEpochSecond(item.timestamp.map(_.seconds).getOrElse(0)).toString
+      )
     }
   }
 }

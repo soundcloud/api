@@ -17,6 +17,7 @@ import com.soundcloud.apipublic.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.apipublic.client.tracks.TracksTwirpClient
 import com.soundcloud.apipublic.service._
 import com.soundcloud.apipublic.service.comments.CommentService
+import com.soundcloud.apipublic.service.likes.LikesComparisonUtil
 import com.soundcloud.apipublic.service.media.{StreamService, TrackAccessRecorderService}
 import com.soundcloud.apipublic.service.oauth.GrantExchangeService
 import com.soundcloud.apipublic.service.resolve.ResolveService
@@ -33,6 +34,7 @@ import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.client.config.HttpClientConfig
 import com.soundcloud.jvmkit.module.http.client.{DynamicHttpClient, HttpClient, JsonClient}
 import com.soundcloud.jvmkit.module.rollout.Rollout
+import com.soundcloud.jvmkit.module.servicediscovery.HttpEndpoint
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.twirp.TwirpClient
@@ -42,6 +44,7 @@ import com.soundcloud.jvmkit.module.util.config.{AppConfig, DataSensitivity}
 import proto.soundcloud.authenticator.access_grant_exchange.AccessGrantExchangeClientProtobuf
 import proto.soundcloud.comments.api.CommentsClientProtobuf
 import proto.soundcloud.follows.api.FollowsClientProtobuf
+import proto.soundcloud.likes.api.v2.{LikesClientProtobuf => LikesClientV2Protobuf, LikesService => v2LikesClient}
 import proto.soundcloud.likes.{api => likes}
 import proto.soundcloud.playlists.api.{
   PlaylistsClientProtobuf,
@@ -223,13 +226,19 @@ class Clients(
       exceptionCollector,
       hocuspocusClient
     )
+
+  val likesComparisonUtil = new LikesComparisonUtil(telemetry, exceptionCollector)
   val likesService =
     new LikesService(
       tracksService,
       playlistService,
       likesTwirpClient,
+      v2LikesTwirpAWSClient,
       likeTracksTwirpClient,
-      likesPlaylistsTwirpClient
+      likesPlaylistsTwirpClient,
+      exceptionCollector,
+      rolloutClient,
+      likesComparisonUtil
     )
   val userPlaylistsService = new UserPlaylistsService(playlistService, okidokiClient)
 
@@ -300,5 +309,15 @@ class Clients(
     val client =
       JsonClient(HttpClientConfig.from(ResourceName("AUTHENTICATOR_DISPENSER"), config), telemetry)
     new TokenDispenserClient(client)
+  }
+
+  private def v2LikesTwirpAWSClient: v2LikesClient = {
+    val endpointValue = config.get(s"LIKES_V2_HTTP_ENDPOINT", DataSensitivity.NON_SENSITIVE)
+    val httpEndpoint = HttpEndpoint(endpointValue, allowNonLocalEndpoint = true)
+    val clientConfig = HttpClientConfig(config.getApplicationName, ResourceName("LIKES_V2"), httpEndpoint)
+    new LikesClientV2Protobuf(
+      HttpClient[String](clientConfig, telemetry).httpService,
+      ClientTelemetry.from(clientConfig, telemetry)
+    )
   }
 }

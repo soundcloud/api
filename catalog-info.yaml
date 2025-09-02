@@ -13,6 +13,7 @@ spec:
     - gatekeeper-gatekeeper_api.proto
     - hocuspocus-hocuspocus.proto
     - likes-likes_api.proto
+    - likes_api_v2.proto
     - playlists-playlists_api.proto
     - profiles-profiles_api.proto
     - tracks-tracks_api.proto
@@ -78,6 +79,7 @@ spec:
     - Component:geoip2
     - Component:hocuspocus
     - Component:likes
+    - Component:likes-api
     - Component:media-service
     - Component:moshimoshi
     - Component:okidoki

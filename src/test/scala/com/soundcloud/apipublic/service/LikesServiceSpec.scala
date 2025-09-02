@@ -2,6 +2,7 @@ package com.soundcloud.apipublic.service
 
 import com.google.protobuf.timestamp.Timestamp
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
+import com.soundcloud.apipublic.service.likes.{LikeItem, LikesComparisonUtil}
 import com.soundcloud.apipublic.service.pagination.CursorBasedPagination
 import com.soundcloud.apipublic.service.playlists.representation.Playlist
 import com.soundcloud.apipublic.service.playlists.{PlaylistBuilder, PlaylistRequest}
@@ -12,6 +13,8 @@ import com.soundcloud.apipublic.service.trackrepresentation.{
   TrackRepresentationsSpecificationContext
 }
 import com.soundcloud.jvmkit.module.outcome._
+import com.soundcloud.jvmkit.module.rollout.{Rollout, RolloutFeature}
+import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
@@ -19,7 +22,22 @@ import com.twitter.finagle.http.{ParamMap, Status}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
 import org.specs2.mutable.BeforeAfter
-import proto.soundcloud.likes.{api => likes}
+import proto.soundcloud.likes.api.{
+  ChronoDirection,
+  ChronoParams,
+  GetLikesByUserChronoRequest,
+  GetLikesByUserChronoResponse,
+  GetLikesChronoResponseItem,
+  LikesClientProtobuf,
+  Collection => likesCollection
+}
+import proto.soundcloud.likes.api.v2.{
+  ChronoParams => v2ChronoParams,
+  ChronoResponse => v2ChronoResponse,
+  Collection => v2likesCollection,
+  GetLikesByUserChronoRequest => v2GetLikesByUserChronoRequest,
+  LikesService => v2LikesClientProtobuf
+}
 import proto.soundcloud.playlists.api.{
   LikePlaylistRequest,
   LikePlaylistResponse,
@@ -37,9 +55,9 @@ import proto.soundcloud.tracks.api.{
 import java.time.Instant
 
 class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
+  private def useLikesV2Rollout = RolloutFeature("use_likes_v2")
 
   trait Context extends TrackRepresentationsContext with BeforeAfter {
-
     val trackRepresentationsService = mock[TrackRepresentationsService]
     val playlistsService = mock[PlaylistsService]
     val pagination = CursorBasedPagination(
@@ -49,16 +67,26 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
       Some("2"),
       1
     )
+
+    val exceptionCollector = mock[ExceptionCollector]
+    val likesComparisonUtil = mock[LikesComparisonUtil]
+    val rollout = mock[Rollout]
+
     val tracksTwinagleClient = mock[TrackLikesClientProtobuf]
-    val likesTwinagleClient = mock[likes.LikesClientProtobuf]
+    val likesTwinagleClient = mock[LikesClientProtobuf]
+    val v2LikesTwinagleClient = mock[v2LikesClientProtobuf]
     val playlistTwinagleClient = mock[PlaylistLikesClientProtobuf]
 
     val likesService = new LikesService(
       trackRepresentationsService,
       playlistsService,
       likesTwinagleClient,
+      v2LikesTwinagleClient,
       tracksTwinagleClient,
-      playlistTwinagleClient
+      playlistTwinagleClient,
+      exceptionCollector,
+      rollout,
+      likesComparisonUtil
     )
 
     override def before: Any = {}
@@ -275,11 +303,23 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
   }
 
   trait LikesByUserContext extends Context {
-    def buildLikesRequest(collections: Seq[likes.Collection]) = likes.GetLikesByUserChronoRequest(
-      userUrn = trackOwnerUrn.toString,
+    def buildLikesRequest(collections: Seq[likesCollection]) = GetLikesByUserChronoRequest(
+      userUrn = requestingUserUrn.toString,
       chronoParams = Some(
-        likes.ChronoParams(
-          direction = likes.ChronoDirection.DESC,
+        ChronoParams(
+          direction = ChronoDirection.DESC,
+          limit = Some(pagination.pageSize),
+          cursor = pagination.cursor
+        )
+      ),
+      collections = collections
+    )
+
+    def buildV2LikesRequest(collections: Seq[v2likesCollection]) = v2GetLikesByUserChronoRequest(
+      userUrn = requestingUserUrn.toString,
+      chronoParams = Some(
+        v2ChronoParams(
+          direction = v2ChronoParams.Direction.DESC,
           limit = Some(pagination.pageSize),
           cursor = pagination.cursor
         )
@@ -291,16 +331,26 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
     val playlist = new PlaylistBuilder().build
     val playlistUrn = Urn("soundcloud", "playlists", "1001")
 
-    lazy val tracksCollection = Await.result(likesService.userTracksLikes(session, trackOwnerUrn, access, pagination))
-    lazy val playlistsCollection = Await.result(likesService.userPlaylistsLikes(session, trackOwnerUrn, pagination))
+    lazy val tracksCollection =
+      Await.result(likesService.userTracksLikes(session, requestingUserUrn, access, pagination))
+    lazy val playlistsCollection = Await.result(likesService.userPlaylistsLikes(session, requestingUserUrn, pagination))
+  }
+
+  trait RolloutEnabledContext extends LikesByUserContext {
+    rollout.isActive(useLikesV2Rollout) returns Future.value(true)
+  }
+
+  trait RolloutDisabledContext extends LikesByUserContext {
+    rollout.isActive(useLikesV2Rollout) returns Future.value(false)
   }
 
   "#userTracksLikes" >> {
-    "when all data is available" in new LikesByUserContext {
-      val likesRequest = buildLikesRequest(Seq(likes.Collection.TRACKS))
-      val likesPage = likes.GetLikesByUserChronoResponse(
+    val createdAtUTC = "2025-08-26T10:15:30Z"
+    "when all data is available" in new LikesByUserContext with RolloutDisabledContext {
+      val likesRequest = buildLikesRequest(Seq(likesCollection.TRACKS))
+      val likesPage = GetLikesByUserChronoResponse(
         items = Seq(
-          likes.GetLikesChronoResponseItem(
+          GetLikesChronoResponseItem(
             createdAt.toString,
             "user-track-likes",
             requestingUserUrn.toString,
@@ -321,9 +371,142 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
       tracksCollection.nextHref === Some(pagination.nextPage("some_cursor").normalizedHref)
     }
 
-    "when there is no next href" in new LikesByUserContext {
-      val likesRequest = buildLikesRequest(Seq(likes.Collection.TRACKS))
-      val likesPage = likes.GetLikesByUserChronoResponse()
+    "use likesV2Client when rollout is active" in new LikesByUserContext with RolloutEnabledContext {
+      val likesRequest = buildLikesRequest(Seq(likesCollection.TRACKS))
+      val v2LikesRequest = buildV2LikesRequest(Seq(v2likesCollection.TRACKS))
+
+      val likesPage = GetLikesByUserChronoResponse(
+        items = Seq(
+          GetLikesChronoResponseItem(
+            createdAtUTC,
+            "user-track-likes",
+            requestingUserUrn.toString,
+            trackUrn.toString,
+            "some_cursor"
+          )
+        )
+      )
+      val v2LikesPage = v2ChronoResponse(
+        items = Seq(
+          v2ChronoResponse.Item(
+            Some(Timestamp(Instant.parse(createdAtUTC))),
+            "user-track-likes",
+            requestingUserUrn.toString,
+            trackUrn.toString,
+            "some_cursor"
+          )
+        )
+      )
+
+      when(trackRepresentationsService.tracks(session, List(trackRequest), access))
+        .thenReturn(Future.value(List(createTrackRepresentation)))
+      when(likesTwinagleClient.getLikesByUserChrono(likesRequest))
+        .thenReturn(Future.value(likesPage))
+      when(v2LikesTwinagleClient.getLikesByUserChrono(v2LikesRequest))
+        .thenReturn(Future.value(v2LikesPage))
+
+      tracksCollection match {
+        case rep => rep must beAnInstanceOf[Collection[TrackRepresentation]]
+      }
+      tracksCollection.nextHref === Some(pagination.nextPage("some_cursor").normalizedHref)
+
+      there was one(likesTwinagleClient).getLikesByUserChrono(likesRequest)
+      there was one(v2LikesTwinagleClient).getLikesByUserChrono(v2LikesRequest)
+      there was one(likesComparisonUtil).compareAndReport(
+        "getLikesByUserChrono",
+        requestingUserUrn.toString,
+        Seq(
+          LikeItem("user-track-likes", "soundcloud:users:112", "soundcloud:tracks:987", "2025-08-26T10:15:30Z")
+        ),
+        Seq(
+          LikeItem("user-track-likes", "soundcloud:users:112", "soundcloud:tracks:987", "2025-08-26T10:15:30Z")
+        )
+      )
+      val likeItems = likesPage.items.map { item =>
+        LikeItem(item.`type`, item.userUrn, item.targetUrn, item.timestamp)
+      }
+      val v2likeItems = v2LikesPage.items.map { item =>
+        LikeItem(
+          item.`type`,
+          item.userUrn,
+          item.targetUrn,
+          Instant.ofEpochSecond(item.timestamp.map(_.seconds).getOrElse(0)).toString
+        )
+      }
+
+      likeItems === v2likeItems
+    }
+
+    "do not use likesV2Client when rollout is inactive" in new LikesByUserContext with RolloutDisabledContext {
+      val likesRequest = buildLikesRequest(Seq(likesCollection.TRACKS))
+      val likesPage = GetLikesByUserChronoResponse(
+        items = Seq(
+          GetLikesChronoResponseItem(
+            createdAtUTC,
+            "user-track-likes",
+            requestingUserUrn.toString,
+            trackUrn.toString,
+            "some_cursor"
+          )
+        )
+      )
+
+      when(trackRepresentationsService.tracks(session, List(trackRequest), access))
+        .thenReturn(Future.value(List(createTrackRepresentation)))
+      when(likesTwinagleClient.getLikesByUserChrono(likesRequest))
+        .thenReturn(Future.value(likesPage))
+
+      tracksCollection match {
+        case rep => rep must beAnInstanceOf[Collection[TrackRepresentation]]
+      }
+      tracksCollection.nextHref === Some(pagination.nextPage("some_cursor").normalizedHref)
+
+      there was one(likesTwinagleClient).getLikesByUserChrono(likesRequest)
+      there was no(v2LikesTwinagleClient).getLikesByUserChrono(any)
+    }
+
+    "returns result from likes even when V2 errors" in new LikesByUserContext with RolloutEnabledContext {
+      val likesRequest = buildLikesRequest(Seq(likesCollection.TRACKS))
+      val v2LikesRequest = buildV2LikesRequest(Seq(v2likesCollection.TRACKS))
+      val likesPage = GetLikesByUserChronoResponse(
+        items = Seq(
+          GetLikesChronoResponseItem(
+            createdAtUTC,
+            "user-track-likes",
+            requestingUserUrn.toString,
+            trackUrn.toString,
+            "some_cursor"
+          )
+        )
+      )
+
+      when(trackRepresentationsService.tracks(session, List(trackRequest), access))
+        .thenReturn(Future.value(List(createTrackRepresentation)))
+      when(likesTwinagleClient.getLikesByUserChrono(likesRequest))
+        .thenReturn(Future.value(likesPage))
+      when(v2LikesTwinagleClient.getLikesByUserChrono(v2LikesRequest))
+        .thenReturn(Future.exception(new RuntimeException("test exception")))
+
+      tracksCollection match {
+        case rep => rep must beAnInstanceOf[Collection[TrackRepresentation]]
+      }
+      tracksCollection.nextHref === Some(pagination.nextPage("some_cursor").normalizedHref)
+
+      there was one(likesTwinagleClient).getLikesByUserChrono(likesRequest)
+      there was one(v2LikesTwinagleClient).getLikesByUserChrono(v2LikesRequest)
+      there was one(likesComparisonUtil).compareAndReport(
+        "getLikesByUserChrono",
+        requestingUserUrn.toString,
+        Seq(
+          LikeItem("user-track-likes", "soundcloud:users:112", "soundcloud:tracks:987", "2025-08-26T10:15:30Z")
+        ),
+        Seq.empty
+      )
+    }
+
+    "when there is no next href" in new LikesByUserContext with RolloutDisabledContext {
+      val likesRequest = buildLikesRequest(Seq(likesCollection.TRACKS))
+      val likesPage = GetLikesByUserChronoResponse()
 
       when(trackRepresentationsService.tracks(session, List(), access))
         .thenReturn(Future.value(List()))
@@ -339,10 +522,10 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
 
   "#userPlaylistsLikes" >> {
     "when all data is available" in new LikesByUserContext {
-      val likesRequest = buildLikesRequest(Seq(likes.Collection.PLAYLISTS))
-      val likesPage = likes.GetLikesByUserChronoResponse(
+      val likesRequest = buildLikesRequest(Seq(likesCollection.PLAYLISTS))
+      val likesPage = GetLikesByUserChronoResponse(
         items = Seq(
-          likes.GetLikesChronoResponseItem(
+          GetLikesChronoResponseItem(
             createdAt.toString,
             "user-playlist-likes",
             requestingUserUrn.toString,
@@ -364,8 +547,8 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
     }
 
     "when there is no next href" in new LikesByUserContext {
-      val likesRequest = buildLikesRequest(Seq(likes.Collection.PLAYLISTS))
-      val likesPage = likes.GetLikesByUserChronoResponse()
+      val likesRequest = buildLikesRequest(Seq(likesCollection.PLAYLISTS))
+      val likesPage = GetLikesByUserChronoResponse()
 
       when(playlistsService.fetchPlaylistsMetadataOnly(session, List()))
         .thenReturn(Future.value(List()))

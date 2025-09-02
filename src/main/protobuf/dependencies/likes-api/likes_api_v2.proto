@@ -1,0 +1,90 @@
+// DO NOT EDIT
+// This file has been automatically downloaded via 'sc idl fetch' from an upstream dependency.
+
+syntax = "proto3";
+
+package proto.soundcloud.likes.api.v2;
+option go_package = "rpc/likesapi/v2";
+
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/timestamp.proto";
+
+service Likes {
+    // A [Chronological API](https://eng-doc.soundcloud.org/standards/chronological-apis)
+    // endpoint for listing a given user's likes of tracks.
+    rpc GetLikesByUserChrono (GetLikesByUserChronoRequest) returns (ChronoResponse);
+
+    // A [Chronological API](https://eng-doc.soundcloud.org/standards/chronological-apis)
+    // endpoint for listing the users that have liked the target (track)
+    rpc GetLikesByTargetChrono (GetLikesByTargetChronoRequest) returns (ChronoResponse) {}
+
+    // Returns the targets (only tracks for now) liked by the user from the ones sent in the request
+    // Replaces IsTargetLikedBatch from Voltron service.
+    rpc AreTargetsLikedByUser (AreTargetsLikedByUserRequest) returns (AreTargetsLikedByUserResponse) {}
+}
+
+// GetLikesByUserChronoRequest is a request definition to get likes by a user in chronological order.
+message GetLikesByUserChronoRequest {
+    string user_urn = 1;
+    ChronoParams chrono_params = 2;
+    repeated Collection collections = 3; // Set of distinct collections to be fetched
+}
+
+message GetLikesByTargetChronoRequest {
+    string target_urn = 1; // The URN of the target (e.g., a track urn)
+    ChronoParams chrono_params = 2;
+}
+
+// ChronoResponse is a response definition for the [Chronological APIs](https://eng-doc.soundcloud.org/standards/chronological-apis/).
+message ChronoResponse {
+    repeated Item items = 1;
+    Meta meta = 2;
+
+    // Item represents an item in the response of GetLikesByUserChrono.
+    message Item {
+        google.protobuf.Timestamp timestamp = 1;
+        string type = 2;
+        string user_urn = 3;
+        string target_urn = 4;
+        string cursor = 5;
+    }
+
+    // Meta contains metadata about the chronological query.
+    message Meta {
+        ChronoParams params = 1;
+        repeated string warnings = 2;
+        repeated string errors = 3;
+        bool valid_for_caching = 4;
+    }
+}
+
+// ChronoParams defines parameters for chronological queries.
+message ChronoParams {
+    Direction direction = 1;
+    google.protobuf.Int32Value limit = 2;
+    google.protobuf.StringValue cursor = 3;
+
+    // Direction defines the direction of the chronological query.
+    enum Direction {
+        MISSING = 0;
+        ASC = 1;
+        DESC = 2;
+    }
+}
+
+// Collection defines the types of collections that can be fetched in the likes API.
+enum Collection {
+    UNDEFINED = 0;
+    TRACKS = 1;
+}
+
+// AreTargetsLikedByUserRequest is a request definition for checking if multiple tracks are liked by a user.
+message AreTargetsLikedByUserRequest {
+    string user_urn = 1;
+    repeated string target_urns = 2;
+}
+
+// AreTargetsLikedByUserResponse is a response definition for showing which targets are liked by the user.
+message AreTargetsLikedByUserResponse {
+    repeated string liked_target_urns = 1;
+}

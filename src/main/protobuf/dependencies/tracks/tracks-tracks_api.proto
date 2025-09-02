@@ -314,6 +314,7 @@ message GetVisibleTracksRequest {
     google.protobuf.StringValue subscription_country_code = 4; // optional, will be fetched by this service is not present
     google.protobuf.FieldMask track_field_mask = 5; // required
     DeduplicatedTopTracksRequest deduplicated_top_tracks_request = 6; // optional, include if deduplication by play count is desired
+    optional TranscodingFilterStrategy transcoding_filter_strategy = 7; // optional, used by api-partners to filter legacy transcodings by client
 }
 
 message GetPlayableOrUpsellableTracks {
@@ -363,6 +364,11 @@ enum TrackFlag {
   UNKNOWN_FLAG = 0;
   GO_PLUS = 1;
   FPR = 2;
+}
+
+enum TranscodingFilterStrategy {
+  LEGACY = 0;
+  LEGACY_AND_NEW = 1;
 }
 
 message Track {
