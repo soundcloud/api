@@ -310,7 +310,9 @@ class SearchClientSpec extends Specification with Mockito {
         TwinagleException(ErrorCode.InvalidArgument, "some error")
       )
 
-      result must beLeft(HttpServiceError(HttpResponseFields(Status.BadRequest.code, Some("some error"))))
+      result must beLeft(
+        HttpServiceError(HttpResponseFields(Status.BadRequest.code, Some("some error [invalid_argument]")))
+      )
     }
 
     "should fail with InternalError when client returns an unhandled error" in new UsersContext {
@@ -318,7 +320,9 @@ class SearchClientSpec extends Specification with Mockito {
         TwinagleException(ErrorCode.Aborted, "some error")
       )
 
-      result must beLeft(HttpServiceError(HttpResponseFields(Status.InternalServerError.code, Some("some error"))))
+      result must beLeft(
+        HttpServiceError(HttpResponseFields(Status.InternalServerError.code, Some("some error [aborted]")))
+      )
     }
 
     "should filter users with ids" in new UsersContext {
