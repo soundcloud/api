@@ -16,7 +16,6 @@ type uploaderAPI interface {
 }
 
 type uploader struct {
-	mediaService     mediaServiceClientAPI
 	trackCoordinator trackCoordinatorClientAPI
 	s3Bucket         string
 	s3Uploader       s3manageriface.UploaderAPI
@@ -53,7 +52,7 @@ func (u uploader) uploadTrack(req *uploadTrackRequest) (*uploadTrackResponse, er
 		return nil, err
 	}
 
-	if err := u.mediaService.createTranscoding(uid, req.filename); err != nil {
+	if err := u.trackCoordinator.triggerTranscodings(uid, req.filename); err != nil {
 		return nil, err
 	}
 

@@ -16,6 +16,10 @@ type UploadPolicy struct {
 	Url string `json:"url"`
 }
 
+type TranscodingResponse struct {
+	Status string `json:"status"`
+}
+
 func main() {
 	var listenAddr = flag.String("listenAddr", ":9090", "Listen address")
 	flag.Parse()
@@ -44,6 +48,20 @@ func main() {
 		response := UploadPolicy{
 			Uid: uid,
 			Url: "ignored",
+		}
+
+		w.WriteHeader(http.StatusCreated)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}))
+
+	http.HandleFunc("/transcodings", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println(r)
+
+		response := TranscodingResponse{
+			Status: "ignored",
 		}
 
 		w.WriteHeader(http.StatusCreated)

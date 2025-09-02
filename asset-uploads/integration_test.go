@@ -26,15 +26,13 @@ func (f fakeS3Manager) Upload(i *s3manager.UploadInput, opts ...func(*s3manager.
 	return &s3manager.UploadOutput{}, nil
 }
 
-type fakeMediaServiceClient struct{}
+type alwaysSucceedTrackCoordinator struct{ uid string }
 
-func (f fakeMediaServiceClient) createTranscoding(string, string) error { return nil }
-
-type alwaysProvideUidTrackCoordinator struct{ uid string }
-
-func (a alwaysProvideUidTrackCoordinator) createUserPolicy(filename string, fileSize int64, session *EnrichedSessionResponse) (string, error) {
+func (a alwaysSucceedTrackCoordinator) createUserPolicy(filename string, fileSize int64, session *EnrichedSessionResponse) (string, error) {
 	return a.uid, nil
 }
+
+func (a alwaysSucceedTrackCoordinator) triggerTranscodings(string, string) error { return nil }
 
 type alwaysAllowedAuthenticator struct{}
 
@@ -57,8 +55,7 @@ func (g noFeaturesGatekeeper) GetFeatures(ctx context.Context, user string) (*[]
 
 func TestControllerServiceS3Integration(t *testing.T) {
 	uploader := &uploader{
-		mediaService:     &fakeMediaServiceClient{},
-		trackCoordinator: &alwaysProvideUidTrackCoordinator{uid: "testUid"},
+		trackCoordinator: &alwaysSucceedTrackCoordinator{uid: "testUid"},
 		s3Bucket:         "test-bucket",
 		s3Uploader:       &fakeS3Manager{},
 	}

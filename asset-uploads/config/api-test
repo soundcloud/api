@@ -3,7 +3,6 @@ source api-test-secrets
 PORT=80
 TELE_PORT=8080
 
-MEDIA_SERVICE_ADDRESS=media_service
 TRACK_COORDINATOR_ADDRESS="http://track_coordinator"
 AUTHENTICATOR_ADDRESS="http://authenticator"
 GATEKEEPER_ADDRESS="http://gatekeeper"

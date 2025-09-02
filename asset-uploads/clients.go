@@ -13,17 +13,9 @@ const (
 	clientSystemName = "api-public-assets"
 )
 
-type mediaServiceClientAPI interface {
-	createTranscoding(uid string, filename string) error
-}
-
-type mediaServiceClient struct {
-	client *http.Client
-	host   string
-}
-
 type trackCoordinatorClientAPI interface {
 	createUserPolicy(filename string, fileSize int64, session *EnrichedSessionResponse) (string, error)
+	triggerTranscodings(uid, filename string) error
 }
 
 type trackCoordinatorClient struct {
@@ -40,25 +32,9 @@ type policy struct {
 	Uid string `json:"uid"`
 }
 
-type transcodingRequest struct {
+type transcodingsRequest struct {
 	Uid      string `json:"uid"`
-	Key      string `json:"key"`
-	Priority string `json:"priority"`
 	Filename string `json:"filename"`
-}
-
-type transcodingResponse struct {
-	UID string `json:"uid"`
-}
-
-func transcodingRequestPayload(uid, filename string) ([]byte, error) {
-	payload := transcodingRequest{
-		Key:      uid,
-		Uid:      uid,
-		Priority: "manual",
-		Filename: filename,
-	}
-	return json.Marshal(payload)
 }
 
 func (t *trackCoordinatorClient) createUserPolicy(filename string, fileSize int64, session *EnrichedSessionResponse) (string, error) {
@@ -73,7 +49,7 @@ func (t *trackCoordinatorClient) createUserPolicy(filename string, fileSize int6
 		return "", err
 	}
 
-	t.setHeaders(req, session)
+	t.setUserPolicyHeaders(req, session)
 	resp, err := t.client.Do(req)
 	if err != nil {
 		return "", err
@@ -92,7 +68,7 @@ func (t *trackCoordinatorClient) createUserPolicy(filename string, fileSize int6
 	}
 }
 
-func (t *trackCoordinatorClient) setHeaders(r *http.Request, session *EnrichedSessionResponse) {
+func (t *trackCoordinatorClient) setUserPolicyHeaders(r *http.Request, session *EnrichedSessionResponse) {
 	if session == nil {
 		session = &EnrichedSessionResponse{}
 	}
@@ -116,10 +92,9 @@ func (t *trackCoordinatorClient) parseUid(body io.ReadCloser, userUrn string) (s
 	return policy.Uid, nil
 }
 
-func (u *mediaServiceClient) createTranscoding(uid, filename string) error {
-	url := fmt.Sprintf("http://%s/transcode", u.host)
-
-	bs, err := transcodingRequestPayload(uid, filename)
+func (t *trackCoordinatorClient) triggerTranscodings(uid, filename string) error {
+	url := fmt.Sprintf("%s/transcodings", t.host)
+	bs, err := json.Marshal(transcodingsRequest{Uid: uid, Filename: filename})
 	if err != nil {
 		return err
 	}
@@ -131,20 +106,16 @@ func (u *mediaServiceClient) createTranscoding(uid, filename string) error {
 	req.Header.Set("Content-Type", jsonContentType)
 	req.Header.Set("Sc-System", clientSystemName)
 
-	resp, err := u.client.Do(req)
+	resp, err := t.client.Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusAccepted {
-		return fmt.Errorf("failed to trigger transcoding for uid: %s, status %d", uid, resp.StatusCode)
-	}
-
-	res := &transcodingResponse{}
-
-	if err := json.NewDecoder(resp.Body).Decode(res); err != nil {
-		return err
+	if resp.StatusCode != http.StatusCreated {
+		var msg []byte
+		msg, _ = io.ReadAll(resp.Body)
+		return fmt.Errorf("failed to trigger transcoding for uid: %s; status: %d; resp: %s;", uid, resp.StatusCode, string(msg))
 	}
 
 	return nil

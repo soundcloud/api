@@ -36,7 +36,6 @@ func main() {
 		addr      = flag.String("addr", ":80", "Listen address")
 		adminAddr = flag.String("admin-addr", ":5000", "Listen address admin server")
 
-		mediaServiceAddr     = flag.String("media-service-addr", os.Getenv("MEDIA_SERVICE_ADDRESS"), "media service address")
 		trackCoordinatorAddr = flag.String("track-coordinator-addr", os.Getenv("TRACK_COORDINATOR_ADDRESS"), "track coordinator address")
 		authenticatorAddr    = flag.String("authenticator-addr", os.Getenv("AUTHENTICATOR_ADDRESS"), "authenticator address")
 		gatekeeperAddr       = flag.String("gatekeeper-addr", os.Getenv("GATEKEEPER_ADDRESS"), "gatekeeper address")
@@ -73,19 +72,6 @@ func main() {
 		),
 	)
 
-	mediacli := &http.Client{
-		Transport: instrumenthttp.Tripperware(
-			"MEDIA_SERVICE",
-			instrumenthttp.TripperwareOpts{},
-			dnssrv.DefaultTransport,
-		),
-	}
-
-	mediaService := &mediaServiceClient{
-		client: mediacli,
-		host:   *mediaServiceAddr,
-	}
-
 	trackCoordinatorClient := &trackCoordinatorClient{
 		client: &http.Client{
 			Transport: instrumenthttp.Tripperware(
@@ -104,7 +90,6 @@ func main() {
 		authenticatorClient: authenticator,
 		gatekeeperClient:    gatekeeper,
 		upload: &uploader{
-			mediaService:     mediaService,
 			trackCoordinator: trackCoordinatorClient,
 			s3Uploader:       s3manager.NewUploaderWithClient(s3),
 			s3Bucket:         *s3Bucket,

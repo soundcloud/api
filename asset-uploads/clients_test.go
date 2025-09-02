@@ -34,22 +34,6 @@ func (t *trackCoordinatorMock) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func TestTranscodingRequestPayload(t *testing.T) {
-	uid := "uvwxyz"
-	filename := "Так закалялась сталь.mp3"
-	want := fmt.Sprintf(`{"uid":"%s","key":"%s","priority":"manual","filename":"%s"}`, uid, uid, filename)
-
-	payload, err := transcodingRequestPayload(uid, filename)
-	if err != nil {
-		t.Fatalf("expected generating payload not to fail, got: %v", err)
-	}
-
-	got := string(payload)
-	if want != got {
-		t.Errorf("expected transcoding request payload:\n%v\n\ngot:\n%v", want, got)
-	}
-}
-
 func TestCreateUserPolicy_SuccessScenario(t *testing.T) {
 	stubResponse := `{"uid":"someUid","ignoredField":"ignoredValue"}`
 	m := &trackCoordinatorMock{responseCode: http.StatusCreated, responseBody: stubResponse}
@@ -139,5 +123,72 @@ func TestCreateUserPolicy_FailureScenarios(t *testing.T) {
 			t.Errorf("Unexpected error. Want: %s ; Got %s", tt.expectedError, err)
 		}
 	}
+}
 
+func TestTriggerTranscodings_SuccessScenario(t *testing.T) {
+	stubResponse := `{"ignoredField":"ignoredValue"}`
+	m := &trackCoordinatorMock{responseCode: http.StatusCreated, responseBody: stubResponse}
+	srv := httptest.NewServer(m)
+	client := trackCoordinatorClient{http.DefaultClient, srv.URL}
+
+	defer srv.Close()
+
+	err := client.triggerTranscodings("someUid", "test.mp3")
+	if err != nil {
+		t.Errorf("Unexpected error. Got %s", err)
+	}
+
+	if want, got := "/transcodings", m.path; want != got {
+		t.Errorf("wrong path used. Want: %s ; Got: %s", want, got)
+	}
+
+	expectedHeaders := map[string]string{"Content-Type": "application/json", "Sc-System": "api-public-assets"}
+
+	for k, v := range expectedHeaders {
+		if want, got := v, m.incomingHeaders.Get(k); want != got {
+			t.Errorf("Expected header not present/with wrong value. Want: %s-%s ; Got: %s-%s", k, want, k, got)
+		}
+	}
+
+	if want, got := `{"uid":"someUid","filename":"test.mp3"}`, m.incomingRequestBody.String(); want != got {
+		t.Errorf("error in request body. Want: %v ; Got: %v", want, got)
+	}
+}
+
+func TestTriggerTranscodings_FailureScenarios(t *testing.T) {
+	tests := [...]struct {
+		name          string
+		responseCode  int
+		responseBody  string
+		expectedError error
+	}{
+		0: {
+			name:          "for the case track-coordinator returns anything other than 201, produce an appropriate error where response body provided",
+			responseCode:  http.StatusInternalServerError,
+			responseBody:  `{"error": "something went wrong"}`,
+			expectedError: fmt.Errorf(`failed to trigger transcoding for uid: someUid; status: 500; resp: {"error": "something went wrong"};`),
+		},
+		1: {
+			name:          "for the case track-coordinator returns anything other than 201, produce an appropriate error where no response body provided",
+			responseCode:  http.StatusInternalServerError,
+			expectedError: fmt.Errorf(`failed to trigger transcoding for uid: someUid; status: 500; resp: ;`),
+		},
+	}
+
+	for _, tt := range tests {
+		m := &trackCoordinatorMock{responseCode: tt.responseCode, responseBody: tt.responseBody}
+		srv := httptest.NewServer(m)
+		client := trackCoordinatorClient{http.DefaultClient, srv.URL}
+
+		defer srv.Close()
+
+		err := client.triggerTranscodings("someUid", "test.mp3")
+		if err == nil {
+			t.Errorf("Missing error. Want: %s ", tt.expectedError)
+		}
+
+		if want, got := tt.expectedError.Error(), err.Error(); want != got {
+			t.Errorf("Unexpected error. Want: %s ; Got %s", tt.expectedError, err)
+		}
+	}
 }
