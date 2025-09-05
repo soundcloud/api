@@ -55,7 +55,7 @@ import proto.soundcloud.tracks.api.{
 import java.time.Instant
 
 class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
-  private def useLikesV2Rollout = RolloutFeature("use_likes_v2")
+  private def useLikesV2Rollout = RolloutFeature("shadow-likes-v2")
 
   trait Context extends TrackRepresentationsContext with BeforeAfter {
     val trackRepresentationsService = mock[TrackRepresentationsService]
@@ -336,17 +336,17 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
     lazy val playlistsCollection = Await.result(likesService.userPlaylistsLikes(session, requestingUserUrn, pagination))
   }
 
-  trait RolloutEnabledContext extends LikesByUserContext {
+  trait ShadowRolloutEnabledContext extends LikesByUserContext {
     rollout.isActive(useLikesV2Rollout) returns Future.value(true)
   }
 
-  trait RolloutDisabledContext extends LikesByUserContext {
+  trait ShadowRolloutDisabledContext extends LikesByUserContext {
     rollout.isActive(useLikesV2Rollout) returns Future.value(false)
   }
 
   "#userTracksLikes" >> {
     val createdAtUTC = "2025-08-26T10:15:30Z"
-    "when all data is available" in new LikesByUserContext with RolloutDisabledContext {
+    "when all data is available" in new LikesByUserContext with ShadowRolloutDisabledContext {
       val likesRequest = buildLikesRequest(Seq(likesCollection.TRACKS))
       val likesPage = GetLikesByUserChronoResponse(
         items = Seq(
@@ -371,7 +371,7 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
       tracksCollection.nextHref === Some(pagination.nextPage("some_cursor").normalizedHref)
     }
 
-    "use likesV2Client when rollout is active" in new LikesByUserContext with RolloutEnabledContext {
+    "use likesV2Client when rollout is active" in new LikesByUserContext with ShadowRolloutEnabledContext {
       val likesRequest = buildLikesRequest(Seq(likesCollection.TRACKS))
       val v2LikesRequest = buildV2LikesRequest(Seq(v2likesCollection.TRACKS))
 
@@ -412,7 +412,7 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
 
       there was one(likesTwinagleClient).getLikesByUserChrono(likesRequest)
       there was one(v2LikesTwinagleClient).getLikesByUserChrono(v2LikesRequest)
-      there was one(likesComparisonUtil).compareAndReport(
+      there was one(likesComparisonUtil).compareAndReportChrono(
         "getLikesByUserChrono",
         requestingUserUrn.toString,
         Seq(
@@ -437,7 +437,7 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
       likeItems === v2likeItems
     }
 
-    "do not use likesV2Client when rollout is inactive" in new LikesByUserContext with RolloutDisabledContext {
+    "do not use likesV2Client when rollout is inactive" in new LikesByUserContext with ShadowRolloutDisabledContext {
       val likesRequest = buildLikesRequest(Seq(likesCollection.TRACKS))
       val likesPage = GetLikesByUserChronoResponse(
         items = Seq(
@@ -465,7 +465,7 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
       there was no(v2LikesTwinagleClient).getLikesByUserChrono(any)
     }
 
-    "returns result from likes even when V2 errors" in new LikesByUserContext with RolloutEnabledContext {
+    "returns result from likes even when V2 errors" in new LikesByUserContext with ShadowRolloutEnabledContext {
       val likesRequest = buildLikesRequest(Seq(likesCollection.TRACKS))
       val v2LikesRequest = buildV2LikesRequest(Seq(v2likesCollection.TRACKS))
       val likesPage = GetLikesByUserChronoResponse(
@@ -494,7 +494,7 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
 
       there was one(likesTwinagleClient).getLikesByUserChrono(likesRequest)
       there was one(v2LikesTwinagleClient).getLikesByUserChrono(v2LikesRequest)
-      there was one(likesComparisonUtil).compareAndReport(
+      there was one(likesComparisonUtil).compareAndReportChrono(
         "getLikesByUserChrono",
         requestingUserUrn.toString,
         Seq(
@@ -504,7 +504,7 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
       )
     }
 
-    "when there is no next href" in new LikesByUserContext with RolloutDisabledContext {
+    "when there is no next href" in new LikesByUserContext with ShadowRolloutDisabledContext {
       val likesRequest = buildLikesRequest(Seq(likesCollection.TRACKS))
       val likesPage = GetLikesByUserChronoResponse()
 

@@ -41,10 +41,12 @@ import com.soundcloud.jvmkit.module.twirp.TwirpClient
 import com.soundcloud.jvmkit.module.twirp.filters.ClientTelemetry
 import com.soundcloud.jvmkit.module.util.ResourceName
 import com.soundcloud.jvmkit.module.util.config.{AppConfig, DataSensitivity}
+import com.twitter.finagle
+import com.twitter.finagle.http.{Request, Response}
 import proto.soundcloud.authenticator.access_grant_exchange.AccessGrantExchangeClientProtobuf
 import proto.soundcloud.comments.api.CommentsClientProtobuf
 import proto.soundcloud.follows.api.FollowsClientProtobuf
-import proto.soundcloud.likes.api.v2.{LikesClientProtobuf => LikesClientV2Protobuf, LikesService => v2LikesClient}
+import proto.soundcloud.likes.api.v2.{LikesClientProtobuf => LikesClientV2Protobuf}
 import proto.soundcloud.likes.{api => likes}
 import proto.soundcloud.playlists.api.{
   PlaylistsClientProtobuf,
@@ -160,6 +162,9 @@ class Clients(
     new likes.LikesClientProtobuf(_, _)
   )
 
+  val (likesV2HttpClient, likesV2Telemetry) = twirpAWSClient("LIKES_V2")
+  val v2LikesTwirpAWSClient = new LikesClientV2Protobuf(likesV2HttpClient, likesV2Telemetry)
+
   val likesPlaylistsTwirpClient = TwirpClient(
     ResourceName("playlists"),
     config,
@@ -199,7 +204,15 @@ class Clients(
       new VisibleTrackMapper
     )
 
-  val likedTracksService = new LikedTracksService(likesTwirpClient, exceptionCollector)
+  val likesComparisonUtil = new LikesComparisonUtil(telemetry, exceptionCollector)
+
+  val likedTracksService = new LikedTracksService(
+    likesTwirpClient,
+    v2LikesTwirpAWSClient,
+    exceptionCollector,
+    rolloutClient,
+    likesComparisonUtil
+  )
 
   val tracksService = new TrackRepresentationsService(
     trackVisibilityService,
@@ -227,7 +240,6 @@ class Clients(
       hocuspocusClient
     )
 
-  val likesComparisonUtil = new LikesComparisonUtil(telemetry, exceptionCollector)
   val likesService =
     new LikesService(
       tracksService,
@@ -311,13 +323,10 @@ class Clients(
     new TokenDispenserClient(client)
   }
 
-  private def v2LikesTwirpAWSClient: v2LikesClient = {
-    val endpointValue = config.get(s"LIKES_V2_HTTP_ENDPOINT", DataSensitivity.NON_SENSITIVE)
+  private def twirpAWSClient(name: String): (finagle.Service[Request, Response], ClientTelemetry) = {
+    val endpointValue = config.get(s"${name}_HTTP_ENDPOINT", DataSensitivity.NON_SENSITIVE)
     val httpEndpoint = HttpEndpoint(endpointValue, allowNonLocalEndpoint = true)
-    val clientConfig = HttpClientConfig(config.getApplicationName, ResourceName("LIKES_V2"), httpEndpoint)
-    new LikesClientV2Protobuf(
-      HttpClient[String](clientConfig, telemetry).httpService,
-      ClientTelemetry.from(clientConfig, telemetry)
-    )
+    val clientConfig = HttpClientConfig(config.getApplicationName, ResourceName(name), httpEndpoint)
+    (HttpClient[String](clientConfig, telemetry).httpService, ClientTelemetry.from(clientConfig, telemetry))
   }
 }

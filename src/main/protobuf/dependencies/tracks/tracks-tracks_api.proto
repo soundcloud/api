@@ -233,6 +233,7 @@ message GetOfflineSyncRequest {
 message GetMediaStreamResponse {
     string url = 1;
     string mime_type = 2;
+     map<string, string> license_urls = 3;
 }
 
 service Snippets {

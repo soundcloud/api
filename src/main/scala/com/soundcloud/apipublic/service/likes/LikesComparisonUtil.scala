@@ -19,7 +19,7 @@ class LikesComparisonUtil(telemetry: Telemetry, exceptionCollector: ExceptionCol
       "endpoint"
     )
 
-  def compareAndReport(
+  def compareAndReportChrono(
       endpoint: String,
       userUrn: String,
       likesItems: Seq[LikeItem],
@@ -35,6 +35,27 @@ class LikesComparisonUtil(telemetry: Telemetry, exceptionCollector: ExceptionCol
           s"user: $userUrn" +
           s"likes items: ${likesItems.mkString(", ")}, " +
           s"likes v2 items: ${likesV2Items.mkString(", ")}",
+        Info
+      )
+    }
+  }
+
+  def compareAndReportAreLiked(
+      endpoint: String,
+      userUrn: String,
+      likes: Seq[String],
+      likesV2: Seq[String]
+  ) = {
+    if (likes == likesV2) {
+      equalResponsesCounter.labels(endpoint).inc()
+    } else {
+      differentResponsesCounter.labels(endpoint).inc()
+      exceptionCollector.addMessage(
+        "different_likes_response",
+        s"Different likes response for endpoint: $endpoint: " +
+          s"user: $userUrn" +
+          s"likes map: ${likes.mkString(", ")}, " +
+          s"likes v2 map: ${likesV2.mkString(", ")}",
         Info
       )
     }

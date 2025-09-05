@@ -70,7 +70,7 @@ class LikesService(
     rollout: Rollout,
     likesComparisonUtil: LikesComparisonUtil
 ) {
-  private def useLikesV2RolloutFlag = RolloutFeature("use_likes_v2")
+  private def useLikesV2RolloutFlag = RolloutFeature("shadow-likes-v2")
 
   def createTrackLike(
       session: UserSession,
@@ -258,7 +258,7 @@ class LikesService(
               v2ChronoResponse()
           }
       )
-      _ = likesComparisonUtil.compareAndReport(
+      _ = likesComparisonUtil.compareAndReportChrono(
         "getLikesByUserChrono",
         request.userUrn,
         likeItemsFromLikes(likes),
