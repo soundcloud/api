@@ -41,6 +41,8 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     val httpMp3 = "http://mp3-progressive"
     val hlsMp3 = "http://mp3-hls"
     val hlsOpus = "http://opus-hls"
+    val aac160k = "http://aac-160k"
+    val aac96k = "http://aac-96k"
     val httpPreviewMp3 = "http://mp3-progressive-preview"
 
     def call(method: Method, path: String) = method match {
@@ -98,7 +100,14 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
       case (method, path) =>
         s"${method.toString} $path" in new MediaServiceContext {
           streamService.fetchUrls(session, trackUrn, None) returns Future.value(
-            MediaStreamUrls(httpMp3, hlsMp3, Some(hlsOpus), Some(httpPreviewMp3)).good
+            MediaStreamUrls(
+              Some(httpMp3),
+              Some(hlsMp3),
+              Some(aac96k),
+              Some(aac160k),
+              Some(hlsOpus),
+              Some(httpPreviewMp3)
+            ).good
           )
 
           val response = call(method, path)
@@ -107,6 +116,8 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
           if (method == Method.Get) {
             Json.parse(response.getContentString) ==== Json.obj(
               "http_mp3_128_url" -> httpMp3,
+              "hls_aac_160_url" -> aac160k,
+              "hls_aac_96k_url" -> aac96k,
               "hls_mp3_128_url" -> hlsMp3,
               "hls_opus_64_url" -> hlsOpus,
               "preview_mp3_128_url" -> httpPreviewMp3
@@ -117,7 +128,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
 
     "records access and with logging disabled" in new MediaServiceContext {
       streamService.fetchUrls(session, trackUrn, None) returns Future.value(
-        MediaStreamUrls(httpMp3, hlsMp3, Some(hlsOpus), Some(httpPreviewMp3)).good
+        MediaStreamUrls(Some(httpMp3), Some(hlsMp3), Some(aac96k), Some(aac160k), Some(hlsOpus), Some(httpPreviewMp3)).good
       )
 
       get("/tracks/soundcloud:tracks:5/streams")
