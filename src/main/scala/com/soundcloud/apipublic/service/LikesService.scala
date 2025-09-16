@@ -261,6 +261,7 @@ class LikesService(
       _ = likesComparisonUtil.compareAndReportChrono(
         "getLikesByUserChrono",
         request.userUrn,
+        request.chronoParams,
         likeItemsFromLikes(likes),
         likeItemsFromLikesV2(v2Likes)
       )

@@ -415,6 +415,7 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
       there was one(likesComparisonUtil).compareAndReportChrono(
         "getLikesByUserChrono",
         requestingUserUrn.toString,
+        likesRequest.chronoParams,
         Seq(
           LikeItem("user-track-likes", "soundcloud:users:112", "soundcloud:tracks:987", "2025-08-26T10:15:30Z")
         ),
@@ -497,6 +498,7 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
       there was one(likesComparisonUtil).compareAndReportChrono(
         "getLikesByUserChrono",
         requestingUserUrn.toString,
+        likesRequest.chronoParams,
         Seq(
           LikeItem("user-track-likes", "soundcloud:users:112", "soundcloud:tracks:987", "2025-08-26T10:15:30Z")
         ),

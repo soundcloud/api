@@ -3,6 +3,7 @@ package com.soundcloud.apipublic.service.likes
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.periskop.client.Severity.Info
+import proto.soundcloud.likes.api.ChronoParams
 
 class LikesComparisonUtil(telemetry: Telemetry, exceptionCollector: ExceptionCollector) {
   private val differentResponsesCounter =
@@ -22,6 +23,7 @@ class LikesComparisonUtil(telemetry: Telemetry, exceptionCollector: ExceptionCol
   def compareAndReportChrono(
       endpoint: String,
       userUrn: String,
+      chronoParams: Option[ChronoParams],
       likesItems: Seq[LikeItem],
       likesV2Items: Seq[LikeItem]
   ) = {
@@ -29,12 +31,17 @@ class LikesComparisonUtil(telemetry: Telemetry, exceptionCollector: ExceptionCol
       equalResponsesCounter.labels(endpoint).inc()
     } else {
       differentResponsesCounter.labels(endpoint).inc()
+
+      val chronoSummary = chronoParams.map(p => s"cursor: ${p.cursor}, limit ${p.limit}").getOrElse("none")
       exceptionCollector.addMessage(
-        "different_likes_response",
+        "different_likes_response_from_user_chrono",
         s"Different likes response for endpoint: $endpoint: " +
-          s"user: $userUrn" +
-          s"likes items: ${likesItems.mkString(", ")}, " +
-          s"likes v2 items: ${likesV2Items.mkString(", ")}",
+          s" user: $userUrn," +
+          s" chrono_params: $chronoSummary," +
+          s" likes_items_count: ${likesItems.size}," +
+          s" likes_v2_items_count: ${likesV2Items.size}," +
+          s" likes_items: ${likesItems.map(_.trackUrn).mkString(",")}," +
+          s" likes_v2_items: ${likesV2Items.map(_.trackUrn).mkString(",")}",
         Info
       )
     }
@@ -51,11 +58,13 @@ class LikesComparisonUtil(telemetry: Telemetry, exceptionCollector: ExceptionCol
     } else {
       differentResponsesCounter.labels(endpoint).inc()
       exceptionCollector.addMessage(
-        "different_likes_response",
+        "different_likes_response_from_is_target_liked",
         s"Different likes response for endpoint: $endpoint: " +
           s"user: $userUrn" +
-          s"likes map: ${likes.mkString(", ")}, " +
-          s"likes v2 map: ${likesV2.mkString(", ")}",
+          s" likes_items_count: ${likes.size}," +
+          s" likes_v2_items_count: ${likesV2.size}," +
+          s" likes_items: ${likes.mkString(",")}," +
+          s" likes_v2_items: ${likesV2.mkString(",")}",
         Info
       )
     }
