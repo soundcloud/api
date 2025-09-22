@@ -26,7 +26,7 @@ class LikedTracksService(
     batchSize: Int = 50
 ) {
   private def useLikesV2RolloutFlag = RolloutFeature("shadow-likes-v2")
-  private val v2BatchSize = 5000
+  private val v2BatchSize = 100
 
   def getLikedTracks(session: UserSession, trackUrns: Seq[Urn]): Future[Map[Urn, Boolean]] = {
     session.user match {
