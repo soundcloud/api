@@ -80,7 +80,6 @@ spec:
     - Component:hocuspocus
     - Component:likes
     - Component:likes-api
-    - Component:media-service
     - Component:moshimoshi
     - Component:okidoki
     - Component:playlists
