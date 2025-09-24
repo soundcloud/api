@@ -25,7 +25,7 @@ class LikedTracksServiceSpec extends UnitSpecification {
     val likesComparisonUtil = mock[LikesComparisonUtil]
 
     val service =
-      new LikedTracksService(likesService, v2likesService, exceptionCollector, rollout, likesComparisonUtil, 2)
+      new LikedTracksService(likesService, v2likesService, exceptionCollector, rollout, likesComparisonUtil, 2, 2)
 
     val trackUrn1 = Urn("soundcloud", "tracks", "1")
     val trackUrn2 = Urn("soundcloud", "tracks", "2")
@@ -89,14 +89,15 @@ class LikedTracksServiceSpec extends UnitSpecification {
     "use likesV2Client when rollout is active" in new Context with ShadowRolloutV2EnabledContext {
       mockLikes(Seq(trackUrn1.toString, trackUrn2.toString), Seq(trackUrn1.toString))
       mockLikes(Seq(trackUrn3.toString), Seq.empty)
-      mockLikesV2(Seq(trackUrn1.toString, trackUrn2.toString, trackUrn3.toString), Seq(trackUrn1.toString))
+      mockLikesV2(Seq(trackUrn1.toString, trackUrn2.toString), Seq(trackUrn1.toString))
+      mockLikesV2(Seq(trackUrn3.toString), Seq.empty)
 
       result ==== Map(trackUrn1 -> true, trackUrn2 -> false, trackUrn3 -> false)
 
       there was one(v2likesService).areTargetsLikedByUser(
         AreTargetsLikedByUserRequest(
           userUrn.toString,
-          Seq(trackUrn1.toString, trackUrn2.toString, trackUrn3.toString)
+          Seq(trackUrn1.toString, trackUrn2.toString)
         )
       )
 
@@ -120,7 +121,7 @@ class LikedTracksServiceSpec extends UnitSpecification {
       there was one(v2likesService).areTargetsLikedByUser(
         AreTargetsLikedByUserRequest(
           userUrn.toString,
-          Seq(trackUrn1.toString, trackUrn2.toString, trackUrn3.toString)
+          Seq(trackUrn1.toString, trackUrn2.toString)
         )
       )
 

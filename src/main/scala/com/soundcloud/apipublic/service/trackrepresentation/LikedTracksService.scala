@@ -23,10 +23,10 @@ class LikedTracksService(
     exceptionCollector: ExceptionCollector,
     rollout: Rollout,
     likesComparisonUtil: LikesComparisonUtil,
-    batchSize: Int = 50
+    batchSize: Int = 50,
+    v2BatchSize: Int = 100
 ) {
   private def useLikesV2RolloutFlag = RolloutFeature("shadow-likes-v2")
-  private val v2BatchSize = 100
 
   def getLikedTracks(session: UserSession, trackUrns: Seq[Urn]): Future[Map[Urn, Boolean]] = {
     session.user match {
@@ -92,7 +92,7 @@ class LikedTracksService(
   private def getV2LikedTracksInBatches(user: Urn, trackUrns: Seq[Urn]): Future[Map[Urn, Boolean]] = {
     inBatches(trackUrns.toSet, v2BatchSize) { tracks =>
       v2LikesService
-        .areTargetsLikedByUser(AreTargetsLikedByUserRequest(user.toString, trackUrns.map(_.toString)))
+        .areTargetsLikedByUser(AreTargetsLikedByUserRequest(user.toString, tracks.map(_.toString).toSeq))
         .handle {
           case NonFatal(_) =>
             exceptionCollector
