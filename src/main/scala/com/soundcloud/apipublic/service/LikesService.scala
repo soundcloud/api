@@ -1,5 +1,6 @@
 package com.soundcloud.apipublic.service
 
+import com.google.protobuf.timestamp.Timestamp
 import com.soundcloud.apipublic.client.tracks.TrackRequest
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
 import com.soundcloud.apipublic.service.likes.{LikeItem, LikesComparisonUtil}
@@ -28,19 +29,19 @@ import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
 import com.twitter.finagle.http.Status
 import com.twitter.util.Future
 import proto.soundcloud.likes.api.{
-  LikesClientProtobuf => LikesClient,
+  ChronoDirection,
+  ChronoParams,
   GetLikesByUserChronoRequest,
   GetLikesByUserChronoResponse,
-  ChronoParams,
-  ChronoDirection,
-  Collection => likesCollection
+  Collection => likesCollection,
+  LikesClientProtobuf => LikesClient
 }
 import proto.soundcloud.likes.api.v2.{
-  LikesService => v2LikesClient,
   ChronoParams => v2ChronoParams,
   ChronoResponse => v2ChronoResponse,
   Collection => v2likesCollection,
-  GetLikesByUserChronoRequest => v2GetLikesByUserChronoRequest
+  GetLikesByUserChronoRequest => v2GetLikesByUserChronoRequest,
+  LikesService => v2LikesClient
 }
 import proto.soundcloud.playlists.api.{LikePlaylistRequest, LikesClientProtobuf => PlaylistLikesClientProtobuf}
 import proto.soundcloud.tracks.api.{
@@ -50,7 +51,8 @@ import proto.soundcloud.tracks.api.{
   LikesClientProtobuf => TrackLikesClientProtobuf
 }
 
-import java.time.Instant
+import java.time.format.DateTimeFormatter
+import java.time.{Instant, ZoneOffset}
 import scala.util.control.NonFatal
 
 case class CreateLikeResponse()
@@ -280,8 +282,18 @@ class LikesService(
         item.`type`,
         item.userUrn,
         item.targetUrn,
-        Instant.ofEpochSecond(item.timestamp.map(_.seconds).getOrElse(0)).toString
+        getTimestampWithMilliseconds(item.timestamp)
       )
     }
+  }
+
+  private def getTimestampWithMilliseconds(timestamp: Option[Timestamp]): String = {
+    val formatter: DateTimeFormatter = DateTimeFormatter
+      .ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+      .withZone(ZoneOffset.UTC)
+
+    formatter.format(
+      Instant.ofEpochSecond(timestamp.map(_.seconds).getOrElse(0), timestamp.map(_.nanos).get)
+    )
   }
 }

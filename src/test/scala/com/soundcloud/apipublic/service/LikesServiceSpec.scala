@@ -52,7 +52,8 @@ import proto.soundcloud.tracks.api.{
   LikesClientProtobuf => TrackLikesClientProtobuf
 }
 
-import java.time.Instant
+import java.time.{Instant, ZoneOffset}
+import java.time.format.DateTimeFormatter
 
 class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
   private def useLikesV2Rollout = RolloutFeature("shadow-likes-v2")
@@ -345,7 +346,11 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
   }
 
   "#userTracksLikes" >> {
-    val createdAtUTC = "2025-08-26T10:15:30Z"
+    val createdAtUTC = "2025-08-26T10:15:30.000Z"
+    val formatter: DateTimeFormatter = DateTimeFormatter
+      .ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+      .withZone(ZoneOffset.UTC)
+
     "when all data is available" in new LikesByUserContext with ShadowRolloutDisabledContext {
       val likesRequest = buildLikesRequest(Seq(likesCollection.TRACKS))
       val likesPage = GetLikesByUserChronoResponse(
@@ -417,10 +422,10 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
         requestingUserUrn.toString,
         likesRequest.chronoParams,
         Seq(
-          LikeItem("user-track-likes", "soundcloud:users:112", "soundcloud:tracks:987", "2025-08-26T10:15:30Z")
+          LikeItem("user-track-likes", "soundcloud:users:112", "soundcloud:tracks:987", createdAtUTC)
         ),
         Seq(
-          LikeItem("user-track-likes", "soundcloud:users:112", "soundcloud:tracks:987", "2025-08-26T10:15:30Z")
+          LikeItem("user-track-likes", "soundcloud:users:112", "soundcloud:tracks:987", createdAtUTC)
         )
       )
       val likeItems = likesPage.items.map { item =>
@@ -431,7 +436,9 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
           item.`type`,
           item.userUrn,
           item.targetUrn,
-          Instant.ofEpochSecond(item.timestamp.map(_.seconds).getOrElse(0)).toString
+          formatter.format(
+            Instant.ofEpochSecond(item.timestamp.map(_.seconds).getOrElse(0), item.timestamp.map(_.nanos).get)
+          )
         )
       }
 
@@ -500,7 +507,7 @@ class LikesServiceSpec extends TrackRepresentationsSpecificationContext {
         requestingUserUrn.toString,
         likesRequest.chronoParams,
         Seq(
-          LikeItem("user-track-likes", "soundcloud:users:112", "soundcloud:tracks:987", "2025-08-26T10:15:30Z")
+          LikeItem("user-track-likes", "soundcloud:users:112", "soundcloud:tracks:987", createdAtUTC)
         ),
         Seq.empty
       )

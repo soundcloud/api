@@ -40,8 +40,8 @@ class LikesComparisonUtil(telemetry: Telemetry, exceptionCollector: ExceptionCol
           s" chrono_params: $chronoSummary," +
           s" likes_items_count: ${likesItems.size}," +
           s" likes_v2_items_count: ${likesV2Items.size}," +
-          s" likes_items: ${likesItems.map(_.trackUrn).mkString(",")}," +
-          s" likes_v2_items: ${likesV2Items.map(_.trackUrn).mkString(",")}",
+          s" likes_items: ${likesItems.mkString(",")}," +
+          s" likes_v2_items: ${likesV2Items.mkString(",")}",
         Info
       )
     }
