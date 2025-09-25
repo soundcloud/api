@@ -1682,49 +1682,6 @@
    fill: #222222;
  }
 
-/* Cookie banner code copied from developer portal */
-.announcements {
-  font: 12px/1.4 "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Garuda, Verdana, Tahoma, sans-serif;
-  width: 100%;
-  position: fixed;
-  bottom: 0;
-  z-index: 3001;
-  color: #999;
-}
-
-.announcement {
-  padding: 15px 30px;
-  background-color: rgba(0, 0, 0, 0.9);
-  position: relative;
-}
-
-.announcement__dismiss {
-  position: absolute;
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-  right: 30px;
-  top: 50%;
-  margin-top: -9px;
-  background: url(./close-announcement.png) no-repeat 50% 50%;
-  background-size: 18px 18px;
-}
-
-.announcement > .announcement__message > a {
-  color: #ccc;
-  text-decoration: underline;
-}
-
-@media (max-width: 1079px) {
-  .announcement {
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-  .announcement__dismiss {
-    right: 20px;
-  }
-}
-
-.m-hidden {
-  display: none;
-}
+ .swagger-ui #cookie-manager {
+   text-decoration: none;
+ }

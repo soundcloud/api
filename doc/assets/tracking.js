@@ -1,4 +1,18 @@
-const BANNER_NAME = 'banner-2018-05-15';
+function addConsentScripts() {
+  const preloadScript = document.createElement('script');
+  preloadScript.src = 'https://consent.sndcdn.com/v1/preload.js';
+  
+  const consentScript = document.createElement('script');
+  consentScript.src = 'https://consent.sndcdn.com/v1/consent.js';
+
+  consentScript.onload = function() {
+    addClickHandlerToCookieManagerLink();
+    initAnalyticsIfConsented(); 
+  };
+  
+  document.head.appendChild(preloadScript);
+  document.head.appendChild(consentScript);
+}
 
 function initAnalytics() {
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
@@ -10,49 +24,38 @@ function initAnalytics() {
   ga('send', 'pageview');
 }
 
-/* Cookie banner code copied from developer portal */
-function localStorageSupported() {
-  return (window.localStorage && typeof window.localStorage.getItem === 'function');
-}
+const CookieCategory = {
+  StrictlyNecessary: 'C0001',
+  Performance: 'C0002',
+  Functional: 'C0003',
+  Targeting: 'C0004',
+  SocialMedia: 'C0005',
+  Communications: 'C0007',
+};
 
-function hasDismissedBanner() {
-  return (localStorageSupported() && window.localStorage.getItem(BANNER_NAME)) ||
-    (new RegExp(BANNER_NAME + '=1').test(document.cookie))
-}
-
-function storeDismiss() {
-  if (localStorageSupported()) {
-    window.localStorage.setItem(BANNER_NAME, '1');
-  } else {
-    document.cookie = BANNER_NAME + '=1; path=/';
+function initAnalyticsIfConsented() {
+  if (window.location.host === 'developers.soundcloud.com') {
+    Promise.all([
+      window.SCConsent.waitForCategory(CookieCategory.Performance), 
+      window.SCConsent.waitForCategory(CookieCategory.Targeting)  
+    ]).then(() => {
+      initAnalytics();
+    });
   }
 }
 
-function dismissBanner(e) {
-  e.preventDefault();
-  document.getElementById('cookieBanner').classList.add('m-hidden')
-  storeDismiss();
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', addConsentScripts);
+} else {
+  addConsentScripts();
 }
 
-function addCookieBanner() {
-  if (hasDismissedBanner()) { return }
-
-  const cookieBanner = `
-    <div id="cookieBanner" class="announcements">
-      <div class="announcement">
-        <a href="" class="announcement__dismiss" aria-role="button" title="Dismiss"></a>
-        <span class="announcement__message">We use cookies for various purposes including analytics and personalized marketing. By continuing to use the service, you agree to our use of cookies as described in the <a href="https://soundcloud.com/pages/cookies/05-2018" target="_blank">Cookie Policy</a>.</span>
-      </div>
-    </div>`
-
-  document.body.insertAdjacentHTML('beforeend', cookieBanner)
-
-  const dismiss = document.getElementsByClassName('announcement__dismiss')[0]
-  dismiss.addEventListener("click", dismissBanner)
+function addClickHandlerToCookieManagerLink() {
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest('#cookie-manager');
+    if (link && window?.SCConsent?.showConsentDialog) {
+      e.preventDefault();
+      window.SCConsent.showConsentDialog();
+    }
+  });
 }
-
-if (window.location.host === 'developers.soundcloud.com') {
-  initAnalytics()
-  document.addEventListener("DOMContentLoaded", addCookieBanner)
-}
-
