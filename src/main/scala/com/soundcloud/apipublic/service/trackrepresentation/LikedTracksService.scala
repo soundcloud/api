@@ -51,6 +51,7 @@ class LikedTracksService(
       _ = likesComparisonUtil.compareAndReportAreLiked(
         "areTargetsLikedByUser",
         user.toString,
+        trackUrns,
         likeItemsFromLikes(likes),
         likeItemsFromLikes(v2Likes)
       )

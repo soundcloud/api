@@ -104,6 +104,7 @@ class LikedTracksServiceSpec extends UnitSpecification {
       there was one(likesComparisonUtil).compareAndReportAreLiked(
         "areTargetsLikedByUser",
         userUrn.toString,
+        Seq(trackUrn1, trackUrn2, trackUrn3),
         Seq(trackUrn1.toString),
         Seq(trackUrn1.toString)
       )
@@ -128,6 +129,7 @@ class LikedTracksServiceSpec extends UnitSpecification {
       there was one(likesComparisonUtil).compareAndReportAreLiked(
         "areTargetsLikedByUser",
         userUrn.toString,
+        Seq(trackUrn1, trackUrn2, trackUrn3),
         Seq(trackUrn1.toString),
         Seq.empty
       )

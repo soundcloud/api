@@ -2,6 +2,7 @@ package com.soundcloud.apipublic.service.likes
 
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
+import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.periskop.client.Severity.Info
 import proto.soundcloud.likes.api.ChronoParams
 
@@ -50,6 +51,7 @@ class LikesComparisonUtil(telemetry: Telemetry, exceptionCollector: ExceptionCol
   def compareAndReportAreLiked(
       endpoint: String,
       userUrn: String,
+      trackUrns: Seq[Urn],
       likes: Seq[String],
       likesV2: Seq[String]
   ) = {
@@ -62,6 +64,7 @@ class LikesComparisonUtil(telemetry: Telemetry, exceptionCollector: ExceptionCol
         s"Different likes response for endpoint: $endpoint: " +
           s"user: $userUrn" +
           s" likes_items_count: ${likes.size}," +
+          s" trackUrns parameters: ${trackUrns.mkString("\",\"")} " +
           s" likes_v2_items_count: ${likesV2.size}," +
           s" likes_items: ${likes.mkString(",")}," +
           s" likes_v2_items: ${likesV2.mkString(",")}",
