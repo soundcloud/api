@@ -6,10 +6,6 @@ items:
     created_at:
       description: Timestamp of when the link was added to the profile.
       type: string
-    id:
-      description: Id
-      deprecated: true
-      type: integer
     urn:
       description: Id
       type: string

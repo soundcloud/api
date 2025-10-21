@@ -4,10 +4,6 @@ properties:
   title:
     description: Playlist title.
     type: string
-  id:
-    description: Playlist identifier.
-    deprecated: true
-    type: integer
   urn:
     description: Playlist identifier.
     type: string
@@ -102,10 +98,6 @@ properties:
     type: string
   user:
     $ref: "#/components/schemas/User"
-  user_id:
-    description: User identifier.
-    deprecated: true
-    type: integer
   user_urn:
     description: User identifier.
     type: string

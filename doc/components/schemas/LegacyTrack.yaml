@@ -41,10 +41,6 @@ properties:
   genre:
     description: Genre
     type: string
-  id:
-    description: Track identifier.
-    deprecated: true
-    type: integer
   urn:
     description: Track identifier.
     type: string

@@ -7,7 +7,6 @@ value:
   ean:
   embeddable_by: all
   genre: ''
-  id: 12345
   urn: soundcloud:playlists:12345
   kind: playlist
   label:

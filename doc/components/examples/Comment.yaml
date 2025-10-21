@@ -1,15 +1,12 @@
 value:
   body: comment body
   created_at: 2007/09/11 15:40:24 +0000
-  id: 1234
   urn: soundcloud:comments:1234
   kind: comment
   timestamp: 4960
-  track_id: 123456
   track_urn: soundcloud:tracks:123456
   uri: https://api.soundcloud.com/comments/1234
   user:
-    id: 12345
     urn: souncloud:users:12345
     kind: user
     permalink: permalink
@@ -22,5 +19,4 @@ value:
     followings_count: 172
     public_favorites_count: 5
     reposts_count: 0
-  user_id: 12345
   user_urn: soundcloud:users:12345

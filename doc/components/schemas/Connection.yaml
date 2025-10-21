@@ -6,10 +6,6 @@ properties:
   display_name:
     type: string
     description: Full Name.
-  id:
-    type: integer
-    deprecated: true
-    description: Unique identifier
   urn:
     type: string
     description: Unique identifier

@@ -35,10 +35,6 @@ properties:
   full_name:
     description: first and last name.
     type: string
-  id:
-    description: unique identifier
-    deprecated: true
-    type: integer
   urn:
     description: unique identifier
     type: string
@@ -61,10 +57,6 @@ properties:
   online:
     description: online.
     type: boolean
-  myspace_name:
-    description: myspace name
-    type: string
-    deprecated: true
   permalink:
     description: permalink of the resource.
     type: string

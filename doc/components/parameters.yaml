@@ -220,14 +220,6 @@ show_tracks:
   description: A boolean flag to request a playlist with or without tracks. Default is `true`.
   example: true
 # path #
-comment_id:
-  in: path
-  name: comment_id
-  deprecated: true
-  schema:
-    type: integer
-  description: SoundCloud comment id
-  example: 123456
 comment_urn:
   in: path
   name: comment_urn
@@ -236,14 +228,6 @@ comment_urn:
     type: string
   description: SoundCloud comment urn
   example: soundcloud:comments:123456
-follower_id:
-  in: path
-  name: follower_id
-  deprecated: true
-  schema:
-    type: integer
-  description: SoundCloud User id to denote a Follower
-  example: 743372812
 follower_urn:
   in: path
   name: follower_urn
@@ -252,14 +236,6 @@ follower_urn:
     type: string
   description: SoundCloud User id to denote a Follower
   example: soundcloud:users:743372812
-following_id:
-  in: path
-  name: following_id
-  deprecated: true
-  schema:
-    type: integer
-  description: SoundCloud User id to denote a Following of a user
-  example: 25219981
 following_urn:
   in: path
   name: following_urn
@@ -268,14 +244,6 @@ following_urn:
     type: string
   description: SoundCloud User id to denote a Following of a user
   example: soundcloud:users:25219981
-playlist_id:
-  in: path
-  name: playlist_id
-  deprecated: true
-  schema:
-    type: integer
-  description: SoundCloud playlist id
-  example: 1212781357
 playlist_urn:
   in: path
   name: playlist_urn
@@ -284,14 +252,6 @@ playlist_urn:
     type: string
   description: SoundCloud playlist id
   example: soundcloud:playlists:1212781357
-fake_playlist_id:
-  in: path
-  name: playlist_id
-  deprecated: true
-  schema:
-    type: integer
-  description: SoundCloud playlist id
-  example: 10
 fake_playlist_urn:
   in: path
   name: playlist_urn
@@ -300,14 +260,6 @@ fake_playlist_urn:
     type: string
   description: SoundCloud playlist id
   example: soundcloud:playlists:10
-repost_playlist_id:
-  in: path
-  name: playlist_id
-  deprecated: true
-  schema:
-    type: integer
-  description: SoundCloud playlist id
-  example: 1205584273
 repost_playlist_urn:
   in: path
   name: playlist_urn
@@ -324,14 +276,6 @@ tag:
     type: string
   description: tag
   example: some tag
-track_id:
-  in: path
-  name: track_id
-  deprecated: true
-  schema:
-    type: integer
-  description: SoundCloud Track id
-  example: 308946187
 track_urn:
   in: path
   name: track_urn
@@ -340,14 +284,6 @@ track_urn:
     type: string
   description: SoundCloud Track urn
   example: soundcloud:tracks:308946187
-test_track_id:
-  in: path
-  name: track_id
-  deprecated: true
-  schema:
-    type: integer
-  description: SoundCloud Track id
-  example: 1015448728
 test_track_urn:
   in: path
   name: track_urn
@@ -356,14 +292,6 @@ test_track_urn:
     type: string
   description: SoundCloud Track id
   example: soundcloud:tracks:1015448728
-user_id:
-  in: path
-  name: user_id
-  deprecated: true
-  schema:
-    type: integer
-  description: SoundCloud User id
-  example: 948745750
 user_urn:
   in: path
   name: user_urn
@@ -372,14 +300,6 @@ user_urn:
     type: string
   description: SoundCloud User id
   example: soundcloud:users:948745750
-user_id_to_follow:
-  in: path
-  name: user_id
-  deprecated: true
-  schema:
-    type: integer
-  description: SoundCloud User id
-  example: 743372812
 user_urn_to_follow:
   in: path
   name: user_urn

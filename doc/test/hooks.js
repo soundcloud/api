@@ -5,13 +5,6 @@ const fs = require('fs');
 var responseStash = {};
 var skipDeprecatedTransactionIds = [
     "POST (200) /sign-out", // this is a virtual endpoint mapped through Tyk
-    "PUT (200) /me/followings/743372812", // skipping as tested with urn
-    "PUT (201) /me/followings/743372812", // skipping as tested with urn
-    "DELETE (200) /me/followings/743372812", // skipping as tested with urn
-    "GET (200) /users/948745750/followings/25219981",
-    "GET (200) /users/948745750/followers/743372812",
-    "GET (200) /me/followers/743372812",
-    "GET (200) /me/followings/948745750",
     "GET (200) /users/soundcloud%3Ausers%3A948745750/followings/soundcloud%3Ausers%3A25219981",
     "GET (200) /users/soundcloud%3Ausers%3A948745750/followers/soundcloud%3Ausers%3A743372812",
     "GET (200) /me/followers/soundcloud%3Ausers%3A743372812",
@@ -20,14 +13,10 @@ var skipDeprecatedTransactionIds = [
 var skipTransactionIds = [
     "POST (200) /oauth2/token",
     "POST (401) /oauth2/token",
-    "PUT (200) /tracks/308946187",
-    "POST (201) /tracks/308946187/comments",
     "PUT (200) /tracks/soundcloud%3Atracks%3A308946187",
     "POST (201) /tracks/soundcloud%3Atracks%3A308946187/comments"
 ];
 var replacePlaylistIdTransactionIds = [
-    "PUT (200) /playlists/10",
-    "DELETE (200) /playlists/10",
     "PUT (200) /playlists/soundcloud%3Aplaylists%3A10",
     "DELETE (200) /playlists/soundcloud%3Aplaylists%3A10"
 ];
