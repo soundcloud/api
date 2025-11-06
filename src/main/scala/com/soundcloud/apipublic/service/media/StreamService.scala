@@ -40,13 +40,19 @@ class StreamService(
       )
       .flatMap(_.headOption match {
         case Some(Good(visibleTrack)) =>
-          visibleTrack.transcodings
-            .find(transcoding => transcoding.mimeType == mp3MimeType || transcoding.mimeType == aacMimeType)
-            .map(transcoding => {
-              if (streamNotAllowed(visibleTrack)) fetchPreviewUrls(session, visibleTrack, transcoding, singleStream)
-              else fetchStreamUrls(session, visibleTrack, transcoding, singleStream)
-            })
-            .getOrElse(Future.value(NotFound().bad))
+          if (streamNotAllowed(visibleTrack)) {
+            // For preview URLs, we need an MP3 transcoding
+            visibleTrack.transcodings
+              .find(transcoding => transcoding.mimeType == mp3MimeType)
+              .map(transcoding => fetchPreviewUrls(session, visibleTrack, transcoding, singleStream))
+              .getOrElse(Future.value(NotFound().bad))
+          } else {
+            // For full stream URLs, we can use MP3 or AAC
+            visibleTrack.transcodings
+              .find(transcoding => transcoding.mimeType == mp3MimeType || transcoding.mimeType == aacMimeType)
+              .map(transcoding => fetchStreamUrls(session, visibleTrack, transcoding, singleStream))
+              .getOrElse(Future.value(NotFound().bad))
+          }
         case Some(Bad(err)) => Future.value(err.bad)
         case _ => Future.value(NotFound().bad)
       })

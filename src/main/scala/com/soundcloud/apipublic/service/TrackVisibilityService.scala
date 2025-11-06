@@ -15,6 +15,7 @@ import proto.soundcloud.tracks.api.{
   GetVisibleTracksRequest,
   Track,
   TrackMetadataService,
+  TranscodingFilterStrategy,
   TrackRequest => TwirpTrackRequest
 }
 import scalapb.FieldMaskUtil
@@ -55,7 +56,9 @@ class TrackVisibilityService(
         TwirpTrackRequest(trackRequest.urn.toString, trackRequest.secretToken)
       ),
       trackFieldMask = Some(fieldMask),
-      userSession = Some(session.asProtoSession)
+      userSession = Some(session.asProtoSession),
+      // Request for both legacy and new transcodings excluding DRM protocols
+      transcodingFilterStrategy = Some(TranscodingFilterStrategy.LEGACY_AND_NEW)
     )
 
     tracksTwinagleClient.getVisibleTracks(request).map { tracksResponse =>

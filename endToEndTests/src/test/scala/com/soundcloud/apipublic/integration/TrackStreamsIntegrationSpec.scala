@@ -19,6 +19,8 @@ class TrackStreamsIntegrationSpec extends IntegrationTest {
       (response.json \ "hls_mp3_128_url").as[String] mustNotEqual empty
       (response.json \ "hls_opus_64_url").as[String] mustNotEqual empty
       (response.json \ "preview_mp3_128_url").as[String] must contain("https://cf-preview-media.sndcdn.com/preview")
+      (response.json \ "hls_aac_160_url").as[String] mustNotEqual empty
+      (response.json \ "hls_aac_160_url").as[String] must contain("https://playback.media-streaming.soundcloud.cloud")
     }
 
     "should return URLs for a high-tier track" in new TrackStreamContext {

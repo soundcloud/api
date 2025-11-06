@@ -1,2 +1,2 @@
 <!--- Remove everything below and start over --->
-downloadCounts is deprecated in the response for write operations on tracks (create, update) and will be removed soon
+Introduce new AAC HLS transcodings. More details: https://developers.soundcloud.com/blog/api-streaming-urls

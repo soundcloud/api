@@ -19,6 +19,7 @@ import proto.soundcloud.tracks.api.{
   GetVisibleTracksRequest,
   GetVisibleTracksResponse,
   TrackMetadataService,
+  TranscodingFilterStrategy,
   Track => ProtoTrack,
   TrackRequest => ProtoTrackRequest
 }
@@ -56,7 +57,8 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
       trackRequests =
         List(trackRequest).map(trackRequest => ProtoTrackRequest(trackRequest.urn.toString, trackRequest.secretToken)),
       trackFieldMask = Some(fieldMask),
-      userSession = Some(session.asProtoSession)
+      userSession = Some(session.asProtoSession),
+      transcodingFilterStrategy = Some(TranscodingFilterStrategy.LEGACY_AND_NEW)
     )
 
     tracksTwinagleClient.getVisibleTracks(request) returns Future.value(
