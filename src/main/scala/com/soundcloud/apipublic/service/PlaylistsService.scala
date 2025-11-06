@@ -377,7 +377,7 @@ class PlaylistsService(
       playlist <- visiblePlaylists.find(_.urn == urn)
       owner <- users.find(_.urn.toString == playlist.userUrn)
       maybeLabelOwner = playlist.labelId.flatMap(id => users.find(_.urn.identifier == id))
-    } yield Playlist.fromVisiblePlaylist(playlist, owner, maybeLabelOwner, session.user)
+    } yield Playlist.fromVisiblePlaylist(playlist, owner, maybeLabelOwner, session.user, session.agent)
   }
 
   private def getPlaylistObjects(

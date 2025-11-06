@@ -26,7 +26,7 @@ trait TrackRepresentationSpecContext {
       isLiked: Boolean = false
   ) = {
     TrackRepresentationBuilder.fromVisibleTrack(
-      client = Some(client),
+      agent = Some(client),
       sessionUser = Some(loggedInUser),
       visibleTrack = visibleTrack,
       user = user,
@@ -550,7 +550,11 @@ class TrackRepresentationSpec extends UnitSpecification {
       }
 
       "adds the secret token to the permalink_url" in new UrlsPresentContext {
-        json \ "permalink_url" ==== JsDefined(JsString("http://soundcloud.com/nirvana/plsty-remix/bl3rkbi3"))
+        json \ "permalink_url" ==== JsDefined(
+          JsString(
+            "http://soundcloud.com/nirvana/plsty-remix/bl3rkbi3?utm_medium=api&utm_campaign=social_sharing&utm_source=id_123"
+          )
+        )
       }
     }
 
@@ -576,7 +580,9 @@ class TrackRepresentationSpec extends UnitSpecification {
 
         "correctly encodes it into the permalink_url" in new BadlyFormedSecretTokenContext {
           json \ "permalink_url" ==== JsDefined(
-            JsString("http://soundcloud.com/nirvana/plsty-remix/badgers%3Fformat%3Djson")
+            JsString(
+              "http://soundcloud.com/nirvana/plsty-remix/badgers%3Fformat%3Djson?utm_medium=api&utm_campaign=social_sharing&utm_source=id_123"
+            )
           )
         }
       }
@@ -635,7 +641,11 @@ class TrackRepresentationSpec extends UnitSpecification {
       trackJson \ "release_day" ==== JsDefined(JsNumber(2))
       trackJson \ "license" ==== JsDefined(JsString("all-rights-reserved"))
       trackJson \ "uri" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:1324"))
-      trackJson \ "permalink_url" ==== JsDefined(JsString("http://soundcloud.com/nirvana/plsty-remix"))
+      trackJson \ "permalink_url" ==== JsDefined(
+        JsString(
+          "http://soundcloud.com/nirvana/plsty-remix?utm_medium=api&utm_campaign=social_sharing&utm_source=id_123"
+        )
+      )
       trackJson \ "stream_url" ==== JsDefined(
         JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:1324/stream")
       )
@@ -794,7 +804,9 @@ class TrackRepresentationSpec extends UnitSpecification {
       trackJson \ "uri" ==== JsDefined(JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:174088262"))
       trackJson \ "artwork_url" === JsDefined(JsString("https://i1.sndcdn.com/artworks-000095281756-51d163-large.jpg"))
       trackJson \ "permalink_url" ==== JsDefined(
-        JsString("https://soundcloud.com/imprisonedprecision/awesome-track-2014-10-27-17-25-29-66")
+        JsString(
+          "https://soundcloud.com/imprisonedprecision/awesome-track-2014-10-27-17-25-29-66?utm_medium=api&utm_campaign=social_sharing&utm_source=id_123"
+        )
       )
       trackJson \ "stream_url" ==== JsDefined(
         JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:174088262/stream")
@@ -834,7 +846,9 @@ class TrackRepresentationSpec extends UnitSpecification {
         JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:174088262?secret_token=s-8USae")
       )
       trackJson \ "permalink_url" ==== JsDefined(
-        JsString("https://soundcloud.com/imprisonedprecision/awesome-track-2014-10-27-17-25-29-66/s-8USae")
+        JsString(
+          "https://soundcloud.com/imprisonedprecision/awesome-track-2014-10-27-17-25-29-66/s-8USae?utm_medium=api&utm_campaign=social_sharing&utm_source=id_123"
+        )
       )
       trackJson \ "stream_url" ==== JsDefined(
         JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:174088262/stream?secret_token=s-8USae")

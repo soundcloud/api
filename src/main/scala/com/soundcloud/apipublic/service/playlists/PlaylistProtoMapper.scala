@@ -1,13 +1,12 @@
 package com.soundcloud.apipublic.service.playlists
 
-import com.soundcloud.jvmkit.module.twirp.proto.WellKnownOps._
 import com.soundcloud.apipublic.service.pagination.OffsetBasedPagination
 import com.soundcloud.apipublic.service.playlists.representation.{
   PlaylistCounts,
   PlaylistTrackRequests,
   VisiblePlaylist
 }
-import com.soundcloud.apipublic.utilities.TrackingExtensions.StringExtension
+import com.soundcloud.jvmkit.module.twirp.proto.WellKnownOps._
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import proto.soundcloud.playlists.api.{
   Playlist,
@@ -32,7 +31,7 @@ class PlaylistProtoMapper {
       duration = playlist.duration,
       genre = playlist.genre,
       permalink = playlist.permalink,
-      permalinkUrl = playlist.permalinkUrl.annotate(session.getAgent),
+      permalinkUrl = playlist.permalinkUrl,
       artworkUrl = if (playlist.artworkUrl.nonEmpty) Some(playlist.artworkUrl) else None,
       trackCount = playlist.trackCount,
       userTags = playlist.userTags.toList,

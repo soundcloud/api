@@ -12,6 +12,7 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
 
   trait Context extends Scope {
     val playlistUrn = Urn("soundcloud", "playlists", "42703821")
+    val application = Urn("soundcloud", "applications", "2")
     val playlistTitle = "my playlist"
     val playlistReleaseInstant = LocalDateTime.of(2013, 8, 19, 2, 29, 15).toInstant(ZoneOffset.UTC)
     val visiblePlaylist =
@@ -55,7 +56,8 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
         visiblePlaylist,
         defaultUser,
         Some(defaultLabel),
-        Some(Urn.parse(visiblePlaylist.userUrn).get)
+        Some(Urn.parse(visiblePlaylist.userUrn).get),
+        Some(application)
       )
   }
 
@@ -65,7 +67,8 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
         visiblePlaylist,
         defaultUser,
         Some(defaultLabel),
-        Some(Urn("soundcloud", "users", "1"))
+        Some(Urn("soundcloud", "users", "1")),
+        Some(application)
       )
 
     playlist.title ==== "playlist mix"
@@ -77,7 +80,7 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
     playlist.createdAt ==== Some(playlistReleaseInstant)
     playlist.duration ==== 120
     playlist.genre ==== "metal"
-    playlist.permalinkUrl ==== "http://soundcloud.com/some-random-link/secret"
+    playlist.permalinkUrl ==== "http://soundcloud.com/some-random-link/secret?utm_medium=api&utm_campaign=social_sharing&utm_source=id_2"
     playlist.permalink ==== "some-random-link"
     playlist.artworkUrl ==== Some("http://some.url/link")
     playlist.trackCount ==== 7
@@ -147,7 +150,8 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
         visiblePlaylistNoSecret,
         defaultUser,
         Some(defaultLabel),
-        Some(Urn.parse(visiblePlaylist.userUrn).get)
+        Some(Urn.parse(visiblePlaylist.userUrn).get),
+        Some(application)
       )
     val enrichedPlaylist = Playlist.enrichPlaylistWithTracks(playlist, List(trackRepresentation))
 
@@ -163,7 +167,8 @@ class PlaylistSpec extends Specification with TrackRepresentationSpecContext {
         visiblePlaylistWithoutCounts,
         defaultUser,
         Some(defaultLabel),
-        Some(Urn.parse(visiblePlaylist.userUrn).get)
+        Some(Urn.parse(visiblePlaylist.userUrn).get),
+        Some(application)
       )
 
     playlist.likesCount ==== 0

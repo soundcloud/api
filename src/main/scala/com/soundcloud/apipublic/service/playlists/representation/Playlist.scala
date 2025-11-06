@@ -3,6 +3,7 @@ package com.soundcloud.apipublic.service.playlists.representation
 import com.soundcloud.apipublic.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.apipublic.service.trackrepresentation.TrackRepresentation
 import com.soundcloud.apipublic.support.HtmlSanitizer
+import com.soundcloud.apipublic.utilities.TrackingExtensions.StringExtension
 import com.soundcloud.jvmkit.module.util.Urn
 import play.api.libs.json._
 
@@ -113,7 +114,8 @@ object Playlist {
       playlist: VisiblePlaylist,
       playlistOwner: UserRepresentation,
       maybeLabel: Option[UserRepresentation],
-      requestingUserUrn: Option[Urn]
+      requestingUserUrn: Option[Urn],
+      agent: Option[Urn]
   ): Playlist = {
     val releaseDay =
       playlist.releaseDate.map(date => LocalDateTime.ofInstant(date, ZoneOffset.UTC).getDayOfMonth)
@@ -132,7 +134,7 @@ object Playlist {
       releaseMonth = releaseMonth,
       releaseYear = releaseYear,
       permalink = playlist.permalink,
-      permalinkUrl = createFullPermalinkUrl(playlist),
+      permalinkUrl = createFullPermalinkUrl(playlist, agent),
       description = playlist.description,
       uri = playlist.uri,
       tagList = getTagList(playlist.userTags),
@@ -178,7 +180,8 @@ object Playlist {
   }
 
   private def createFullPermalinkUrl(
-      visiblePlaylist: VisiblePlaylist
+      visiblePlaylist: VisiblePlaylist,
+      agent: Option[Urn]
   ): String = {
     if (!visiblePlaylist.public && visiblePlaylist.secretToken.isDefined) {
       val secret = URLEncoder.encode(visiblePlaylist.secretToken.get, "UTF-8")
@@ -186,7 +189,7 @@ object Playlist {
     } else {
       visiblePlaylist.permalinkUrl
     }
-  }
+  }.annotate(agent)
 
   private val baseUrl = "https://api.soundcloud.com/playlists"
 

@@ -46,7 +46,7 @@ class VisibleTrackMapperSpec extends Specification {
           permalinkUrl = Some(s"https://soundcloud.com/owner-perma/lost-ii-by-dead-battery-dabin"),
           userTags = List.empty,
           description = None,
-          secretToken = None,
+          secretToken = Some("secret"),
           revealStats = true,
           artwork = Some("dummy_artwork_filename-original.png"),
           publishedAt = None,
@@ -117,11 +117,11 @@ class VisibleTrackMapperSpec extends Specification {
       visibleTrack.genre ==== None
       visibleTrack.public ==== false
       visibleTrack.permalinkUrl ==== Some(
-        s"https://soundcloud.com/owner-perma/lost-ii-by-dead-battery-dabin?utm_medium=api&utm_campaign=social_sharing&utm_source=id_999"
+        s"https://soundcloud.com/owner-perma/lost-ii-by-dead-battery-dabin"
       )
       visibleTrack.userTags ==== List.empty
       visibleTrack.description ==== None
-      visibleTrack.secretToken ==== None
+      visibleTrack.secretToken ==== Some("secret")
       visibleTrack.revealStats ==== true
       visibleTrack.artwork ==== Artwork(Some("dummy_artwork_filename-original.png"))
       visibleTrack.publishedAt ==== None

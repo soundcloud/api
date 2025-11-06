@@ -1,10 +1,9 @@
 package com.soundcloud.apipublic.service.tracks
 
-import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.apipublic.authorization.policies._
 import com.soundcloud.apipublic.client.tracks._
-import com.soundcloud.apipublic.utilities.TrackingExtensions.OptionExtension
 import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import org.joda.time.{DateTimeZone, LocalDateTime}
 import proto.soundcloud.tracks.api.Transcoding.Quality
 import proto.soundcloud.tracks.api.{Track => ProtoTrack}
@@ -40,7 +39,7 @@ class VisibleTrackMapper {
       commentable = metadata.commentable,
       genre = metadata.genre,
       public = metadata.public,
-      permalinkUrl = metadata.permalinkUrl.annotate(session.getAgent),
+      permalinkUrl = metadata.permalinkUrl,
       userTags = metadata.userTags.toList,
       description = metadata.description,
       secretToken = metadata.secretToken,

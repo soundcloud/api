@@ -57,7 +57,7 @@ class TrackRepresentationsService(
         case (users, isLiked, geoBlockings, followCounts) =>
           visibleTracks.map { visibleTrack =>
             TrackRepresentationBuilder.fromVisibleTrack(
-              client = session.agent,
+              agent = session.agent,
               sessionUser = session.user,
               visibleTrack = visibleTrack,
               user = users(visibleTrack.userUrn).copy(

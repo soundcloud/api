@@ -5,6 +5,7 @@ import com.soundcloud.apipublic.authorization.policies.{Access, ContentPolicy, M
 import com.soundcloud.apipublic.client.mothership.response.representation.{Geoblockings, UserRepresentation}
 import com.soundcloud.apipublic.client.trackcoordinator.TrackCoordinatorTrack
 import com.soundcloud.apipublic.client.tracks.{EmbeddingPermission, VisibleTrack}
+import com.soundcloud.apipublic.utilities.TrackingExtensions.StringExtension
 import com.soundcloud.jvmkit.module.util.Urn
 import org.joda.time.DateTime
 
@@ -76,7 +77,7 @@ object TrackRepresentationBuilder {
   }
 
   def fromVisibleTrack(
-      client: Option[Urn],
+      agent: Option[Urn],
       sessionUser: Option[Urn],
       visibleTrack: VisibleTrack,
       user: UserRepresentation,
@@ -120,7 +121,7 @@ object TrackRepresentationBuilder {
       uri = urlFor(visibleTrack.urn, visibleTrack.public, secretToken),
       streamUrl = getConditionalUrl(visibleTrack, visibleTrack.access.contains(Access.Blocked), "stream"),
       downloadUrl = getConditionalUrl(visibleTrack, !visibleTrack.downloadable, "download"),
-      permalinkUrl = secretPath(visibleTrack.permalinkUrl, visibleTrack.public, secretToken),
+      permalinkUrl = secretPath(visibleTrack.permalinkUrl, visibleTrack.public, secretToken, agent),
       secretUri = getSecretUri(visibleTrack),
       commentCount = visibleTrack.counts.comments,
       userFavourite = if (!isAnonymous) Some(isLiked) else None,
@@ -128,8 +129,8 @@ object TrackRepresentationBuilder {
       waveformUrl = visibleTrack.waveformUrls.map(_.png.s).headOption.getOrElse(""),
       artworkUrl = visibleTrack.artwork.filename.map(imageUrl),
       downloadable = visibleTrack.downloadable,
-      policy = getPolicy(visibleTrack.authorization.policy, client),
-      monetizationModel = getMonetizationModel(visibleTrack.authorization.monetizationModel, client),
+      policy = getPolicy(visibleTrack.authorization.policy, agent),
+      monetizationModel = getMonetizationModel(visibleTrack.authorization.monetizationModel, agent),
       metaDataArtist = visibleTrack.metaDataArtist
     )
   }
@@ -194,19 +195,21 @@ object TrackRepresentationBuilder {
       path: Option[String],
       isPublic: Boolean,
       secretParam: Option[String],
-      agentUrn: Option[Urn] = None
+      agentUrn: Option[Urn]
   ): Option[String] = {
-    path.map(p => {
-      if (agentUrn.contains(AbletonLiveApplication)) {
-        // TODO: remove this workaround once better solution for Ableton integration is found: https://soundcloud.atlassian.net/browse/INT-279
-        p
-      } else if (!isPublic && secretParam.isDefined) {
-        val secret = URLEncoder.encode(secretParam.get, "UTF-8")
-        s"$p/$secret"
-      } else {
-        p
-      }
-    })
+    path
+      .map(p => {
+        if (agentUrn.contains(AbletonLiveApplication)) {
+          // TODO: remove this workaround once better solution for Ableton integration is found: https://soundcloud.atlassian.net/browse/INT-279
+          p
+        } else if (!isPublic && secretParam.isDefined) {
+          val secret = URLEncoder.encode(secretParam.get, "UTF-8")
+          s"$p/$secret"
+        } else {
+          p
+        }
+      })
+      .map(_.annotate(agentUrn))
   }
 
   private def getPolicy(policy: ContentPolicy, client: Option[Urn]): Option[String] = {
