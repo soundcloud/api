@@ -17,7 +17,6 @@ import com.soundcloud.apipublic.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.apipublic.client.tracks.TracksTwirpClient
 import com.soundcloud.apipublic.service._
 import com.soundcloud.apipublic.service.comments.CommentService
-import com.soundcloud.apipublic.service.likes.LikesComparisonUtil
 import com.soundcloud.apipublic.service.media.{StreamService, TrackAccessRecorderService}
 import com.soundcloud.apipublic.service.oauth.GrantExchangeService
 import com.soundcloud.apipublic.service.resolve.ResolveService
@@ -204,14 +203,11 @@ class Clients(
       new VisibleTrackMapper
     )
 
-  val likesComparisonUtil = new LikesComparisonUtil(telemetry, exceptionCollector)
-
   val likedTracksService = new LikedTracksService(
     likesTwirpClient,
     v2LikesTwirpAWSClient,
     exceptionCollector,
-    rolloutClient,
-    likesComparisonUtil
+    rolloutClient
   )
 
   val tracksService = new TrackRepresentationsService(
@@ -248,9 +244,7 @@ class Clients(
       v2LikesTwirpAWSClient,
       likeTracksTwirpClient,
       likesPlaylistsTwirpClient,
-      exceptionCollector,
-      rolloutClient,
-      likesComparisonUtil
+      rolloutClient
     )
   val userPlaylistsService = new UserPlaylistsService(playlistService, okidokiClient)
 

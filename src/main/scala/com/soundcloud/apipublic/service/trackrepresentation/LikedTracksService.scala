@@ -1,6 +1,5 @@
 package com.soundcloud.apipublic.service.trackrepresentation
 
-import com.soundcloud.apipublic.service.likes.LikesComparisonUtil
 import com.soundcloud.jvmkit.module.rollout.{Rollout, RolloutFeature}
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionHandler.FutureExtensions
@@ -22,46 +21,20 @@ class LikedTracksService(
     v2LikesService: v2LikesClientProtobuf,
     exceptionCollector: ExceptionCollector,
     rollout: Rollout,
-    likesComparisonUtil: LikesComparisonUtil,
     batchSize: Int = 50,
     v2BatchSize: Int = 100
 ) {
-  private def useLikesV2RolloutFlag = RolloutFeature("shadow-likes-v2")
+  private def useLikesV2RolloutFlag = RolloutFeature("likes-v2")
 
   def getLikedTracks(session: UserSession, trackUrns: Seq[Urn]): Future[Map[Urn, Boolean]] = {
     session.user match {
       case Some(user) =>
         rollout.isActive(useLikesV2RolloutFlag).flatMap {
-          case true => fetchAndCompareResults(user, trackUrns)
+          case true => getV2LikedTracksInBatches(user, trackUrns)
           case false => getLikedTracksInBatches(user, trackUrns)
         }
       case None => Future.value(Map.empty[Urn, Boolean])
     }
-  }
-
-  private def fetchAndCompareResults(
-      user: Urn,
-      trackUrns: Seq[Urn]
-  ): Future[Map[Urn, Boolean]] = {
-    for {
-      (likes, v2Likes) <- Future.join(
-        getLikedTracksInBatches(user, trackUrns),
-        getV2LikedTracksInBatches(user, trackUrns)
-      )
-      _ = likesComparisonUtil.compareAndReportAreLiked(
-        "areTargetsLikedByUser",
-        user.toString,
-        trackUrns,
-        likeItemsFromLikes(likes),
-        likeItemsFromLikes(v2Likes)
-      )
-    } yield likes
-  }
-
-  private def likeItemsFromLikes(likesResponse: Map[Urn, Boolean]): Seq[String] = {
-    likesResponse.collect {
-      case (urn, true) => urn.toString
-    }.toSeq
   }
 
   private def inBatches[T](urns: Set[Urn], batchSize: Int)(f: Set[Urn] => Future[Map[Urn, T]]): Future[Map[Urn, T]] = {

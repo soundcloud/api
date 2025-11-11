@@ -79,9 +79,10 @@ docker-down:
 stop-containers:
 	CONFIG= VERSION=$(API_PUBLIC_VERSION) docker compose rm -s -f
 
+TEST_ONLY ?= ""
 test: unit-test
 unit-test:
-	$(SBT) test
+	$(SBT) "testOnly $(TEST_ONLY)"
 
 interactive:
 	$(SBT_INTERACTIVE)

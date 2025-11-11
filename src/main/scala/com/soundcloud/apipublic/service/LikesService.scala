@@ -3,13 +3,11 @@ package com.soundcloud.apipublic.service
 import com.google.protobuf.timestamp.Timestamp
 import com.soundcloud.apipublic.client.tracks.TrackRequest
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
-import com.soundcloud.apipublic.service.likes.{LikeItem, LikesComparisonUtil}
 import com.soundcloud.apipublic.service.pagination.CursorBasedPagination
 import com.soundcloud.apipublic.service.playlists.PlaylistRequest
 import com.soundcloud.apipublic.service.playlists.representation.Playlist
 import com.soundcloud.apipublic.service.representation.collection.Collection
 import com.soundcloud.apipublic.service.trackrepresentation.{TrackRepresentation, TrackRepresentationsService}
-import com.soundcloud.periskop.client.Severity.Info
 import com.soundcloud.jvmkit.module.outcome.{
   ApplicationError,
   GoodOps,
@@ -21,7 +19,6 @@ import com.soundcloud.jvmkit.module.outcome.{
   Outcome
 }
 import com.soundcloud.jvmkit.module.rollout.{Rollout, RolloutFeature}
-import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
@@ -33,6 +30,7 @@ import proto.soundcloud.likes.api.{
   ChronoParams,
   GetLikesByUserChronoRequest,
   GetLikesByUserChronoResponse,
+  GetLikesChronoResponseItem,
   Collection => likesCollection,
   LikesClientProtobuf => LikesClient
 }
@@ -53,7 +51,6 @@ import proto.soundcloud.tracks.api.{
 
 import java.time.format.DateTimeFormatter
 import java.time.{Instant, ZoneOffset}
-import scala.util.control.NonFatal
 
 case class CreateLikeResponse()
 
@@ -68,11 +65,9 @@ class LikesService(
     v2LikesClient: v2LikesClient,
     tracksClient: TrackLikesClientProtobuf,
     playlistsClient: PlaylistLikesClientProtobuf,
-    exceptionCollector: ExceptionCollector,
-    rollout: Rollout,
-    likesComparisonUtil: LikesComparisonUtil
+    rollout: Rollout
 ) {
-  private def useLikesV2RolloutFlag = RolloutFeature("shadow-likes-v2")
+  private def useLikesV2RolloutFlag = RolloutFeature("likes-v2")
 
   def createTrackLike(
       session: UserSession,
@@ -181,9 +176,10 @@ class LikesService(
       ),
       collections = Seq(likesCollection.TRACKS)
     )
+
     rollout.isActive(useLikesV2RolloutFlag).flatMap {
       case true =>
-        fetchAndCompareResults(
+        getV2ChronoResponse(
           request,
           Some(
             v2ChronoParams(
@@ -232,68 +228,43 @@ class LikesService(
     }
   }
 
-  private def fetchAndCompareResults(
+  private def getV2ChronoResponse(
       request: GetLikesByUserChronoRequest,
       v2ChronoParams: Option[v2ChronoParams]
   ): Future[GetLikesByUserChronoResponse] = {
-    for {
-      (likes, v2Likes) <- Future.join(
-        likesClient.getLikesByUserChrono(request).handle {
-          case NonFatal(_) =>
-            exceptionCollector
-              .addMessage("likes_getLikesByUserChrono", "error fetching from likes", Info, collectRequestBody = true)
-            GetLikesByUserChronoResponse()
-        },
-        v2LikesClient
-          .getLikesByUserChrono(
-            v2GetLikesByUserChronoRequest(request.userUrn, v2ChronoParams, Seq(v2likesCollection.TRACKS))
-          )
-          .handle {
-            case NonFatal(_) =>
-              exceptionCollector
-                .addMessage(
-                  "v2likes_getLikesByUserChrono",
-                  "error fetching from likes v2",
-                  Info,
-                  collectRequestBody = true
-                )
-              v2ChronoResponse()
-          }
+    v2LikesClient
+      .getLikesByUserChrono(
+        v2GetLikesByUserChronoRequest(request.userUrn, v2ChronoParams, Seq(v2likesCollection.TRACKS))
       )
-      _ = likesComparisonUtil.compareAndReportChrono(
-        "getLikesByUserChrono",
-        request.userUrn,
-        request.chronoParams,
-        likeItemsFromLikes(likes),
-        likeItemsFromLikesV2(v2Likes)
-      )
-    } yield likes
+      .map(convertV2ChronoResponseToGetLikesByUserChronoResponse)
   }
 
-  private def likeItemsFromLikes(likesChronoResponse: GetLikesByUserChronoResponse): Seq[LikeItem] = {
-    likesChronoResponse.items.map { item =>
-      LikeItem(item.`type`, item.userUrn, item.targetUrn, item.timestamp)
-    }
-  }
-
-  private def likeItemsFromLikesV2(likesV2ChronoResponse: v2ChronoResponse): Seq[LikeItem] = {
-    likesV2ChronoResponse.items.map { item =>
-      LikeItem(
-        item.`type`,
-        item.userUrn,
-        item.targetUrn,
-        getTimestampWithMilliseconds(item.timestamp)
+  private def convertV2ChronoResponseToGetLikesByUserChronoResponse(
+      response: v2ChronoResponse
+  ): GetLikesByUserChronoResponse = {
+    val items = response.items.map { item =>
+      GetLikesChronoResponseItem(
+        timestamp = convertTimestampToString(item.timestamp),
+        `type` = item.`type`,
+        userUrn = item.userUrn,
+        targetUrn = item.targetUrn,
+        cursor = item.cursor
       )
     }
+    GetLikesByUserChronoResponse(items)
   }
 
-  private def getTimestampWithMilliseconds(timestamp: Option[Timestamp]): String = {
-    val formatter: DateTimeFormatter = DateTimeFormatter
-      .ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-      .withZone(ZoneOffset.UTC)
+  // We can receive timestamps with our without the milliseconds, and occasionally also with
+  // nanoseconds from likes v2 service. So formatting it to return a unified timestamp.
+  private val formatter: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").withZone(ZoneOffset.UTC)
+
+  private def convertTimestampToString(timestamp: Option[Timestamp]): String = {
+    val seconds = timestamp.fold(0L)(_.seconds)
+    val nanos = timestamp.fold(0)(_.nanos)
 
     formatter.format(
-      Instant.ofEpochSecond(timestamp.map(_.seconds).getOrElse(0), timestamp.map(_.nanos).get)
+      Instant.ofEpochSecond(seconds, nanos)
     )
   }
 }
