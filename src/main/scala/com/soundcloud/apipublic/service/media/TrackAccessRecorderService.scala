@@ -9,10 +9,10 @@ import com.twitter.finagle.http.{Method, Response, Status}
 import com.twitter.util.Future
 
 class TrackAccessRecorderService(trackAccessRecorderClient: TrackAccessRecorderClient) {
-  def recordStreamAccess(session: UserSession, request: HandlerRequest, trackUrn: Urn, loggingEnabled: Boolean = true)(
+  def recordStreamAccess(session: UserSession, request: HandlerRequest, trackUrn: Urn)(
       action: => Future[Response]
   ): Future[Response] =
-    recordAccess(session, request, trackUrn, "stream", loggingEnabled && request.method == Method.Get, action)
+    recordAccess(session, request, trackUrn, "stream", request.method == Method.Get, action)
 
   private def recordAccess(
       session: UserSession,

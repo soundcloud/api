@@ -1,16 +1,16 @@
 package com.soundcloud.apipublic.handler
 
-import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
-import com.soundcloud.jvmkit.module.http.server.ResponseBuilder
-import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.apipublic.Routing
 import com.soundcloud.apipublic.authorization.policies.Reason
 import com.soundcloud.apipublic.client.media.TrackAccessRecorderClient
 import com.soundcloud.apipublic.service.UnavailableByPolicy
 import com.soundcloud.apipublic.service.media._
 import com.soundcloud.apipublic.test.{HandlerSpecificationScope, UnitSpecification}
+import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
+import com.soundcloud.jvmkit.module.http.server.ResponseBuilder
+import com.soundcloud.jvmkit.module.outcome._
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.twitter.finagle.http.{Method, Status}
 import com.twitter.util.Future
 import org.specs2.specification.core.Fragments
@@ -60,7 +60,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     ) {
       case (method, path) =>
         "GET /tracks/soundcloud:tracks:5/stream" in new MediaServiceContext {
-          streamService.fetchUrls(session, trackUrn, None, singleStream = true) returns
+          streamService.fetchLegacyProgressiveTranscodingUrl(session, trackUrn, None) returns
             Future.value(RedirectStreamResponse(httpMp3).good)
 
           val response = call(method, path)
@@ -76,7 +76,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     }
 
     "records access and logs" in new MediaServiceContext {
-      streamService.fetchUrls(session, trackUrn, None, singleStream = true) returns
+      streamService.fetchLegacyProgressiveTranscodingUrl(session, trackUrn, None) returns
         Future.value(RedirectStreamResponse(httpMp3).good)
 
       get("/tracks/soundcloud:tracks:5/stream")
@@ -99,7 +99,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     ) {
       case (method, path) =>
         s"${method.toString} $path" in new MediaServiceContext {
-          streamService.fetchUrls(session, trackUrn, None) returns Future.value(
+          streamService.fetchTranscodingUrls(session, trackUrn, None) returns Future.value(
             MediaStreamUrls(
               Some(httpMp3),
               Some(hlsMp3),
@@ -126,56 +126,107 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
         }
     }
 
-    "records access and with logging disabled" in new MediaServiceContext {
-      streamService.fetchUrls(session, trackUrn, None) returns Future.value(
+    "does not records access to just streams" in new MediaServiceContext {
+      streamService.fetchTranscodingUrls(session, trackUrn, None) returns Future.value(
         MediaStreamUrls(Some(httpMp3), Some(hlsMp3), Some(aac96k), Some(aac160k), Some(hlsOpus), Some(httpPreviewMp3)).good
       )
 
       get("/tracks/soundcloud:tracks:5/streams")
-      there was one(trackAccessClient).recordAccess(
+      there was no(trackAccessClient).recordAccess(
         ===(session),
         ===(trackUrn),
         ===("stream"),
-        ===(false),
+        any[Boolean],
         any[Option[String]]
       )
     }
   }
 
-  "with a secret token" >> {
-    trait WithSecretTokenContext extends MediaServiceContext {
-      streamService.fetchUrls(session, trackUrn, Some("itsasecret"), singleStream = true) returns Future.value(
-        RedirectStreamResponse(httpMp3).good
-      )
+  "without a secret token" >> {
+    "for /streams/:uuid/:protocol" >> {
+      trait WithoutSecretTokenContext extends MediaServiceContext {
+        streamService.fetchStreamUrl(session, PlayParams(trackUrn, None, "mp3-uuid", "hls")) returns Future.value(
+          RedirectStreamResponse(hlsMp3).good
+        )
+      }
+
+      s"should return streams" in new WithoutSecretTokenContext {
+        val resp = get(s"/tracks/${trackUrn.toString}/streams/mp3-uuid/hls")
+        resp.status ==== Status.Found
+        resp.headerMap("Location") ==== "http://mp3-hls"
+      }
     }
 
-    s"should return 302" in new WithSecretTokenContext {
-      val resp = get("/tracks/soundcloud:tracks:5/stream?secret_token=itsasecret")
-      resp.status ==== Status.Found
-      resp.headerMap("Location") ==== "http://mp3-progressive"
+    "for /streams" >> {
+      trait WithoutSecretTokenContext extends MediaServiceContext {
+        streamService.fetchTranscodingUrls(session, trackUrn, None) returns Future.value(
+          MediaStreamUrls(
+            httpMp3 = Some(httpMp3),
+            hlsMp3 = Some(hlsMp3)
+          ).good
+        )
+      }
+
+      s"should return 200" in new WithoutSecretTokenContext {
+        val resp = get(s"/tracks/${trackUrn.toString}/streams")
+        resp.status ==== Status.Ok
+        resp.contentString ==== "{\"http_mp3_128_url\":\"http://mp3-progressive\",\"hls_mp3_128_url\":\"http://mp3-hls\"}"
+      }
     }
+  }
+  "with a secret token" >> {
+
+    "for legacy /stream" >> {
+      trait WithSecretTokenContext extends MediaServiceContext {
+        streamService.fetchLegacyProgressiveTranscodingUrl(session, trackUrn, Some("itsasecret")) returns Future.value(
+          RedirectStreamResponse(httpMp3).good
+        )
+      }
+
+      s"should return 302" in new WithSecretTokenContext {
+        val resp = get(s"/tracks/${trackUrn.toString}/stream?secret_token=itsasecret")
+        resp.status ==== Status.Found
+        resp.headerMap("Location") ==== "http://mp3-progressive"
+      }
+    }
+
+    "for new /streams" >> {
+      trait WithSecretTokenContext extends MediaServiceContext {
+        streamService.fetchStreamUrl(session, PlayParams(trackUrn, Some("itsasecret"), "mp3-uuid", "http")) returns Future
+          .value(
+            RedirectStreamResponse(httpMp3).good
+          )
+      }
+
+      s"should return 302" in new WithSecretTokenContext {
+        val resp = get(s"/tracks/${trackUrn.toString}/streams/mp3-uuid/http?secret_token=itsasecret")
+        resp.status ==== Status.Found
+        resp.headerMap("Location") ==== "http://mp3-progressive"
+      }
+    }
+
   }
 
   "when streaming is not found" >> {
     trait StreamingNotAllowedContext extends MediaServiceContext {
-      streamService.fetchUrls(session, trackUrn, None, singleStream = true) returns Future.value(NotFound().bad)
+      streamService.fetchLegacyProgressiveTranscodingUrl(session, trackUrn, None) returns Future.value(NotFound().bad)
     }
 
     s"should return 404" in new StreamingNotAllowedContext {
-      val resp = get("/tracks/soundcloud:tracks:5/stream")
+      val resp = get(s"/tracks/${trackUrn.toString}/stream")
       resp.status ==== Status.NotFound
     }
   }
 
   "when streaming is not allowed" >> {
     trait StreamingNotAllowedContext extends MediaServiceContext {
-      streamService.fetchUrls(session, trackUrn, None, singleStream = true) returns Future.value(
+      streamService.fetchLegacyProgressiveTranscodingUrl(session, trackUrn, None) returns Future.value(
         CustomError(UnavailableByPolicy(trackUrn, Reason.GEO)).bad
       )
     }
 
     s"should return 404" in new StreamingNotAllowedContext {
-      val resp = get("/tracks/soundcloud:tracks:5/stream")
+      val resp = get(s"/tracks/${trackUrn.toString}/stream")
       resp.status ==== Status.Forbidden
       (Json.parse(resp.contentString) \ "message").as[String] ==== "Sorry, this track is not available in your area."
     }

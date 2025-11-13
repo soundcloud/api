@@ -272,7 +272,7 @@ class Clients(
 
   val timelineService = new TimelineService(timelineClient, okidokiClient, tracksService, playlistService)
 
-  val streamService = new StreamService(trackVisibilityService, tracksMediaTwirpClient)
+  val streamService = new StreamService(trackVisibilityService, tracksMediaTwirpClient, baseUrl)
   val repostsService =
     new RepostsService(userRepresentationsService, repostsClient, trackRepostsTwirpClient)
   val playlistDeletionClient = new PlaylistDeletionClient(okidokiJsonClient)

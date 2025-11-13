@@ -3,7 +3,7 @@ package com.soundcloud.apipublic.service.media
 import play.api.libs.json.{JsValue, Json, Writes}
 
 trait MediaStreamResponse
-case class RedirectStreamResponse(httpMp3: String) extends MediaStreamResponse
+case class RedirectStreamResponse(url: String) extends MediaStreamResponse
 case class MediaStreamUrls(
     httpMp3: Option[String] = None,
     hlsMp3: Option[String] = None,

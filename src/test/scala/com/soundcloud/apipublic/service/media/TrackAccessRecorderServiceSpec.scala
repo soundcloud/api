@@ -1,10 +1,10 @@
 package com.soundcloud.apipublic.service.media
 
+import com.soundcloud.apipublic.client.media.TrackAccessRecorderClient
+import com.soundcloud.apipublic.test.UnitSpecification
 import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, ResponseBuilder}
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
-import com.soundcloud.apipublic.client.media.TrackAccessRecorderClient
-import com.soundcloud.apipublic.test.UnitSpecification
 import com.twitter.finagle.http.{Method, Request, Status}
 import com.twitter.util.{Await, Future}
 
@@ -18,7 +18,6 @@ class TrackAccessRecorderServiceSpec extends UnitSpecification {
     val reqMethod: Method = Method.Get
     val range: Option[String] = None
     val secretToken: Option[String] = None
-    val loggingEnabled: Boolean = true
 
     lazy val request = {
       val req = Request(reqMethod, "http://local/" + secretToken.map(token => s"?secret_token=$token").getOrElse(""))
@@ -29,7 +28,7 @@ class TrackAccessRecorderServiceSpec extends UnitSpecification {
     val action = ResponseBuilder().status(Status.Ok).body("foobar").build
 
     lazy val resultStream =
-      Await.result(service.recordStreamAccess(session, request, trackUrn, loggingEnabled)(Future.value(action)))
+      Await.result(service.recordStreamAccess(session, request, trackUrn)(Future.value(action)))
   }
 
   Seq("stream").foreach { accessType =>
@@ -139,21 +138,6 @@ class TrackAccessRecorderServiceSpec extends UnitSpecification {
         }
 
         "action is executed and play is not logged" in new NoneZeroByteRangeContext {
-          result.status ==== Status.Ok
-          result.contentString ==== "foobar"
-        }
-      }
-
-      "when loggingEnabled is set to false" >> {
-        trait LoggingDisabledContext extends Context {
-          override val loggingEnabled = false
-
-          trackAccessRecorderClient.recordAccess(session, trackUrn, "stream", false, secretToken) returns
-            Future.value(ResponseBuilder().status(Status.Ok).build)
-        }
-
-        "action is executed and play is not logged" in new LoggingDisabledContext {
-          val result = resultStream
           result.status ==== Status.Ok
           result.contentString ==== "foobar"
         }

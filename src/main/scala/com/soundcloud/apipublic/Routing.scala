@@ -137,9 +137,10 @@ object Routing {
   }
 
   def forTrackStreamsHandler(trackStreamsHandler: TrackStreamsHandler): List[(Method, String, Handler)] = {
-    route(Method.Get, "/tracks/:trackId/streams", trackStreamsHandler.handleStreamRequest) :::
-      route(Method.Get, "/tracks/:trackId/stream", trackStreamsHandler.redirectStreamRequest) :::
-      route(Method.Get, "/i1/tracks/:trackId/streams", trackStreamsHandler.handleStreamRequest) // deprecate
+    route(Method.Get, "/tracks/:trackId/streams/:transcoding/:protocol", trackStreamsHandler.handlePlayRequest) :::
+      route(Method.Get, "/tracks/:trackId/streams", trackStreamsHandler.handleStreamsRequest) :::
+      route(Method.Get, "/tracks/:trackId/stream", trackStreamsHandler.handleLegacyPlayRequest) :::
+      route(Method.Get, "/i1/tracks/:trackId/streams", trackStreamsHandler.handleStreamsRequest) // deprecate
   }
 
   def forTrackDownloadHandler(trackDownloadHandler: TrackDownloadHandler): List[(Method, String, Handler)] = {

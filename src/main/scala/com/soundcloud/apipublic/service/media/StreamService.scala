@@ -1,22 +1,29 @@
 package com.soundcloud.apipublic.service.media
 
-import com.soundcloud.jvmkit.module.outcome._
-import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
-import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.apipublic.authorization.policies.{ContentPolicy, ContentRestriction}
 import com.soundcloud.apipublic.client.tracks._
+import com.soundcloud.apipublic.handler.PlayParams
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
 import com.soundcloud.apipublic.service.TrackVisibilityService
 import com.soundcloud.apipublic.service.TrackVisibilityService.TrackWithTranscodingsFieldMask
+import com.soundcloud.jvmkit.module.outcome._
+import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps.JvmkitSessionExt
+import com.soundcloud.jvmkit.module.util.Urn
+import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
 import com.twitter.util.Future
 import proto.soundcloud.tracks.api.{GetMediaStreamRequest, GetMediaStreamResponse, MediaService}
 
 class StreamService(
     trackVisibilityService: TrackVisibilityService,
-    tracksMediaService: MediaService
+    tracksMediaService: MediaService,
+    baseUrl: String
 ) {
+
+  private final val PROTOCOL_HLS: String = "hls"
+  private final val PROTOCOL_PREVIEW_HLS: String = "hls-preview"
+  private final val PROTOCOL_PROGRESSIVE: String = "http"
+  private final val PROTOCOL_PREVIEW_PROGRESSIVE: String = "http-preview"
   private val mp3MimeType = "audio/mpeg"
   private val aacMimeType = """audio/mp4; codecs="mp4a.40.2""""
   private val opusMimeType = """audio/ogg; codecs="opus""""
@@ -25,11 +32,10 @@ class StreamService(
   private val aac160kPreset = "aac_160k"
   private val aac96kPreset = "aac_96kk"
 
-  def fetchUrls(
+  def fetchLegacyProgressiveTranscodingUrl(
       session: UserSession,
       trackUrn: Urn,
-      secretToken: Option[String],
-      singleStream: Boolean = false
+      secretToken: Option[String]
   ): Future[Outcome[MediaStreamResponse]] = {
     trackVisibilityService
       .tracks(
@@ -40,135 +46,141 @@ class StreamService(
       )
       .flatMap(_.headOption match {
         case Some(Good(visibleTrack)) =>
-          if (streamNotAllowed(visibleTrack)) {
-            // For preview URLs, we need an MP3 transcoding
-            visibleTrack.transcodings
-              .find(transcoding => transcoding.mimeType == mp3MimeType)
-              .map(transcoding => fetchPreviewUrls(session, visibleTrack, transcoding, singleStream))
-              .getOrElse(Future.value(NotFound().bad))
-          } else {
-            // For full stream URLs, we can use MP3 or AAC
-            visibleTrack.transcodings
-              .find(transcoding => transcoding.mimeType == mp3MimeType || transcoding.mimeType == aacMimeType)
-              .map(transcoding => fetchStreamUrls(session, visibleTrack, transcoding, singleStream))
-              .getOrElse(Future.value(NotFound().bad))
-          }
+          visibleTrack.transcodings
+          // For preview URLs, we need an MP3 transcoding
+            .find(transcoding => transcoding.mimeType == mp3MimeType)
+            .map(transcoding => {
+              if (streamNotAllowed(visibleTrack))
+                fetchProgressivePreviewUrl(session, trackUrn, secretToken, transcoding.uuid)
+              else
+                fetchProgressiveUrl(session, trackUrn, secretToken, transcoding.uuid)
+            }.map(_.map(RedirectStreamResponse(_))))
+            .getOrElse(Future.value(NotFound().bad))
         case Some(Bad(err)) => Future.value(err.bad)
         case _ => Future.value(NotFound().bad)
       })
   }
-
   // Some labels disallow progressive streams. The best thing we can do in this case is to downgrade to a snippet.
   private def streamNotAllowed(track: VisibleTrack): Boolean =
     track.authorization.policy == ContentPolicy.SNIP ||
       track.authorization.contentRestrictions.contains(ContentRestriction.NO_PROGRESSIVE_DOWNLOAD)
 
-  private def fetchStreamUrls(
-      session: UserSession,
-      track: VisibleTrack,
-      mp3: Transcoding,
-      singleStream: Boolean
-  ): Future[Outcome[MediaStreamResponse]] = {
-    val futureHttpStream = track.transcodings
-      .find(transcoding => transcoding.mimeType == mp3MimeType && transcoding.protocols.contains(protoProgressive))
-      .map(mp3 => fetchStreamUrl(session, track.urn, track.secretToken, mp3.uuid, protoProgressive))
-      .getOrElse(Future.value(NotFound().bad))
-
-    if (singleStream) return futureHttpStream.map(_.map(RedirectStreamResponse))
-
-    val futureLegacyHlsStream = track.transcodings
-      .find(transcoding => transcoding.mimeType == mp3MimeType && transcoding.protocols.contains(protoHls))
-      .map(mp3 => fetchStreamUrl(session, track.urn, track.secretToken, mp3.uuid, protoHls))
-      .getOrElse(Future.value(NotFound().bad))
-    val futureHls160kStream = track.transcodings
-      .find(transcoding => transcoding.mimeType == aacMimeType && transcoding.preset == aac160kPreset)
-      .map(aac => fetchStreamUrl(session, track.urn, track.secretToken, aac.uuid, protoHls))
-      .getOrElse(Future.value(NotFound().bad))
-    val futureHls96kStream = track.transcodings
-      .find(transcoding => transcoding.mimeType == aacMimeType && transcoding.preset == aac96kPreset)
-      .map(aac => fetchStreamUrl(session, track.urn, track.secretToken, aac.uuid, protoHls))
-      .getOrElse(Future.value(NotFound().bad))
-    val futureOpusStream = track.transcodings
-      .find(_.mimeType == opusMimeType)
-      .map(opus => fetchStreamUrl(session, track.urn, track.secretToken, opus.uuid, protoHls))
-      .getOrElse(Future.value(NotFound().bad))
-    val futureMp3Preview = track.transcodings
-      .find(transcoding => transcoding.mimeType == mp3MimeType)
-      .map(mp3 => fetchPreviewUrl(session, track.urn, track.secretToken, mp3.uuid, protoProgressive))
-      .getOrElse(Future.value(NotFound().bad))
-
-    Future
-      .join(
-        futureHttpStream,
-        futureHls160kStream,
-        futureHls96kStream,
-        futureLegacyHlsStream,
-        futureOpusStream,
-        futureMp3Preview
+  def fetchStreamUrl(session: UserSession, params: PlayParams): Future[Outcome[RedirectStreamResponse]] = {
+    trackVisibilityService
+      .tracks(
+        session,
+        List(TrackRequest(params.trackUrn, params.secretToken)),
+        TrackWithTranscodingsFieldMask,
+        AccessParams.streamAccess
       )
-      .map {
-        case (rHttp, rHls160k, rHls96k, rLegacyHls, rOpus, rPreview) =>
-          val urls = MediaStreamUrls(
-            rHttp.toOption,
-            rLegacyHls.toOption,
-            rHls96k.toOption,
-            rHls160k.toOption,
-            rOpus.toOption,
-            rPreview.toOption
-          )
-
-          val errors: List[ApplicationError] =
-            List(rHttp, rHls160k, rHls96k, rLegacyHls, rOpus, rPreview).collect { case Bad(e) => e }
-
-          def allNone(msu: MediaStreamUrls): Boolean =
-            List(
-              msu.httpMp3,
-              msu.hlsMp3,
-              msu.hlsAac96k,
-              msu.hlsAac160k,
-              msu.hlsOpus,
-              msu.httpPreviewMp3
-            ).forall(_.isEmpty)
-
-          if (allNone(urls)) {
-            // return the first error
-            errors.headOption
-              .map(Bad(_))
-              .get
-          } else {
-            // Partial success (some options are present). Return Good(urls).
-            Good(urls)
+      .flatMap(_.headOption match {
+        case Some(Good(visibleTrack)) =>
+          val fetched = params.protocol match {
+            case PROTOCOL_PREVIEW_HLS =>
+              fetchHlsPreviewUrl(session, params.trackUrn, params.secretToken, params.transcoding)
+            case PROTOCOL_PREVIEW_PROGRESSIVE =>
+              fetchProgressivePreviewUrl(session, params.trackUrn, params.secretToken, params.transcoding)
+            case PROTOCOL_PROGRESSIVE =>
+              if (streamNotAllowed(visibleTrack))
+                fetchProgressivePreviewUrl(session, params.trackUrn, params.secretToken, params.transcoding)
+              else
+                fetchProgressiveUrl(session, params.trackUrn, params.secretToken, params.transcoding)
+            case PROTOCOL_HLS =>
+              if (streamNotAllowed(visibleTrack))
+                fetchHlsPreviewUrl(session, params.trackUrn, params.secretToken, params.transcoding)
+              else
+                fetchHlsUrl(session, params.trackUrn, params.secretToken, params.transcoding)
           }
-      }
+          fetched.map(_.map(RedirectStreamResponse(_)))
+        case Some(Bad(err)) => Future.value(err.bad)
+        case _ => Future.value(NotFound().bad)
+      })
   }
 
-  private def fetchPreviewUrls(
+  def fetchTranscodingUrls(
       session: UserSession,
-      track: VisibleTrack,
-      mp3: Transcoding,
-      singleStream: Boolean
-  ): Future[Outcome[MediaStreamResponse]] = {
-    val futureHttpStream = fetchPreviewUrl(session, track.urn, track.secretToken, mp3.uuid, protoProgressive)
+      trackUrn: Urn,
+      secretToken: Option[String]
+  ): Future[Outcome[MediaStreamUrls]] = {
+    trackVisibilityService
+      .tracks(
+        session,
+        List(TrackRequest(trackUrn, secretToken)),
+        TrackWithTranscodingsFieldMask,
+        AccessParams.streamAccess
+      )
+      .flatMap(_.headOption match {
+        case Some(Good(visibleTrack)) => fetchTranscodingUrls(visibleTrack).map(Good(_))
+        case Some(Bad(err)) => Future.value(err.bad)
+        case _ => Future.value(NotFound().bad)
+      })
 
-    if (singleStream) return futureHttpStream.map(_.map(RedirectStreamResponse))
-
-    val futureLegacyHlsStream = fetchPreviewUrl(session, track.urn, track.secretToken, mp3.uuid, protoHls)
-
-    Future
-      .join(futureHttpStream, futureLegacyHlsStream)
-      .map {
-        case (Good(http), Good(hlsMp3)) =>
-          MediaStreamUrls(Some(http), Some(hlsMp3)).good
-        case (Bad(err), _) => err.bad
-        case (_, Bad(err)) => err.bad
-      }
   }
 
-  private def fetchPreviewUrl: (UserSession, Urn, Option[String], String, String) => Future[Outcome[String]] =
-    fetch(tracksMediaService.getMediaPreview)
+  private def fetchTranscodingUrls(track: VisibleTrack): Future[MediaStreamUrls] = {
+    val progressiveProtocol = if (streamNotAllowed(track)) PROTOCOL_PREVIEW_PROGRESSIVE else PROTOCOL_PROGRESSIVE
+    val hlsProtocol = if (streamNotAllowed(track)) PROTOCOL_PREVIEW_HLS else PROTOCOL_HLS
+    val secretTokenParam = if (track.secretToken.isDefined) s"?secret_token=${track.secretToken.get}" else ""
 
-  private def fetchStreamUrl: (UserSession, Urn, Option[String], String, String) => Future[Outcome[String]] =
-    fetch(tracksMediaService.getMediaStream)
+    def buildStreamUrl(transcoding: Transcoding, protocol: String): String =
+      s"$baseUrl/tracks/${track.urn}/streams/${transcoding.uuid}/$protocol$secretTokenParam"
+
+    def findTranscoding(
+        mimeType: String,
+        protocol: Option[String] = None,
+        preset: Option[String] = None
+    ): Option[String] =
+      track.transcodings
+        .find(t =>
+          t.mimeType == mimeType &&
+            protocol.forall(t.protocols.contains) &&
+            preset.forall(t.preset == _)
+        )
+        .map(t =>
+          buildStreamUrl(
+            t,
+            if (mimeType == opusMimeType) hlsProtocol
+            else if (protocol.contains(protoProgressive)) progressiveProtocol
+            else hlsProtocol
+          )
+        )
+
+    val httpStream = findTranscoding(mp3MimeType, Some(protoProgressive))
+    val legacyHlsStream = findTranscoding(mp3MimeType, Some(protoHls))
+    val hls160kStream = findTranscoding(aacMimeType, preset = Some(aac160kPreset))
+    val hls96kStream = findTranscoding(aacMimeType, preset = Some(aac96kPreset))
+    val opusStream = findTranscoding(opusMimeType)
+    val mp3Preview = track.transcodings
+      .find(_.mimeType == mp3MimeType)
+      .map(mp3 => buildStreamUrl(mp3, PROTOCOL_PREVIEW_PROGRESSIVE))
+
+    Future.value(
+      MediaStreamUrls(
+        httpStream,
+        legacyHlsStream,
+        hls96kStream,
+        hls160kStream,
+        opusStream,
+        mp3Preview
+      )
+    )
+  }
+
+  private def fetchHlsUrl: (UserSession, Urn, Option[String], String) => Future[Outcome[String]] =
+    (session, urn, secretToken, transcodingId) =>
+      fetch(tracksMediaService.getMediaStream)(session, urn, secretToken, transcodingId, protoHls)
+
+  private def fetchHlsPreviewUrl: (UserSession, Urn, Option[String], String) => Future[Outcome[String]] =
+    (session, urn, secretToken, transcodingId) =>
+      fetch(tracksMediaService.getMediaPreview)(session, urn, secretToken, transcodingId, protoHls)
+
+  private def fetchProgressivePreviewUrl: (UserSession, Urn, Option[String], String) => Future[Outcome[String]] =
+    (session, urn, secretToken, transcodingId) =>
+      fetch(tracksMediaService.getMediaPreview)(session, urn, secretToken, transcodingId, protoProgressive)
+
+  private def fetchProgressiveUrl: (UserSession, Urn, Option[String], String) => Future[Outcome[String]] =
+    (session, urn, secretToken, transcodingId) =>
+      fetch(tracksMediaService.getMediaStream)(session, urn, secretToken, transcodingId, protoProgressive)
 
   private def fetch(fetchAction: GetMediaStreamRequest => Future[GetMediaStreamResponse])(
       session: UserSession,

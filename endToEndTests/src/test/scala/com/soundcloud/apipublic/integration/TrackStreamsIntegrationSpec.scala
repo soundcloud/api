@@ -15,12 +15,12 @@ class TrackStreamsIntegrationSpec extends IntegrationTest {
 
       response.status === 200
 
-      (response.json \ "http_mp3_128_url").as[String] must contain("https://cf-media.sndcdn.com/")
+      (response.json \ "http_mp3_128_url").as[String] mustEqual "https://api.soundcloud.com/tracks/soundcloud:tracks:405325995/streams/4bb26bce-8ade-4a47-91e0-6134582c1c10/http"
       (response.json \ "hls_mp3_128_url").as[String] mustNotEqual empty
       (response.json \ "hls_opus_64_url").as[String] mustNotEqual empty
-      (response.json \ "preview_mp3_128_url").as[String] must contain("https://cf-preview-media.sndcdn.com/preview")
-      (response.json \ "hls_aac_160_url").as[String] mustNotEqual empty
-      (response.json \ "hls_aac_160_url").as[String] must contain("https://playback.media-streaming.soundcloud.cloud")
+      (response.json \ "preview_mp3_128_url").as[String] mustEqual "https://api.soundcloud.com/tracks/soundcloud:tracks:405325995/streams/4bb26bce-8ade-4a47-91e0-6134582c1c10/http-preview"
+      (response.json \ "hls_aac_160_url").as[String] mustEqual "https://api.soundcloud.com/tracks/soundcloud:tracks:405325995/streams/9dbd6985-4bc9-475b-85c3-8d70a0282ca9/hls"
+
     }
 
     "should return URLs for a high-tier track" in new TrackStreamContext {
@@ -28,7 +28,7 @@ class TrackStreamsIntegrationSpec extends IntegrationTest {
 
       response.status === 200
 
-      (response.json \ "http_mp3_128_url").as[String] must contain("https://cf-preview-media.sndcdn.com/preview/")
+      (response.json \ "http_mp3_128_url").as[String] must contain("http-preview")
       (response.json \ "hls_mp3_128_url").as[String] mustNotEqual empty
     }
 
