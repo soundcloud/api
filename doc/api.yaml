@@ -589,7 +589,7 @@ paths:
           $ref: "#/components/responses/NotFound"
   /tracks/{track_urn}/streams:
     get:
-      summary: Returns a track's streamable URLs
+      summary: Returns a track's streamable URLs (needs to keep using authentication)
       tags:
         - tracks
       parameters:
