@@ -21,8 +21,7 @@ class LikedTracksService(
     v2LikesService: v2LikesClientProtobuf,
     exceptionCollector: ExceptionCollector,
     rollout: Rollout,
-    batchSize: Int = 50,
-    v2BatchSize: Int = 100
+    batchSize: Int = 50
 ) {
   private def useLikesV2RolloutFlag = RolloutFeature("likes-v2")
 
@@ -64,7 +63,7 @@ class LikedTracksService(
   }
 
   private def getV2LikedTracksInBatches(user: Urn, trackUrns: Seq[Urn]): Future[Map[Urn, Boolean]] = {
-    inBatches(trackUrns.toSet, v2BatchSize) { tracks =>
+    inBatches(trackUrns.toSet, batchSize) { tracks =>
       v2LikesService
         .areTargetsLikedByUser(AreTargetsLikedByUserRequest(user.toString, tracks.map(_.toString).toSeq))
         .handle {

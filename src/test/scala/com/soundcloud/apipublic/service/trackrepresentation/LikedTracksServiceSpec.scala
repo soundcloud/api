@@ -23,7 +23,7 @@ class LikedTracksServiceSpec extends UnitSpecification {
     val rollout = mock[Rollout]
 
     val service =
-      new LikedTracksService(likesService, v2likesService, exceptionCollector, rollout, 2, 2)
+      new LikedTracksService(likesService, v2likesService, exceptionCollector, rollout, 2)
 
     val trackUrn1 = Urn("soundcloud", "tracks", "1")
     val trackUrn2 = Urn("soundcloud", "tracks", "2")
