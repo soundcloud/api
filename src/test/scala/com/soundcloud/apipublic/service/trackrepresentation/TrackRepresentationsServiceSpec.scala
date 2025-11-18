@@ -59,6 +59,17 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
 
   "#tracks" >> {
 
+    "does not call likedTracksService if addLikedStatus is false" in new Context {
+      val track = trackVisibilityTrack()
+      setUpMocksForExistingTrack(track, session)
+
+      Await.result(
+        tracksService.tracks(session, List(trackRequest), AccessParams.explicitAccess, addLikedStatus = false)
+      )
+
+      there was noCallsTo(likedTracksService)
+    }
+
     "Returns Some(x) for public tracks" in new Context {
       val track = trackVisibilityTrack()
       setUpMocksForExistingTrack(track, session)

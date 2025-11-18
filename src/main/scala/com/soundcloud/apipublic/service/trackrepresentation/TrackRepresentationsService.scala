@@ -24,16 +24,17 @@ class TrackRepresentationsService(
       session: UserSession,
       trackRequest: TrackRequest
   ): Future[Option[TrackRepresentation]] =
-    tracks(session, List(trackRequest), AccessParams.explicitAccess).map(_.headOption)
+    tracks(session, List(trackRequest), AccessParams.explicitAccess, addLikedStatus = true).map(_.headOption)
 
   def tracks(
       session: UserSession,
       trackRequests: List[TrackRequest],
-      access: AccessParams
+      access: AccessParams,
+      addLikedStatus: Boolean = false
   ): Future[List[TrackRepresentation]] = {
     for {
       visibleTracks <- trackVisibilityService.visibleTracks(session, trackRequests, DefaultTrackFieldMask, access)
-      enrichedTracks <- enrichTracks(session, visibleTracks)
+      enrichedTracks <- enrichTracks(session, visibleTracks, addLikedStatus)
     } yield {
       enrichedTracks
     }
@@ -41,7 +42,8 @@ class TrackRepresentationsService(
 
   private def enrichTracks(
       session: UserSession,
-      visibleTracks: List[VisibleTrack]
+      visibleTracks: List[VisibleTrack],
+      addLikedStatus: Boolean
   ): Future[List[TrackRepresentation]] = {
     val urns = visibleTracks.map(_.urn).toSet
     val userUrns = visibleTracks.map(_.userUrn)
@@ -49,7 +51,7 @@ class TrackRepresentationsService(
     Future
       .join(
         okidokiClient.fetchUserObjects(session, userUrns.toSet).map(users => users.map(user => user.urn -> user).toMap),
-        likedTracksService.getLikedTracks(session, urns.toSeq),
+        getTracksLikedByLoggedInUser(session, urns, addLikedStatus),
         okidokiClient.fetchTrackGeoblockings(session, urns).handle { case NonFatal(_) => Map.empty[Urn, Geoblockings] },
         followCountsClient.counts(userUrns).map(userUrns.zip(_).toMap)
       )
@@ -69,5 +71,13 @@ class TrackRepresentationsService(
             )
           }
       }
+  }
+
+  private def getTracksLikedByLoggedInUser(session: UserSession, tracks: Set[Urn], addLikedStatus: Boolean) = {
+    if (addLikedStatus) {
+      likedTracksService.getLikedTracks(session, tracks.toSeq)
+    } else {
+      Future.value(Map.empty[Urn, Boolean])
+    }
   }
 }

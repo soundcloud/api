@@ -46,7 +46,7 @@ class SearchService(
     for {
       searchPage <- searchClient.searchTracks(session = session, params = params, access = access)
       enrichedTracks <- trackRepresentationsService
-        .tracks(session, searchPage.docs.map(doc => TrackRequest(doc.urn, None)).toList, access)
+        .tracks(session, searchPage.docs.map(doc => TrackRequest(doc.urn, None)).toList, access, addLikedStatus = true)
         .outcomeF
     } yield {
       Collection(enrichedTracks, trackPagination.nextHref(searchPage.total_results.toInt))

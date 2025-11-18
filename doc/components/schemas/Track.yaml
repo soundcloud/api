@@ -106,7 +106,7 @@ properties:
       - $ref: "#/components/schemas/User"
       - description: User who uploaded a track
   user_favorite:
-    description: Is user's favourite.
+    description: Is user's favourite. It is only set when fetching search results or single track, otherwise it is false.
     type: boolean
   user_playback_count:
     description: Number of plays by a user.

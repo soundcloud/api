@@ -131,7 +131,12 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
       lazy val tracks = List(trackRepresentationMock)
 
       when(
-        trackRepresentationsService.tracks(===(session), anyObject[List[TrackRequest]], anyObject[AccessParams])
+        trackRepresentationsService.tracks(
+          ===(session),
+          anyObject[List[TrackRequest]],
+          anyObject[AccessParams],
+          ===(true)
+        )
       ).thenReturn(Future.value(tracks))
       when(searchClient.searchTracks(===(session), any[TracksParams], anyObject, ===(accessParam))).thenReturn(response)
     }
