@@ -98,7 +98,7 @@ class TrackStreamsHandler(
   ): Response = {
     val builder = streamResponse match {
       case RedirectStreamResponse(url) =>
-        ResponseBuilder().header("Location", url).status(Status.Found)
+        ResponseBuilder().header("Location", url).header("Cache-Control", "private, max-age=0").status(Status.Found)
       case _ => ResponseBuilder().status(Status.Ok)
     }
     if (request.method != Method.Head)

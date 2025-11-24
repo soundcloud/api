@@ -66,6 +66,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
           val response = call(method, path)
 
           response.statusCode ==== 302
+          response.headerMap("Cache-Control") ==== "private, max-age=0"
           if (method == Method.Get) {
             Json.parse(response.getContentString) ==== Json.obj(
               "status" -> "302 - Found",
