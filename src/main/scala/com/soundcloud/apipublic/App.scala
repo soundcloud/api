@@ -2,18 +2,24 @@ package com.soundcloud.apipublic
 
 import com.soundcloud.apipublic.Routing._
 import com.soundcloud.apipublic.filter._
+import com.soundcloud.apipublic.support._
 import com.soundcloud.jvmkit.module.admin.AdminServer
 import com.soundcloud.jvmkit.module.bff.BffHttpServer
 import com.soundcloud.jvmkit.module.bff.filters.CorsFilter
+import com.soundcloud.jvmkit.module.bff.ratelimiting.facade._
 import com.soundcloud.jvmkit.module.http.server.HandlerRouterBuilder
 import com.soundcloud.jvmkit.module.http.server.akira.ResponseDumpSessionRegistry
 import com.soundcloud.jvmkit.module.http.server.config.HttpServerConfig
+import com.soundcloud.jvmkit.module.memcached.RichMemcachedClient
+import com.soundcloud.jvmkit.module.memcached.config.MemcachedClientConfig
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.config.AppConfig
+import com.soundcloud.jvmkit.module.util.{ResourceName, Urn}
+import com.soundcloud.jvmkit.module.zookeeper.CuratorFramework
 import com.twitter.finagle.Filter
 import com.twitter.finagle.http.filter.JsonpFilter
-import com.twitter.finagle.http.{Request, Response}
+import com.twitter.finagle.http.{Method, Request, Response}
 
 object App {
   def main(args: Array[String]): Unit = {
@@ -25,6 +31,34 @@ object App {
 
     val clients = new Clients(config, telemetry, exceptionCollector)
     val handlers = new Handlers(telemetry, clients, exceptionCollector)
+
+    val bffApplication =
+      BffApplication(Urn("soundcloud", "systems", "api-public"), config.getApplicationResourceName)
+
+    val memcachedResourceName = ResourceName("API_PUBLIC_MEMCACHED")
+    val memcachedClient = RichMemcachedClient(
+      MemcachedClientConfig.from(memcachedResourceName, config),
+      telemetry
+    )
+
+    val curatorFramework = CuratorFramework(config, telemetry)
+    val rateLimitingFacade = {
+      new RateLimitingFacade(
+        bffApplication,
+        curatorFramework,
+        clients.userAuthentication,
+        config,
+        telemetry,
+        memcachedClient,
+        clients.rolloutClient,
+        exceptionCollector,
+        Some(
+          Seq(
+            RateLimits.playsRateLimiter
+          )
+        )
+      )
+    }
 
     val limitOffsetPaths = Seq(
       """/e1/me/track_likes""",
@@ -40,6 +74,7 @@ object App {
     val responseDump = new ResponseDumpSessionRegistry
 
     val router = HandlerRouterBuilder()
+      .register(Method.Get, rateLimitingFacade.statusEndpoint, rateLimitingFacade.rateLimitStatusHandler.handle)
       .register(
         List.concat(
           forUserFollowHandler(handlers.userFollowHandler),
@@ -91,6 +126,7 @@ object App {
         new HeadRequestFilter,
         new OffsetLimitRequestFilter(limitOffsetPaths, limitOffset),
         new CookieHeaderRemovalFilter,
+        new ExceptionForAuthorizationAndRatelimiting(rateLimitingFacade.filter),
         new DeprecatedEndpointUsageFilter(clients.userAuthentication, telemetry, router),
         new RequestTelemetryFilter(clients.userAuthentication, telemetry, router),
         new PlaylistsWithTracksTelemetryFilter(telemetry, router)
@@ -100,6 +136,13 @@ object App {
       config = config,
       telemetry = telemetry,
       responseDumpSessionRegistry = Some(responseDump),
+      customHandlers = List(
+        (
+          Method.Get,
+          rateLimitingFacade.diagnosticsEndpoint,
+          rateLimitingFacade.rateLimitingDiagnosticsAdminHandler.handle
+        )
+      ),
       exceptionCollector = exceptionCollector,
       applicationRouter = Some(router)
     ).start()

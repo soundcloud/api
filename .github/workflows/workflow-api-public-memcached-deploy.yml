@@ -1,0 +1,20 @@
+---
+name: api-public-memcached-deploy
+env:
+  SC_PIPELINE_GROUP: api-team
+on:
+  workflow_dispatch:
+  push:
+    branches:
+    - master
+    paths-ignore:
+    - "**/*"
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+jobs:
+  call_api_public_memcached_deploy_common:
+    name: call api-public-memcached-deploy-common workflow
+    uses: "./.github/workflows/workflow-api-public-memcached-deploy-common.yml"
+    secrets: inherit
+    with:
+      ref: ${{ github.ref }}

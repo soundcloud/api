@@ -1,0 +1,39 @@
+---
+format_version: 2
+pipelines:
+  api-public-memcached:
+    group: api-team
+    label_template: "${COUNT}-${git[:7]}"
+    materials:
+      git:
+        git: git@github.com:soundcloud/sc-k8s-memcached.git
+    stages:
+    - deploy:
+        approval: manual
+        jobs:
+          deploy-db:
+            job_type: deploy
+            tasks:
+            - exec:
+                command: make
+                arguments:
+                - deploy
+                - scale
+                - ZONES=db
+                - SYSTEM=api-public
+                - CPU=0.2
+                - STORAGE=512
+                - REPLICAS=10
+          deploy-replicas:
+            job_type: deploy
+            tasks:
+            - exec:
+                command: make
+                arguments:
+                - deploy
+                - scale
+                - ZONES=replicas
+                - SYSTEM=api-public
+                - CPU=0.2
+                - STORAGE=512
+                - REPLICAS=10

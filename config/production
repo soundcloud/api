@@ -35,7 +35,17 @@ PLAYLIST_SRV_RECORD="dnssrv!http.moshimoshi.prod.mothership.srv.${ZONE}.s-cloud.
 OKIDOKI_SRV_RECORD="dnssrv!http.okidoki.prod.moshimoshi.srv.${ZONE}.s-cloud.net."
 OKIDOKI_CLIENT_REQUEST_TIMEOUT_MILLIS=2000
 
+<<<<<<< HEAD
 PROFILES_SRV_RECORD="dnssrv!http.api.prod.profiles.srv.${ZONE}.s-cloud.net."
+=======
+RATELIMITING_CIRCUITBREAKER_MAX_CONSECUTIVE_FAILURES="5"
+RATELIMITING_CIRCUITBREAKER_RESET_TIMEOUT_IN_MILLIS="1000"
+RATELIMITING_CLIENT_REQUEST_TIMEOUT_MILLIS="2000"
+RATELIMITING_CLIENT_RETRIES="1"
+RATELIMITING_MAX_PROMETHEUS_COUNTER_LABELS="100"
+RATELIMITING_SRV_RECORD="dnssrv!http.api.prod.ratelimiting.srv.${ZONE}.s-cloud.net."
+
+>>>>>>> parent of e9d24126 (chore: remove ratelimits service and code (Moved to Tyk) (#1348))
 
 TIMELINE_CLIENT_REQUEST_TIMEOUT_MILLIS="4000"
 
@@ -54,6 +64,7 @@ TRACK_COORDINATOR_CLIENT_REQUEST_TIMEOUT_MILLIS=5000
 
 RATELIMIT_MAX_CONN="999999"
 
+API_PUBLIC_MEMCACHED_SRV_RECORD="dnssrv!memcached.cache.prod.api-public.srv.${ZONE}.s-cloud.net."
 ZOOKEEPER_ADDRESS="dnssrv!zookeeper.coordinator.prod.rollout.srv.db.s-cloud.net."
 
 FOLLOW_COUNTS_FETCH_MAX_ENTRIES="20"
