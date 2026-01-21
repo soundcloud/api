@@ -12,6 +12,7 @@ class ExceptionForAuthorizationAndRatelimiting(wrappedFilter: SimpleFilter[Reque
       case (Method.Post, "/tracks") => next(request)
       case (Method.Post, "/muzooka/webhook") => next(request)
       case (Method.Put, PUT_TRACKS_PATTERN()) => next(request)
+      case (Method.Post, "/oauth2/token") => next(request)
       case _ => wrappedFilter(request, next)
     }
 }
