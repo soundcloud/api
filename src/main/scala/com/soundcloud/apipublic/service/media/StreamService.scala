@@ -26,7 +26,6 @@ class StreamService(
   private final val PROTOCOL_PREVIEW_PROGRESSIVE: String = "http-preview"
   private val mp3MimeType = "audio/mpeg"
   private val aacMimeType = """audio/mp4; codecs="mp4a.40.2""""
-  private val opusMimeType = """audio/ogg; codecs="opus""""
   private val protoProgressive = "progressive"
   private val protoHls = "hls"
   private val aac160kPreset = "aac_160k"
@@ -139,9 +138,7 @@ class StreamService(
         .map(t =>
           buildStreamUrl(
             t,
-            if (mimeType == opusMimeType) hlsProtocol
-            else if (protocol.contains(protoProgressive)) progressiveProtocol
-            else hlsProtocol
+            if (protocol.contains(protoProgressive)) progressiveProtocol else hlsProtocol
           )
         )
 
@@ -149,7 +146,6 @@ class StreamService(
     val legacyHlsStream = findTranscoding(mp3MimeType, Some(protoHls))
     val hls160kStream = findTranscoding(aacMimeType, preset = Some(aac160kPreset))
     val hls96kStream = findTranscoding(aacMimeType, preset = Some(aac96kPreset))
-    val opusStream = findTranscoding(opusMimeType)
     val mp3Preview = track.transcodings
       .find(_.mimeType == mp3MimeType)
       .map(mp3 => buildStreamUrl(mp3, PROTOCOL_PREVIEW_PROGRESSIVE))
@@ -160,7 +156,6 @@ class StreamService(
         legacyHlsStream,
         hls96kStream,
         hls160kStream,
-        opusStream,
         mp3Preview
       )
     )

@@ -40,7 +40,6 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
 
     val httpMp3 = "http://mp3-progressive"
     val hlsMp3 = "http://mp3-hls"
-    val hlsOpus = "http://opus-hls"
     val aac160k = "http://aac-160k"
     val aac96k = "http://aac-96k"
     val httpPreviewMp3 = "http://mp3-progressive-preview"
@@ -106,7 +105,6 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
               Some(hlsMp3),
               Some(aac96k),
               Some(aac160k),
-              Some(hlsOpus),
               Some(httpPreviewMp3)
             ).good
           )
@@ -120,7 +118,6 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
               "hls_aac_160_url" -> aac160k,
               "hls_aac_96k_url" -> aac96k,
               "hls_mp3_128_url" -> hlsMp3,
-              "hls_opus_64_url" -> hlsOpus,
               "preview_mp3_128_url" -> httpPreviewMp3
             )
           }
@@ -129,7 +126,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
 
     "does not records access to just streams" in new MediaServiceContext {
       streamService.fetchTranscodingUrls(session, trackUrn, None) returns Future.value(
-        MediaStreamUrls(Some(httpMp3), Some(hlsMp3), Some(aac96k), Some(aac160k), Some(hlsOpus), Some(httpPreviewMp3)).good
+        MediaStreamUrls(Some(httpMp3), Some(hlsMp3), Some(aac96k), Some(aac160k), Some(httpPreviewMp3)).good
       )
 
       get("/tracks/soundcloud:tracks:5/streams")

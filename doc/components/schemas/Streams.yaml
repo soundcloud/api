@@ -7,8 +7,5 @@ properties:
     deprecated: true
   hls_mp3_128_url:
     type: string
-  hls_opus_64_url:
-    type: string
-    deprecated: true
   preview_mp3_128_url:
     type: string
