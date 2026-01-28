@@ -107,7 +107,7 @@ class StreamServiceSpec extends UnitSpecification {
     override lazy val tracks = List[Outcome[VisibleTrack]]()
 
     Await.result(service.fetchTranscodingUrls(session, trackUrn, secretToken)) ==== NotFound().bad
-    Await.result(service.fetchLegacyProgressiveTranscodingUrl(session, trackUrn, secretToken)) ==== NotFound().bad
+    Await.result(service.fetchLegacyProgressivePreviewTranscodingUrl(session, trackUrn, secretToken)) ==== NotFound().bad
   }
 
   "error when track is not streamable" in new Context {
@@ -115,12 +115,12 @@ class StreamServiceSpec extends UnitSpecification {
     override lazy val tracks = List[Outcome[VisibleTrack]](unavailableError)
 
     Await.result(service.fetchTranscodingUrls(session, trackUrn, secretToken)) ==== unavailableError
-    Await.result(service.fetchLegacyProgressiveTranscodingUrl(session, trackUrn, secretToken)) ==== unavailableError
+    Await.result(service.fetchLegacyProgressivePreviewTranscodingUrl(session, trackUrn, secretToken)) ==== unavailableError
   }
 
   "error when no MP3 transodings are returned for legacy stream" in new Context {
     override lazy val transcodings = List()
-    Await.result(service.fetchLegacyProgressiveTranscodingUrl(session, trackUrn, secretToken)) ==== NotFound().bad
+    Await.result(service.fetchLegacyProgressivePreviewTranscodingUrl(session, trackUrn, secretToken)) ==== NotFound().bad
   }
 
   "downgrades to snippet when MP3 transodings are returned but progressive streaming restricted" in new Context {
@@ -138,7 +138,7 @@ class StreamServiceSpec extends UnitSpecification {
     )
     override lazy val transcodings = List(mp3ProgressiveAndHlsTranscoding)
 
-    Await.result(service.fetchLegacyProgressiveTranscodingUrl(session, trackUrn, secretToken)) ==== RedirectStreamResponse(
+    Await.result(service.fetchLegacyProgressivePreviewTranscodingUrl(session, trackUrn, secretToken)) ==== RedirectStreamResponse(
       "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/http-preview"
     ).good
 
@@ -157,7 +157,7 @@ class StreamServiceSpec extends UnitSpecification {
           TwinagleException(ErrorCode.NotFound, "stream not found")
         )
 
-        Await.result(service.fetchLegacyProgressiveTranscodingUrl(session, trackUrn, secretToken)) ==== NotFound().bad
+        Await.result(service.fetchLegacyProgressivePreviewTranscodingUrl(session, trackUrn, secretToken)) ==== NotFound().bad
         Await.result(service.fetchStreamUrl(session, PlayParams(trackUrn, secretToken, "mp3-uuid", "http"))) ==== NotFound().bad
         Await.result(service.fetchStreamUrl(session, PlayParams(trackUrn, secretToken, "mp3-uuid", "hls"))) ==== NotFound().bad
       }
@@ -171,19 +171,19 @@ class StreamServiceSpec extends UnitSpecification {
           TwinagleException(ErrorCode.Unauthenticated, "stream not authorised")
         )
 
-        Await.result(service.fetchLegacyProgressiveTranscodingUrl(session, trackUrn, secretToken)) ==== NotAuthorized().bad
+        Await.result(service.fetchLegacyProgressivePreviewTranscodingUrl(session, trackUrn, secretToken)) ==== NotAuthorized().bad
         Await.result(service.fetchStreamUrl(session, PlayParams(trackUrn, secretToken, "mp3-uuid", "http"))) ==== NotAuthorized().bad
       }
 
       "returns an MP3 stream url" in new Context {
         tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns Future.value(streamUrlTwirpResponse)
 
-        Await.result(service.fetchLegacyProgressiveTranscodingUrl(session, trackUrn, secretToken)) ==== RedirectStreamResponse(
-          "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/http"
+        Await.result(service.fetchLegacyProgressivePreviewTranscodingUrl(session, trackUrn, secretToken)) ==== RedirectStreamResponse(
+          "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/http-preview"
         ).good
 
-        Await.result(service.fetchStreamUrl(session, PlayParams(trackUrn, secretToken, "mp3-uuid", "http"))) ==== RedirectStreamResponse(
-          "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/http"
+        Await.result(service.fetchStreamUrl(session, PlayParams(trackUrn, secretToken, "mp3-uuid", "http-preview"))) ==== RedirectStreamResponse(
+          "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/http-preview"
         ).good
       }
 
@@ -206,7 +206,7 @@ class StreamServiceSpec extends UnitSpecification {
       "returns an MP3 snippet url if policy is SNIP" in new Context {
         override lazy val policy = ContentPolicy.SNIP
 
-        val result = Await.result(service.fetchLegacyProgressiveTranscodingUrl(session, trackUrn, secretToken))
+        val result = Await.result(service.fetchLegacyProgressivePreviewTranscodingUrl(session, trackUrn, secretToken))
         result ==== RedirectStreamResponse(
           "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/http-preview"
         ).good
@@ -224,7 +224,7 @@ class StreamServiceSpec extends UnitSpecification {
         TwinagleException(ErrorCode.NotFound, "stream not found")
       )
 
-      Await.result(service.fetchLegacyProgressiveTranscodingUrl(session, trackUrn, secretToken)) ==== NotFound().bad
+      Await.result(service.fetchLegacyProgressivePreviewTranscodingUrl(session, trackUrn, secretToken)) ==== NotFound().bad
       Await.result(service.fetchStreamUrl(session, PlayParams(trackUrn, secretToken, "mp3-uuid", "http"))) ==== NotFound().bad
     }
 
@@ -237,7 +237,7 @@ class StreamServiceSpec extends UnitSpecification {
         TwinagleException(ErrorCode.Unauthenticated, "stream not authorised")
       )
 
-      Await.result(service.fetchLegacyProgressiveTranscodingUrl(session, trackUrn, secretToken)) ==== NotAuthorized().bad
+      Await.result(service.fetchLegacyProgressivePreviewTranscodingUrl(session, trackUrn, secretToken)) ==== NotAuthorized().bad
       Await.result(service.fetchStreamUrl(session, PlayParams(trackUrn, secretToken, "mp3-uuid", "hls"))) ==== NotAuthorized().bad
     }
 

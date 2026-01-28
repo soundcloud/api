@@ -59,8 +59,8 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     ) {
       case (method, path) =>
         "GET /tracks/soundcloud:tracks:5/stream" in new MediaServiceContext {
-          streamService.fetchLegacyProgressiveTranscodingUrl(session, trackUrn, None) returns
-            Future.value(RedirectStreamResponse(httpMp3).good)
+          streamService.fetchLegacyProgressivePreviewTranscodingUrl(session, trackUrn, None) returns
+            Future.value(RedirectStreamResponse(httpPreviewMp3).good)
 
           val response = call(method, path)
 
@@ -69,15 +69,15 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
           if (method == Method.Get) {
             Json.parse(response.getContentString) ==== Json.obj(
               "status" -> "302 - Found",
-              "location" -> httpMp3
+              "location" -> httpPreviewMp3
             )
           }
         }
     }
 
     "records access and logs" in new MediaServiceContext {
-      streamService.fetchLegacyProgressiveTranscodingUrl(session, trackUrn, None) returns
-        Future.value(RedirectStreamResponse(httpMp3).good)
+      streamService.fetchLegacyProgressivePreviewTranscodingUrl(session, trackUrn, None) returns
+        Future.value(RedirectStreamResponse(httpPreviewMp3).good)
 
       get("/tracks/soundcloud:tracks:5/stream")
       there was one(trackAccessClient).recordAccess(
@@ -176,15 +176,16 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
 
     "for legacy /stream" >> {
       trait WithSecretTokenContext extends MediaServiceContext {
-        streamService.fetchLegacyProgressiveTranscodingUrl(session, trackUrn, Some("itsasecret")) returns Future.value(
-          RedirectStreamResponse(httpMp3).good
-        )
+        streamService.fetchLegacyProgressivePreviewTranscodingUrl(session, trackUrn, Some("itsasecret")) returns Future
+          .value(
+            RedirectStreamResponse(httpPreviewMp3).good
+          )
       }
 
       s"should return 302" in new WithSecretTokenContext {
         val resp = get(s"/tracks/${trackUrn.toString}/stream?secret_token=itsasecret")
         resp.status ==== Status.Found
-        resp.headerMap("Location") ==== "http://mp3-progressive"
+        resp.headerMap("Location") ==== "http://mp3-progressive-preview"
       }
     }
 
@@ -207,7 +208,9 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
 
   "when streaming is not found" >> {
     trait StreamingNotAllowedContext extends MediaServiceContext {
-      streamService.fetchLegacyProgressiveTranscodingUrl(session, trackUrn, None) returns Future.value(NotFound().bad)
+      streamService.fetchLegacyProgressivePreviewTranscodingUrl(session, trackUrn, None) returns Future.value(
+        NotFound().bad
+      )
     }
 
     s"should return 404" in new StreamingNotAllowedContext {
@@ -218,7 +221,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
 
   "when streaming is not allowed" >> {
     trait StreamingNotAllowedContext extends MediaServiceContext {
-      streamService.fetchLegacyProgressiveTranscodingUrl(session, trackUrn, None) returns Future.value(
+      streamService.fetchLegacyProgressivePreviewTranscodingUrl(session, trackUrn, None) returns Future.value(
         CustomError(UnavailableByPolicy(trackUrn, Reason.GEO)).bad
       )
     }

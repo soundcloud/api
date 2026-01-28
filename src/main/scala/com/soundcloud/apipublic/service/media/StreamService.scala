@@ -31,7 +31,7 @@ class StreamService(
   private val aac160kPreset = "aac_160k"
   private val aac96kPreset = "aac_96kk"
 
-  def fetchLegacyProgressiveTranscodingUrl(
+  def fetchLegacyProgressivePreviewTranscodingUrl(
       session: UserSession,
       trackUrn: Urn,
       secretToken: Option[String]
@@ -49,10 +49,7 @@ class StreamService(
           // For preview URLs, we need an MP3 transcoding
             .find(transcoding => transcoding.mimeType == mp3MimeType)
             .map(transcoding => {
-              if (streamNotAllowed(visibleTrack))
-                fetchProgressivePreviewUrl(session, trackUrn, secretToken, transcoding.uuid)
-              else
-                fetchProgressiveUrl(session, trackUrn, secretToken, transcoding.uuid)
+              fetchProgressivePreviewUrl(session, trackUrn, secretToken, transcoding.uuid)
             }.map(_.map(RedirectStreamResponse(_))))
             .getOrElse(Future.value(NotFound().bad))
         case Some(Bad(err)) => Future.value(err.bad)

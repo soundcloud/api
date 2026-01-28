@@ -50,7 +50,7 @@ class TrackStreamsHandler(
       extractParams(request) match {
         case Some(params) =>
           streamService
-            .fetchLegacyProgressiveTranscodingUrl(
+            .fetchLegacyProgressivePreviewTranscodingUrl(
               session,
               params.trackUrn,
               params.secretToken
