@@ -537,15 +537,9 @@ class TrackRepresentationSpec extends UnitSpecification {
         )
       }
 
-      "adds the secret token to the preview_url" in new UrlsPresentContext {
-        json \ "stream_url" ==== JsDefined(
-          JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:1324/preview?secret_token=bl3rkbi3")
-        )
-      }
-
       "adds the secret token to the stream_url" in new UrlsPresentContext {
-        json \ "streams_url" ==== JsDefined(
-          JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:1324/streams?secret_token=bl3rkbi3")
+        json \ "stream_url" ==== JsDefined(
+          JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:1324/stream?secret_token=bl3rkbi3")
         )
       }
 
@@ -653,10 +647,7 @@ class TrackRepresentationSpec extends UnitSpecification {
         )
       )
       trackJson \ "stream_url" ==== JsDefined(
-        JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:1324/preview")
-      )
-      trackJson \ "streams_url" ==== JsDefined(
-        JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:1324/streams")
+        JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:1324/stream")
       )
       trackJson \ "download_url" ==== JsDefined(
         JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:1324/download")
@@ -818,10 +809,7 @@ class TrackRepresentationSpec extends UnitSpecification {
         )
       )
       trackJson \ "stream_url" ==== JsDefined(
-        JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:174088262/preview")
-      )
-      trackJson \ "streams_url" ==== JsDefined(
-        JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:174088262/streams")
+        JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:174088262/stream")
       )
       trackJson \ "download_url" ==== JsDefined(
         JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:174088262/download")
@@ -863,10 +851,7 @@ class TrackRepresentationSpec extends UnitSpecification {
         )
       )
       trackJson \ "stream_url" ==== JsDefined(
-        JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:174088262/preview?secret_token=s-8USae")
-      )
-      trackJson \ "streams_url" ==== JsDefined(
-        JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:174088262/streams?secret_token=s-8USae")
+        JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:174088262/stream?secret_token=s-8USae")
       )
       trackJson \ "download_url" ==== JsDefined(
         JsString("https://api.soundcloud.com/tracks/soundcloud:tracks:174088262/download?secret_token=s-8USae")

@@ -87,9 +87,8 @@ properties:
     description: Type of sharing (public/private).
     type: string
   stream_url:
-    description: URL to stream (preview only)
+    description: URL to stream.
     type: string
-    deprecated: true
   streamable:
     description: Is streamable.
     type: boolean

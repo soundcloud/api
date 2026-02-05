@@ -90,11 +90,7 @@ properties:
     description: Type of sharing (public/private).
     type: string
   stream_url:
-    description: URL to stream (preview only)
-    type: string
-    deprecated: true
-  streams_url:
-    description: URL to get playable streams
+    description: URL to stream.
     type: string
   streamable:
     description: Is streamable.

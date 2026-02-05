@@ -43,7 +43,7 @@ class TrackStreamsHandler(
       }
     }
 
-  def handleLegacyPlayRequestAsPreview(
+  def handleLegacyPlayRequest(
       request: HandlerRequest
   ): Future[Response] = {
     userAuthentication.withUserSession(request) { session =>

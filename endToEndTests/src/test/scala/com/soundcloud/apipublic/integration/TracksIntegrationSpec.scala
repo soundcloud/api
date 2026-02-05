@@ -16,10 +16,7 @@ class TracksIntegrationSpec extends IntegrationTest {
       response.status === 200
 
       (response.json \ "stream_url").as[String] must equalTo(
-        s"https://api.soundcloud.com/tracks/soundcloud:tracks:$freeTierTrackId/preview"
-      )
-      (response.json \ "streams_url").as[String] must equalTo(
-        s"https://api.soundcloud.com/tracks/soundcloud:tracks:$freeTierTrackId/streams"
+        s"https://api.soundcloud.com/tracks/soundcloud:tracks:$freeTierTrackId/stream"
       )
       (response.json \ "duration").as[Int] must equalTo(189613)
       (response.json \ "streamable").as[Boolean] must equalTo(true)
@@ -32,10 +29,7 @@ class TracksIntegrationSpec extends IntegrationTest {
       response.status === 200
 
       (response.json \ "stream_url").as[String] must equalTo(
-        s"https://api.soundcloud.com/tracks/soundcloud:tracks:$highTierTrackId/preview"
-      )
-      (response.json \ "streams_url").as[String] must equalTo(
-        s"https://api.soundcloud.com/tracks/soundcloud:tracks:$highTierTrackId/streams"
+        s"https://api.soundcloud.com/tracks/soundcloud:tracks:$highTierTrackId/stream"
       )
       (response.json \ "duration").as[Int] must equalTo(30000)
       (response.json \ "streamable").as[Boolean] must equalTo(true)
@@ -48,7 +42,6 @@ class TracksIntegrationSpec extends IntegrationTest {
       response.status === 200
 
       (response.json \ "stream_url").asOpt[String] must beNone
-      (response.json \ "streams_url").asOpt[String] must beNone
       (response.json \ "access").as[String] must equalTo("blocked")
       (response.json \ "available_country_codes").as[List[String]] must not contain "DE"
     }
@@ -59,7 +52,6 @@ class TracksIntegrationSpec extends IntegrationTest {
       response.status === 200
 
       (response.json \ "stream_url").asOpt[String] must beNone
-      (response.json \ "streams_url").asOpt[String] must beNone
       (response.json \ "duration").as[Int] must equalTo(7889)
       (response.json \ "streamable").as[Boolean] must equalTo(false)
       (response.json \ "access").as[String] must equalTo("blocked")
@@ -71,7 +63,6 @@ class TracksIntegrationSpec extends IntegrationTest {
       response.status === 200
 
       (response.json \ "stream_url").asOpt[String] must beNone
-      (response.json \ "streams_url").asOpt[String] must beNone
       (response.json \ "access").as[String] must equalTo("blocked")
     }
 
