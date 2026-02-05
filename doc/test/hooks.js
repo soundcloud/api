@@ -14,8 +14,7 @@ var skipTransactionIds = [
     "POST (200) /oauth2/token",
     "POST (401) /oauth2/token",
     "PUT (200) /tracks/soundcloud%3Atracks%3A308946187",
-    "POST (201) /tracks/soundcloud%3Atracks%3A308946187/comments",
-    "POST (201) /tracks"
+    "POST (201) /tracks/soundcloud%3Atracks%3A308946187/comments"
 ];
 var replacePlaylistIdTransactionIds = [
     "PUT (200) /playlists/soundcloud%3Aplaylists%3A10",
