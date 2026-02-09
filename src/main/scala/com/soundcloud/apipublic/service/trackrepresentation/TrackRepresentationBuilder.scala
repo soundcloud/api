@@ -59,7 +59,7 @@ object TrackRepresentationBuilder {
       releaseDay = trackCoordinatorTrack.release_day,
       releaseMonth = trackCoordinatorTrack.release_month,
       uri = urlFor(urn, trackCoordinatorTrack.public, secretToken),
-      streamUrl = urlFor(urn, trackCoordinatorTrack.public, "stream", secretToken),
+      streamUrl = urlFor(urn, trackCoordinatorTrack.public, "preview", secretToken),
       downloadUrl = urlFor(urn, trackCoordinatorTrack.public, "download", secretToken),
       permalinkUrl =
         secretPath(Some(trackCoordinatorTrack.permalink_url), trackCoordinatorTrack.public, secretToken, agentUrn),
@@ -119,7 +119,7 @@ object TrackRepresentationBuilder {
       releaseDay = releaseDayFor(visibleTrack),
       releaseMonth = releaseMonthFor(visibleTrack),
       uri = urlFor(visibleTrack.urn, visibleTrack.public, secretToken),
-      streamUrl = getConditionalUrl(visibleTrack, visibleTrack.access.contains(Access.Blocked), "stream"),
+      streamUrl = getConditionalUrl(visibleTrack, visibleTrack.access.contains(Access.Blocked), "preview"),
       downloadUrl = getConditionalUrl(visibleTrack, !visibleTrack.downloadable, "download"),
       permalinkUrl = secretPath(visibleTrack.permalinkUrl, visibleTrack.public, secretToken, agent),
       secretUri = getSecretUri(visibleTrack),

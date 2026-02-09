@@ -67,7 +67,7 @@ hooks.before("/tracks > Uploads a new track. > 201 > application/json; charset=u
 
     const form = new Multipart();
     form.append('track[title]', 'Test sample track');
-    form.append('track[asset_data]', fs.createReadStream('./test/test-sample.wav'), {filename: 'test-sample.wav', contentType: 'audio/wav'});
+    form.append('track[asset_data]', fs.createReadStream('./test/test-sample.mp3'), {filename: 'test-sample.mp3', contentType: 'audio/mpeg'});
     form.append('track[sharing]', 'private');
 
     transaction.request.body = (await form.buffer()).toString('base64');

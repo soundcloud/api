@@ -139,7 +139,8 @@ object Routing {
   def forTrackStreamsHandler(trackStreamsHandler: TrackStreamsHandler): List[(Method, String, Handler)] = {
     route(Method.Get, "/tracks/:trackId/streams/:transcoding/:protocol", trackStreamsHandler.handlePlayRequest) :::
       route(Method.Get, "/tracks/:trackId/streams", trackStreamsHandler.handleStreamsRequest) :::
-      route(Method.Get, "/tracks/:trackId/stream", trackStreamsHandler.handleLegacyPlayRequest) :::
+      route(Method.Get, "/tracks/:trackId/stream", trackStreamsHandler.handleLegacyPlayRequestAsPreview) :::
+      route(Method.Get, "/tracks/:trackId/preview", trackStreamsHandler.handleLegacyPlayRequestAsPreview) :::
       route(Method.Get, "/i1/tracks/:trackId/streams", trackStreamsHandler.handleStreamsRequest) // deprecate
   }
 

@@ -65,7 +65,7 @@
   "secret_token": "s-8USae",
   "sharing": "public",
   "state": "storing",
-  "stream_url": "https://media.soundcloud.com/stream/2014-10-27-17-25-29-66",
+  "stream_url": "https://api.soundcloud.com/tracks/soundcloud:tracks:174088262/preview",
   "streamable": true,
   "tag_list": "tag onw two \"hello tag\" tōkyō",
   "title": "Awesome Track",
