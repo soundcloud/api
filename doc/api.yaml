@@ -35,91 +35,6 @@ tags:
   - name: miscellaneous
     description: Miscellaneous Endpoints.
 paths:
-  /connect:
-    get:
-      summary: Deprecated since 01.10.2024, please use https://secure.soundcloud.com/authorize instead. Use Authorize button in Swagger UI to see it in action.
-      deprecated: true
-      description: >
-        <h3>Security Advice</h3>
-
-        * [OAuth Authorization Code flow](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-security-topics-16#section-2.1.1) (`response_type=code`)
-        is the only allowed method of authorization.
-
-        * Use the `state` parameter for [CSRF protection](https://tools.ietf.org/html/draft-ietf-oauth-security-topics-16#section-4.7). Pass a sufficient 
-        random nonce here and verify this nonce again after retrieving the token.
-      tags:
-        - oauth
-      parameters:
-        - $ref: "#/components/parameters/client_id"
-        - $ref: "#/components/parameters/redirect_uri"
-        - $ref: "#/components/parameters/response_type"
-        # The scope parameter is usually empty for most of the clients. As different scopes are poorly supported, we shouldn't mention it here at all.
-        #        - $ref: '#/components/parameters/scope'
-        - $ref: "#/components/parameters/state"
-      responses:
-        302:
-          description: Redirect to connect portal
-          headers:
-            Location:
-              description: Redirect to connect portal "https://secure.soundcloud.com/connect"
-              schema:
-                type: string
-        401:
-          $ref: "#/components/responses/Unauthorized"
-  /oauth2/token:
-    post:
-      summary: Deprecated since 01.10.2024, please use https://secure.soundcloud.com/oauth/token instead. Use Authorize button in Swagger UI to see it in action.
-      deprecated: true
-      tags:
-        - oauth
-      requestBody:
-        required: true
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: "#/components/schemas/OAuthToken"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/OAuthToken"
-      responses:
-        200:
-          description: Success
-          content:
-            application/json; charset=utf-8:
-              examples:
-                ExpiringToken:
-                  $ref: "#/components/examples/ExpiringToken"
-        400:
-          description: "Bad Request"
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: "#/components/schemas/Error"
-              examples:
-                ErrorInvalidGrant:
-                  $ref: "#/components/examples/ErrorInvalidGrant"
-                ErrorUnsupportedGrant:
-                  $ref: "#/components/examples/ErrorUnsupportedGrant"
-                BadRequest:
-                  $ref: "#/components/examples/BadRequest"
-        401:
-          description: "Unauthorized"
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: "#/components/schemas/Error"
-              examples:
-                ErrorInvalidGrant:
-                  value:
-                    code: 401
-                    message: invalid_grant
-                    link: https://developers.soundcloud.com/docs/api/guide#authentication
-                ErrorInvalidScope:
-                  $ref: "#/components/examples/ErrorInvalidScope"
-                ErrorInvalidClient:
-                  $ref: "#/components/examples/ErrorInvalidClient"
   /me:
     get:
       summary: Returns the authenticated user’s information.
@@ -585,6 +500,21 @@ paths:
       responses:
         200:
           description: Success
+        404:
+          $ref: "#/components/responses/NotFound"
+  /tracks/{track_urn}/preview:
+    get:
+      summary: Starts playback of a preview of the track
+      tags:
+        - tracks
+      parameters:
+        - $ref: "#/components/parameters/track_urn"
+        - $ref: "#/components/parameters/secret_token"
+      responses:
+        302:
+          $ref: "#/components/responses/Found"
+        401:
+          $ref: "#/components/responses/Unauthorized"
         404:
           $ref: "#/components/responses/NotFound"
   /tracks/{track_urn}/streams:
