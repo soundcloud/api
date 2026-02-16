@@ -110,10 +110,13 @@ class SearchHandler(
         if (req.params.contains("access")) {
           req.params
         } else {
-          (req.params ++ ParamMap(
-            "content_tier" -> "FREE",
-            "content_country" -> session.getGeo.getCountryCode
-          )).asInstanceOf[ParamMap]
+          // Build a fresh ParamMap to avoid ClassCastException from casting a generic Map
+          ParamMap(
+            req.params ++ ParamMap(
+              "content_tier" -> "FREE",
+              "content_country" -> session.getGeo.getCountryCode
+            )
+          )
         }
 
       val params =

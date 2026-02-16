@@ -241,6 +241,22 @@ class SearchHandlerSpec extends UnitSpecification {
       response.contentString ==== Collection.getRepresentation(tracksCollection, true)
     }
 
+    "handles duplicate q params without failing" in new Context {
+      // Simulate a request like /tracks?q=&q=foo which used to cause a 500 due to a ClassCastException
+      when(
+        searchService
+          .searchTracks(
+            any,
+            any,
+            any[TrackPagination],
+            any[AccessParams]
+          )
+      ).thenReturn(Good(tracksCollection).outcomeF)
+
+      val res = get("/tracks?q=&q=foo")
+      res.statusCode ==== 200
+    }
+
     "returns a 400 when search service returns invalid request" in new Context {
       override lazy val params = ParamMap(("q", "foo"), ("offset", "10"), ("limit", "5"), ("linked_partitioning", "1"))
       override lazy val queryString = "?q=foo&offset=10&limit=5&linked_partitioning=1"
