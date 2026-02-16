@@ -9,8 +9,7 @@ import org.joda.time.format.DateTimeFormat
 import scala.language.implicitConversions
 
 object ParamsExtractor {
-  val isNumber = "\\d+\\.?\\d+"
-  val sourceFormat = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")
+  val sourceFormat = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss").withZoneUTC()
   val searchDefaultLimit = 50
 
   def mapCreatedAt(v: String): DateTime = DateTime.parse(v, sourceFormat)
