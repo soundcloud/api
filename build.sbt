@@ -7,7 +7,7 @@ lazy val apiPublic = project
   .enablePlugins(SbtKitPlugin, TwirpSbtPlugin)
   .settings(
     name := "api-public",
-    scalaVersion := scalaVersion212,
+    scalaVersion := "2.12.20",
     scalacOptions += "-Wconf:cat=deprecation:is,any:e",
     libraryDependencies ++= Seq(
       "com.soundcloud" %% "jvmkit-http-client" % jvmkitVersion,
@@ -40,7 +40,7 @@ lazy val endToEnd = project
   .enablePlugins(SbtKitPlugin)
   .settings(
     name := "endToEnd",
-    scalaVersion := scalaVersion212,
+    scalaVersion := "2.12.20",
     libraryDependencies ++= Seq(
       "org.specs2" %% "specs2-core" % specs2Version,
       "org.specs2" %% "specs2-mock" % specs2Version,
