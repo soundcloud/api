@@ -7,7 +7,7 @@
     "express": "^4.18.2",
     "multi-file-swagger": "^2.3.0",
     "multi-part": "^4.0.0",
-    "swagger-ui-express": "4.6.1",
+    "swagger-ui-express": "4.6.3",
     "yamljs": "0.3.0"
   },
   "devDependencies": {
