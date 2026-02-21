@@ -12,8 +12,6 @@ Please check the [releases] page.
 * [Backstage blog]
 * [API announcements]
 
-**NOTE: This is not a forum for requesting new API keys. Please send us a request via our support channels, e.g. the chat bot. Also please subscribe to our [@SoundCloudDev] on X for updates**
-
 ## Opening an issue
 Please use the [issue tracker] in this repository for bug reports, feature requests, suggestions, and documentation improvements. We will triage the request and mark it as one of the following types:
 
@@ -27,7 +25,7 @@ In order to show your support for issues filed here, please add a thumbs-up emoj
 Please note - if there is an issue filed for something that is answered already in the FAQ, we will close the issue in the spirit of having the open issues only for unanswered questions of topics. 
 
 ## Security Issues
-Please don't post security issues or vulnerabilities here. Instead, submit them to our public [bug-bounty program] to get triaged and receive bounty payouts.
+Please don't post security issues or vulnerabilities here. Refer to [Security.md](Security.md) for [bug-bounty program]
 
 ## Frequently asked questions
 ### Can I request an API key for a new app?
@@ -39,7 +37,7 @@ Our Support Team will be happy to help you with your URI's redirects. Please fil
 
 ### My app disappeared from `https://soundcloud.com/you/apps`, what should I do?
 If you registered an app with Soundcloud and now cannot find it, it's possible your API keys were revoked as unused for some time.
-Our Support Team will be happy to help you with reinstating the keys. Please fill out a ticket [here] under "I need help with something else" and they will get back to you as soon as they can.
+Contact our Support Team for further questions. Please fill out a ticket [here] under "I need help with something else" and they will get back to you as soon as they can.
 
 ### I have a questions about the SDKs. Can I post them here?
 Yes, you may. However, please note that we're not maintaining the Ruby, Python or JS SDK anymore and we're going to be announcing soon that we're going to open it for maintainers from the community if there's interest. Our recommendation is to use the API directly and build your own client. We will also be exposing the underlying yaml file for the OpenAPI spec soon, so that folks can generate clients from this. 
