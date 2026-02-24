@@ -47,7 +47,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
   /me/activities:
     get:
-      summary: Returns the authenticated user's activities.
+      summary: Returns the authenticated user's feed
+      deprecated: true
       tags:
         - me
       parameters:
@@ -60,7 +61,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
   /me/activities/all/own:
     get:
-      summary: Recent the authenticated user's activities.
+      summary: Returns the authenticated user's feed
+      deprecated: true
       tags:
         - me
       parameters:
@@ -73,7 +75,34 @@ paths:
           $ref: "#/components/responses/Unauthorized"
   /me/activities/tracks:
     get:
-      summary: Returns the authenticated user's recent track related activities.
+      summary: Returns the authenticated user's recent track related feed.
+      deprecated: true
+      tags:
+        - me
+      parameters:
+        - $ref: "#/components/parameters/access"
+        - $ref: "#/components/parameters/limit"
+      responses:
+        200:
+          $ref: "#/components/responses/Activities"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+  /me/feed:
+    get:
+      summary: Returns the authenticated user's feed.
+      tags:
+        - me
+      parameters:
+        - $ref: "#/components/parameters/access"
+        - $ref: "#/components/parameters/limit"
+      responses:
+        200:
+          $ref: "#/components/responses/Activities"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+  /me/feed/tracks:
+    get:
+      summary: Returns the authenticated user's recent track related feed.
       tags:
         - me
       parameters:
