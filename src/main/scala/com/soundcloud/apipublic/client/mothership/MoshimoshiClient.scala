@@ -41,7 +41,7 @@ class MoshimoshiClient(
 
   def fetchUserObjects(session: UserSession, urns: Set[Urn]): Future[List[UserRepresentation]] =
     fetchByUrns(service, session, Path() / "users" / "fetch", urns)
-      .map(_.map(UserRepresentationMapper(_, loggedinApplicaton = Some(session.getAgent))))
+      .map(_.map(UserRepresentationMapper(_, loggedInUser = session.user, loggedinApplicaton = Some(session.getAgent))))
 
   def userPlaylists(
       session: UserSession,

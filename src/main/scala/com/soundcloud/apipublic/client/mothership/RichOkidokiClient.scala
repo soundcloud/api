@@ -64,7 +64,13 @@ class RichOkidokiClient(service: JsonClient, exceptionCollector: ExceptionCollec
                 Json
                   .parse(response.contentString)
                   .as[List[JsValue]]
-                  .map(UserRepresentationMapper(_, loggedinApplicaton = Some(session.getAgent)))
+                  .map(
+                    UserRepresentationMapper(
+                      _,
+                      loggedInUser = session.user,
+                      loggedinApplicaton = Some(session.getAgent)
+                    )
+                  )
               case _ => List.empty
             }
           }

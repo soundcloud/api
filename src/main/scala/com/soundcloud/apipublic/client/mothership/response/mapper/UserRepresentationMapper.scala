@@ -33,6 +33,8 @@ object MeMapper {
 
 object UserRepresentationMapper {
 
+  val MockTimestampForOtherUsers = "1970/01/01 00:00:00 +0000"
+
   private def getMoshiSubscriptions(json: JsValue): Seq[CreatorSubscription] = {
     (json \ "subscriptions")
       .asOpt[Seq[JsObject]]
@@ -91,8 +93,12 @@ object UserRepresentationMapper {
       followers_count = followCount.map(_.followers).orElse((json \ "followers_count").asOpt[Long]),
       verified = (json \ "verified").as[Boolean],
       description = (json \ "description").asOpt[String],
-      created_at = (json \ "created_at").asOpt[String],
-      updated_at = (json \ "updated_at").asOpt[String],
+      created_at =
+        if (isLoggedInUser) (json \ "created_at").asOpt[String]
+        else Some(MockTimestampForOtherUsers),
+      updated_at =
+        if (isLoggedInUser) (json \ "updated_at").asOpt[String]
+        else Some(MockTimestampForOtherUsers),
       discogs_name = getNameInNetwork(json, "discogs"),
       first_name = (json \ "first_name").asOpt[String],
       last_name = (json \ "last_name").asOpt[String],

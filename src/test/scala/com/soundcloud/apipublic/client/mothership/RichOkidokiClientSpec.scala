@@ -1,5 +1,6 @@
 package com.soundcloud.apipublic.client.mothership
 
+import com.soundcloud.apipublic.client.mothership.response.mapper.UserRepresentationMapper.MockTimestampForOtherUsers
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.http.Headers
@@ -156,8 +157,8 @@ class RichOkidokiClientSpec extends UnitSpecification {
             .setFollowingsCount(None)
             .setVerified(false)
             .setDescription(None)
-            .setCreatedAt(None)
-            .setUpdatedAt(None)
+            .setCreatedAt(Some(MockTimestampForOtherUsers))
+            .setUpdatedAt(Some(MockTimestampForOtherUsers))
             .setPublicTracksCount(None)
             .setPublicPlaylistsCount(None)
             .setDiscogsName(None)
@@ -188,8 +189,8 @@ class RichOkidokiClientSpec extends UnitSpecification {
             .setFollowingsCount(None)
             .setVerified(true)
             .setDescription(None)
-            .setCreatedAt(None)
-            .setUpdatedAt(None)
+            .setCreatedAt(Some(MockTimestampForOtherUsers))
+            .setUpdatedAt(Some(MockTimestampForOtherUsers))
             .setPublicTracksCount(None)
             .setPublicPlaylistsCount(None)
             .setDiscogsName(None)
@@ -220,8 +221,8 @@ class RichOkidokiClientSpec extends UnitSpecification {
             .setFollowingsCount(None)
             .setVerified(false)
             .setDescription(None)
-            .setCreatedAt(None)
-            .setUpdatedAt(None)
+            .setCreatedAt(Some(MockTimestampForOtherUsers))
+            .setUpdatedAt(Some(MockTimestampForOtherUsers))
             .setPublicTracksCount(None)
             .setPublicPlaylistsCount(None)
             .setDiscogsName(None)

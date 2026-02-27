@@ -23,7 +23,7 @@ class UserRepresentationMapperSpec extends UnitSpecification {
     val uploadQuota = UserUploadQuota(1, Some(2))
 
     lazy val userJson = Fixtures.moshiUser
-    lazy val user = UserRepresentationMapper(userJson)
+    lazy val user = UserRepresentationMapper(userJson, loggedInUser = Some(userUrn))
   }
 
   "maps the urn" in new Context {
@@ -70,8 +70,14 @@ class UserRepresentationMapperSpec extends UnitSpecification {
     user.description ==== Some("Founder/CTO SoundCloud.\r\nMusician under the alias http://soundcloud.com/forss")
   }
 
-  "maps the updated at datetime" in new Context {
+  "maps the updated at datetime for the signed-in user" in new Context {
     user.updated_at ==== Some("2014/05/16 02:43:00 +0000")
+  }
+
+  "returns mock created_at and updated_at for users that are not the signed-in user" in new Context {
+    override lazy val user = UserRepresentationMapper(userJson, loggedInUser = None)
+    user.created_at ==== Some(UserRepresentationMapper.MockTimestampForOtherUsers)
+    user.updated_at ==== Some(UserRepresentationMapper.MockTimestampForOtherUsers)
   }
 
   "maps a 'pro' plan to legacy plan value" in new Context {
