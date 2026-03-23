@@ -272,6 +272,35 @@ paths:
           $ref: "#/components/responses/Tracks"
         401:
           $ref: "#/components/responses/Unauthorized"
+  /me/reposts/tracks:
+    get:
+      summary: Returns a list of track reposts of the authenticated user.
+      tags:
+        - me
+        - reposts
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/access_explicit"
+        - $ref: "#/components/parameters/linked_partitioning"
+      responses:
+        200:
+          $ref: "#/components/responses/Tracks"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+  /me/reposts/playlists:
+    get:
+      summary: Returns a list of playlist reposts of the authenticated user.
+      tags:
+        - me
+        - reposts
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/linked_partitioning"
+      responses:
+        200:
+          $ref: "#/components/responses/Playlists"
+        401:
+          $ref: "#/components/responses/Unauthorized"
   /tracks:
     get:
       summary: Performs a track search based on a query
@@ -815,6 +844,45 @@ paths:
       summary: Returns a list of user's liked playlists.
       tags:
         - users
+      parameters:
+        - $ref: "#/components/parameters/user_urn"
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/linked_partitioning"
+      responses:
+        200:
+          $ref: "#/components/responses/Playlists"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+  /users/{user_urn}/reposts/tracks:
+    get:
+      summary: Returns a list of user's track reposts.
+      tags:
+        - users
+        - reposts
+      parameters:
+        - $ref: "#/components/parameters/user_urn"
+        - $ref: "#/components/parameters/access"
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/linked_partitioning"
+      responses:
+        200:
+          $ref: "#/components/responses/Tracks"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+  /users/{user_urn}/reposts/playlists:
+    get:
+      summary: Returns a list of user's playlist reposts.
+      tags:
+        - users
+        - reposts
       parameters:
         - $ref: "#/components/parameters/user_urn"
         - $ref: "#/components/parameters/limit"

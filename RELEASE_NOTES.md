@@ -1,13 +1,14 @@
 # API Public Release Notes
 
-## Quiet mode (reveal_stats / reveal_comments)
+## List user reposts (tracks and playlists)
 
-Tracks now support **quiet mode** attributes so creators can hide stats and comments.
+- **GET /me/reposts/tracks** – Returns the authenticated user's track reposts (cursor-based pagination, supports `linked_partitioning` and `access`).
+- **GET /me/reposts/playlists** – Returns the authenticated user's playlist reposts (cursor-based pagination, supports `linked_partitioning`).
+- **GET /users/{user_urn}/reposts/tracks** – Returns a user's track reposts (cursor-based pagination, supports `linked_partitioning` and `access`).
+- **GET /users/{user_urn}/reposts/playlists** – Returns a user's playlist reposts (cursor-based pagination, supports `linked_partitioning`).
 
-- **`reveal_stats`** (boolean): When `false`, play count and favorite count are hidden on the track. Default is `true`.
-- **`reveal_comments`** (boolean): When `false`, comments are hidden on the track. Default is `true`.
-
-You can set these when creating or updating a track (JSON body or form params). They are returned in the track representation. See [API issue #257](https://github.com/soundcloud/api/issues/257).
+Implements [api#62](https://github.com/soundcloud/api/issues/62) and [api#379](https://github.com/soundcloud/api/issues/379).
 
 <!--- Remove everything below and start over --->
+
 

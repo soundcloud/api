@@ -2,20 +2,23 @@ package com.soundcloud.apipublic.handler
 
 import com.soundcloud.jvmkit.module.bff.testsupport.FakeUserAuthentication
 import com.soundcloud.jvmkit.module.outcome.{Bad, GoodOps, Outcome}
-import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
+import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
 import com.soundcloud.jvmkit.module.util.{Geo, Urn}
 import com.soundcloud.apipublic.Routing
 import com.soundcloud.apipublic.client.mothership.response.representation.UserRepresentation
 import com.soundcloud.apipublic.client.reposts.RepostsClient._
+import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
 import com.soundcloud.apipublic.service.RepostsService
 import com.soundcloud.apipublic.service.pagination.CursorBasedPagination
+import com.soundcloud.apipublic.service.playlists.PlaylistBuilder
 import com.soundcloud.apipublic.service.representation.collection.Collection
+import com.soundcloud.apipublic.service.trackrepresentation.TrackRepresentationSpecContext
 import com.soundcloud.apipublic.service.users.UserBuilder
 import com.soundcloud.apipublic.test.{HandlerSpecificationScope, UnitSpecification}
 import com.twitter.finagle.http.{ParamMap, Status}
 import com.twitter.util.Future
 
-class RepostsHandlerSpec extends UnitSpecification {
+class RepostsHandlerSpec extends UnitSpecification with TrackRepresentationSpecContext {
   trait Context extends HandlerSpecificationScope {
     val userUrn = Urn("soundcloud", "users", "999")
     val user = new UserBuilder().setUrn(userUrn).build
@@ -33,6 +36,8 @@ class RepostsHandlerSpec extends UnitSpecification {
     lazy val handler = new RepostsHandler(new FakeUserAuthentication(session), repostsService, baseUrl)
 
     override def routingDefinitions = Routing.forRepostsHandler(handler)
+
+    def trackRepresentation(urn: Urn) = createTrackRepresentationFromVisibleTrack().copy(urn = urn)
   }
 
   "POST /reposts/tracks/:id" >> {
@@ -76,6 +81,60 @@ class RepostsHandlerSpec extends UnitSpecification {
       override def result = Failed
 
       response.status ==== Status.InternalServerError
+    }
+  }
+
+  "GET /me/reposts/tracks" >> {
+    "when retrieving succeeds" in new Context {
+      val aTrackRep = trackRepresentation(Urn("soundcloud:tracks:1"))
+
+      repostsService
+        .getTrackReposts(any[UserSession], ===(userUrn), any[AccessParams], any[CursorBasedPagination])
+        .returns(Future.value(Collection(List(aTrackRep), None).good))
+
+      val response = get("/me/reposts/tracks", Map(), requestHeaders)
+
+      response.status ==== Status.Ok
+    }
+  }
+
+  "GET /users/:userId/reposts/tracks" >> {
+    "when retrieving succeeds" in new Context {
+      val aTrackRep = trackRepresentation(Urn("soundcloud:tracks:1"))
+
+      repostsService
+        .getTrackReposts(any[UserSession], ===(userUrn), any[AccessParams], any[CursorBasedPagination])
+        .returns(Future.value(Collection(List(aTrackRep), None).good))
+
+      val response = get(s"/users/${userUrn.identifier}/reposts/tracks", Map(), requestHeaders)
+
+      response.status ==== Status.Ok
+    }
+  }
+
+  "GET /me/reposts/playlists" >> {
+    "when retrieving succeeds" in new Context {
+      val aPlaylist = new PlaylistBuilder().setUrn(Urn("soundcloud:playlists:1")).build
+      repostsService
+        .getPlaylistReposts(any[UserSession], ===(userUrn), any[CursorBasedPagination])
+        .returns(Future.value(Collection(List(aPlaylist), None).good))
+
+      val response = get("/me/reposts/playlists", Map(), requestHeaders)
+
+      response.status ==== Status.Ok
+    }
+  }
+
+  "GET /users/:userId/reposts/playlists" >> {
+    "when retrieving succeeds" in new Context {
+      val aPlaylist = new PlaylistBuilder().setUrn(Urn("soundcloud:playlists:1")).build
+      repostsService
+        .getPlaylistReposts(any[UserSession], ===(userUrn), any[CursorBasedPagination])
+        .returns(Future.value(Collection(List(aPlaylist), None).good))
+
+      val response = get(s"/users/${userUrn.identifier}/reposts/playlists", Map(), requestHeaders)
+
+      response.status ==== Status.Ok
     }
   }
 

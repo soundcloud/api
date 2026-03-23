@@ -274,7 +274,13 @@ class Clients(
 
   val streamService = new StreamService(trackVisibilityService, tracksMediaTwirpClient, baseUrl)
   val repostsService =
-    new RepostsService(userRepresentationsService, repostsClient, trackRepostsTwirpClient)
+    new RepostsService(
+      userRepresentationsService,
+      repostsClient,
+      trackRepostsTwirpClient,
+      tracksService,
+      playlistService
+    )
   val playlistDeletionClient = new PlaylistDeletionClient(okidokiJsonClient)
 
   val trackCommentsTwirpClient = TwirpClient(

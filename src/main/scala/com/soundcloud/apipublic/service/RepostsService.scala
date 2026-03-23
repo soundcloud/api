@@ -1,15 +1,20 @@
 package com.soundcloud.apipublic.service
 
+import com.soundcloud.apipublic.client.mothership.response.representation.UserRepresentation
+import com.soundcloud.apipublic.client.reposts.RepostsClient
+import com.soundcloud.apipublic.client.reposts.RepostsClient.{Created, Deleted, Failed, Forbidden, NotFound, Result}
+import com.soundcloud.apipublic.client.tracks.TrackRequest
+import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
+import com.soundcloud.apipublic.service.pagination.CursorBasedPagination
+import com.soundcloud.apipublic.service.playlists.PlaylistRequest
+import com.soundcloud.apipublic.service.playlists.representation.Playlist
+import com.soundcloud.apipublic.service.representation.collection.Collection
+import com.soundcloud.apipublic.service.trackrepresentation.{TrackRepresentation, TrackRepresentationsService}
+import com.soundcloud.apipublic.service.users.UserRepresentationsService
 import com.soundcloud.jvmkit.module.outcome.{ApplicationError, Bad, Good, GoodOps, Outcome}
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps.JvmkitSessionExt
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
-import com.soundcloud.apipublic.client.mothership.response.representation.UserRepresentation
-import com.soundcloud.apipublic.client.reposts.RepostsClient
-import com.soundcloud.apipublic.client.reposts.RepostsClient.{Created, Deleted, Failed, Forbidden, NotFound, Result}
-import com.soundcloud.apipublic.service.pagination.CursorBasedPagination
-import com.soundcloud.apipublic.service.representation.collection.Collection
-import com.soundcloud.apipublic.service.users.UserRepresentationsService
 import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
 import com.twitter.util.Future
 import proto.soundcloud.tracks.api.{
@@ -23,8 +28,45 @@ import proto.soundcloud.tracks.api.{
 class RepostsService(
     userRepresentationService: UserRepresentationsService,
     repostsClient: RepostsClient,
-    trackRepostsService: TrackRepostsService
+    trackRepostsService: TrackRepostsService,
+    trackRepresentationsService: TrackRepresentationsService,
+    playlistsService: PlaylistsService
 ) {
+
+  def getTrackReposts(
+      session: UserSession,
+      userUrn: Urn,
+      access: AccessParams,
+      pagination: CursorBasedPagination
+  ): Future[Outcome[Collection[TrackRepresentation]]] = {
+    repostsClient
+      .trackReposts(session, userUrn, pagination.pageSize, pagination.cursor)
+      .flatMap { reposts =>
+        trackRepresentationsService
+          .tracks(session, reposts.urns.map(TrackRequest(_, None)), access)
+          .map { tracks =>
+            val nextHref = reposts.nextCursor.map(cursor => pagination.nextPage(cursor)).map(_.normalizedHref)
+            Collection(tracks, nextHref).good
+          }
+      }
+  }
+
+  def getPlaylistReposts(
+      session: UserSession,
+      userUrn: Urn,
+      pagination: CursorBasedPagination
+  ): Future[Outcome[Collection[Playlist]]] = {
+    repostsClient
+      .playlistReposts(session, userUrn, pagination.pageSize, pagination.cursor)
+      .flatMap { reposts =>
+        playlistsService
+          .fetchPlaylistsMetadataOnly(session, reposts.urns.map(PlaylistRequest(_, None)))
+          .map { playlists =>
+            val nextHref = reposts.nextCursor.map(cursor => pagination.nextPage(cursor)).map(_.normalizedHref)
+            Collection(playlists, nextHref).good
+          }
+      }
+  }
 
   def createTracksRepost(session: UserSession, trackUrn: Urn): Future[Result] = {
     val request = RepostTrackRequest(Some(session.asProtoSession), trackUrn.toString)
