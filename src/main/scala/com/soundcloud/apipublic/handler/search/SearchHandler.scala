@@ -78,10 +78,10 @@ class SearchHandler(
     addWildcardIfNoSearchQuery(req, SearchRateLimits.defaultParams, searchUsers)
 
   def searchPlaylists(req: HandlerRequest): Future[Response] =
-    addWildcardIfNoSearchQuery(req, SearchRateLimits.defaultParams, searchPlaylists)
+    addWildcardIfNoSearchQuery(req, SearchRateLimits.playlistParams, searchPlaylists)
 
   def searchTracks(req: HandlerRequest): Future[Response] =
-    addWildcardIfNoSearchQuery(req, SearchRateLimits.defaultParams, searchTracks)
+    addWildcardIfNoSearchQuery(req, SearchRateLimits.trackParams, searchTracks)
 
   private def recordIncompleteResponses[T: Writes](
       collectionResponse: Outcome[Collection[T]],
@@ -122,8 +122,17 @@ class SearchHandler(
       val params =
         extraParams.map(p => paramsWithAccessFilters ++ p).map(ParamMap.apply).getOrElse(paramsWithAccessFilters)
 
+      // Backend expects non-empty q; when only urns/ids are present we still pass q=* for the search request
+      val paramsForSearch: ParamMap =
+        if ((params.get("q").isEmpty || params.get("q").exists(_.isEmpty)) &&
+          (params.contains("urns") || params.contains("ids"))) {
+          ParamMap(params ++ ParamMap("q" -> "*"))
+        } else {
+          params
+        }
+
       val tracksCollection = searchService
-        .searchTracks(session, params.asTracksParams, pagination, access)
+        .searchTracks(session, paramsForSearch.asTracksParams, pagination, access)
         .value
         .onSuccess(recordIncompleteResponses(_, pagination.limit))
 

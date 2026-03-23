@@ -69,6 +69,7 @@ ids:
   in: query
   name: ids
   required: false
+  deprecated: true
   schema:
     type: string
   description: A comma separated list of track ids to filter on

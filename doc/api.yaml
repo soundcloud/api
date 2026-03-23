@@ -279,7 +279,6 @@ paths:
         - search
       parameters:
         - $ref: "#/components/parameters/q"
-        - $ref: "#/components/parameters/ids"
         - $ref: "#/components/parameters/urns"
         - $ref: "#/components/parameters/genres"
         - $ref: "#/components/parameters/tags"
@@ -386,7 +385,6 @@ paths:
         - search
       parameters:
         - $ref: "#/components/parameters/q"
-        - $ref: "#/components/parameters/ids"
         - $ref: "#/components/parameters/urns"
         - $ref: "#/components/parameters/limit"
         - $ref: "#/components/parameters/offset"

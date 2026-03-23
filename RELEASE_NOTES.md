@@ -1,2 +1,5 @@
 <!--- Remove everything below and start over --->
-Introduce new AAC HLS transcodings. More details: https://developers.soundcloud.com/blog/api-streaming-urls
+### Fixed
+
+- **GET /tracks with only `urns` or `ids` (fixes [#363](https://github.com/soundcloud/api/issues/363))**
+---

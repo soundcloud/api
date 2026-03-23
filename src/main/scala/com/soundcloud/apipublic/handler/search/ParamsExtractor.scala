@@ -13,6 +13,17 @@ object ParamsExtractor {
   val searchDefaultLimit = 50
 
   def mapCreatedAt(v: String): DateTime = DateTime.parse(v, sourceFormat)
+  private def extractIds(params: ParamMap): Option[List[Long]] =
+    params
+      .get("urns")
+      .map(_.split(",").toList)
+      .map(_.map(Urn.parse(_).get.identifier))
+      .orElse(
+        params
+          .get("ids")
+          .map(_.split(",").toList)
+      )
+      .map(_.map(_.toLong))
 
   class ParamsToPlaylistParams(params: ParamMap) {
     def asPlaylistParams: PlaylistsParams = PlaylistsParams(
@@ -23,16 +34,7 @@ object ParamsExtractor {
       createdAt = params.get("created_at"),
       createdAtFrom = params.get("created_at[from]").map(mapCreatedAt),
       createdAtTo = params.get("created_at[to]").map(mapCreatedAt),
-      ids = params
-        .get("urns")
-        .map(_.split(",").toList)
-        .map(_.map(Urn.parse(_).get.identifier))
-        .orElse(
-          params
-            .get("ids")
-            .map(_.split(",").toList)
-        )
-        .map(_.map(_.toLong)),
+      ids = extractIds(params),
       clientId = params.get("client_id"),
       genres = params.get("genres").map(_.split(",").toList),
       tags = params.get("tags").map(_.split(",").toList),
@@ -49,16 +51,7 @@ object ParamsExtractor {
       createdAt = params.get("created_at"),
       createdAtFrom = params.get("created_at[from]").map(mapCreatedAt),
       createdAtTo = params.get("created_at[to]").map(mapCreatedAt),
-      ids = params
-        .get("urns")
-        .map(_.split(",").toList)
-        .map(_.map(Urn.parse(_).get.identifier))
-        .orElse(
-          params
-            .get("ids")
-            .map(_.split(",").toList)
-        )
-        .map(_.map(_.toLong)),
+      ids = extractIds(params),
       clientId = params.get("client_id"),
       place = params.get("place")
     )
@@ -81,16 +74,7 @@ object ParamsExtractor {
       durationTo = params.get("duration[to]").map(_.toInt),
       genres = params.get("genres").map(_.split(",").toList),
       tags = params.get("tags").map(_.split(",").toList),
-      ids = params
-        .get("urns")
-        .map(_.split(",").toList)
-        .map(_.map(Urn.parse(_).get.identifier))
-        .orElse(
-          params
-            .get("ids")
-            .map(_.split(",").toList)
-        )
-        .map(_.map(_.toLong)),
+      ids = extractIds(params),
       license = params.get("license"),
       clientId = params.get("client_id"),
       place = params.get("place"),

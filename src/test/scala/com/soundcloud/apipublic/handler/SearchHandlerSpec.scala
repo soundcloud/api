@@ -213,6 +213,60 @@ class SearchHandlerSpec extends UnitSpecification {
       response.statusCode ==== 200
     }
 
+    "does not add wildcard when urns are present but passes q=* to backend" in new Context {
+      override lazy val params = ParamMap(
+        "urns" -> "soundcloud:tracks:1,soundcloud:tracks:2",
+        "offset" -> "10",
+        "limit" -> "5",
+        "linked_partitioning" -> "1"
+      )
+      // Backend requires non-empty q; handler adds q=* when only urns/ids present
+      lazy val withAccessParams = ParamMap(
+        ParamMap(
+          "content_tier" -> "FREE",
+          "content_country" -> Geo.UNKNOWN_GEO.getCountryCode
+        ) ++ params ++ ParamMap("q" -> "*")
+      )
+
+      when(
+        searchService
+          .searchTracks(
+            ===(anonymousSession),
+            ===(withAccessParams.asTracksParams),
+            any[TrackPagination],
+            ===(access)
+          )
+      ).thenReturn(Good(tracksCollection).outcomeF)
+
+      response.statusCode ==== 200
+    }
+
+    "adds wildcard q param to tracks request when ids are present" in new Context {
+      override lazy val params = ParamMap(
+        "ids" -> "1,2,3",
+        "offset" -> "10",
+        "limit" -> "5",
+        "linked_partitioning" -> "1"
+      )
+      lazy val withAccessParams = ParamMap(
+        ParamMap(
+          "content_tier" -> "FREE",
+          "content_country" -> Geo.UNKNOWN_GEO.getCountryCode
+        ) ++ params ++ ParamMap("q" -> "*")
+      )
+
+      when(
+        searchService
+          .searchTracks(
+            ===(anonymousSession),
+            ===(withAccessParams.asTracksParams),
+            any[TrackPagination],
+            ===(access)
+          )
+      ).thenReturn(Good(tracksCollection).outcomeF)
+      response.statusCode ==== 200
+    }
+
     "returns 400 when duration filter is not valid" in new Context {
       override lazy val params = ParamMap(
         "q" -> "foo",

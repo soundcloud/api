@@ -245,6 +245,21 @@ class SearchClientSpec extends Specification with Mockito {
       Right(expected) === result
     }
 
+    "should filter tracks with urns" in new TracksContext {
+      override lazy val rawParams: ParamMap = ParamMap(
+        ("q", "foo"),
+        ("limit", limit.get.toString),
+        ("offset", offset.get.toString),
+        ("urns", "soundcloud:tracks:1,soundcloud:tracks:2,soundcloud:tracks:3")
+      )
+      override lazy val filters: SearchFilters = SearchFilters(
+        contentType = SearchFilters.ContentType.TRACKS,
+        ids = Seq(1L, 2L, 3L)
+      )
+
+      Right(expected) === result
+    }
+
     "should filter tracks with ids" in new TracksContext {
       override lazy val rawParams: ParamMap = ParamMap(
         ("q", "foo"),
@@ -323,6 +338,22 @@ class SearchClientSpec extends Specification with Mockito {
       result must beLeft(
         HttpServiceError(HttpResponseFields(Status.InternalServerError.code, Some("some error [aborted]")))
       )
+    }
+
+    "should filter users with urns" in new UsersContext {
+      override lazy val rawParams: ParamMap = ParamMap(
+        ("q", "foo"),
+        ("limit", limit.get.toString),
+        ("offset", offset.get.toString),
+        ("urns", "soundcloud:users:1,soundcloud:users:2,soundcloud:users:3")
+      )
+
+      override lazy val filters: SearchFilters = SearchFilters(
+        contentType = SearchFilters.ContentType.USERS,
+        ids = Seq(1L, 2L, 3L)
+      )
+
+      Right(expected) === result
     }
 
     "should filter users with ids" in new UsersContext {
