@@ -55,7 +55,9 @@ case class TrackRepresentation(
     access: Option[Access],
     policy: Option[String],
     monetizationModel: Option[String],
-    metaDataArtist: Option[String]
+    metaDataArtist: Option[String],
+    revealStats: Boolean,
+    revealComments: Boolean
 ) {
   def id = urn.identifier.toLong
 }
@@ -111,7 +113,9 @@ object TrackRepresentation {
         "access" -> rep.access.map(_.name),
         "policy" -> rep.policy, // empty unless requested by allowlisted client
         "monetization_model" -> rep.monetizationModel, // empty unless requested by allowlisted client
-        "metadata_artist" -> rep.metaDataArtist.map(HtmlSanitizer.sanitize)
+        "metadata_artist" -> rep.metaDataArtist.map(HtmlSanitizer.sanitize),
+        "reveal_stats" -> rep.revealStats,
+        "reveal_comments" -> rep.revealComments
       )
     }
 

@@ -168,6 +168,44 @@ class TrackUpdateServiceSpec extends UnitSpecification with TrackRepresentationS
           trackUpdateService.updateTrack(None, None, updateRequest, trackUrn, ownerSession)
         ) must throwAn[UnhandledOutcomeException]
       }
+
+      "Updates reveal_stats and reveal_comments" in new Context {
+        val metadataUpdateParams = Map[String, String]("reveal_stats" -> "false", "reveal_comments" -> "false")
+        val metaDataUpdateRequest = TrackMetadataUpdateRequest.fromForm(metadataUpdateParams).getOrElse(null)
+
+        val expectedResponse = mockTrackRepresentation.copy(revealStats = false, revealComments = false)
+        val mockUpdateResult = new TrackCoordinatorTrackFixtures()
+          .fromTrackRepresentation(expectedResponse)
+          .copy(title = mockTrackRepresentation.title, description = mockTrackRepresentation.description)
+
+        setupMocksForUpdateTrackMeta(
+          trackUrn = mockTrackRepresentation.urn,
+          trackAssetDataUpdateRequest = None,
+          updateTrackMetadata = metaDataUpdateRequest,
+          artworkMetadata = None,
+          expectedResponse = Good(mockUpdateResult)
+        )
+
+        setupMocksForTrackService(mockTrackRepresentation.urn, Some(expectedResponse))
+
+        val result = Await.result(
+          trackUpdateService.updateTrack(
+            maybeUpdateAlbumArt = None,
+            maybeUpdateTrackAsset = None,
+            metaDataUpdateRequest,
+            trackUrn,
+            ownerSession
+          )
+        )
+
+        result match {
+          case Good(track) =>
+            track.revealStats === false
+            track.revealComments === false
+            Json.toJson(track) === Json.toJson(expectedResponse)
+          case _ => true must beFalse
+        }
+      }
     }
 
     "album artwork" >> {

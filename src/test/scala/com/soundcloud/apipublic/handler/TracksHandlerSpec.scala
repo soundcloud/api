@@ -155,6 +155,34 @@ class TracksHandlerSpec extends UnitSpecification with TrackRepresentationSpecCo
         val response = putForm(path, body = requestBodyInvalidFileName)
         response.statusCode === 422
       }
+
+      "successfully updates reveal_stats and reveal_comments" in new Context {
+        val requestBody =
+          """
+            | {
+            |   "track": {
+            |     "reveal_stats": false,
+            |     "reveal_comments": false
+            |    }
+            | }
+            |""".stripMargin
+        val trackUpdate = Json.parse(requestBody).as[TrackMetadataUpdateRequest]
+
+        val expectedResponse = mockTrackRepresentation.copy(
+          revealStats = false,
+          revealComments = false
+        )
+
+        val path = s"/tracks/${mockTrackRepresentation.urn}"
+
+        setupMockForTrackUpdateMetadata(metadataUpdateOutcome = Good(expectedResponse), trackUpdate = trackUpdate)
+
+        val response = put(path, body = requestBody)
+        response.statusCode === 200
+        val json = Json.parse(response.contentString)
+        (json \ "reveal_stats").as[Boolean] === false
+        (json \ "reveal_comments").as[Boolean] === false
+      }
     }
 
     "application/x-www-form-urlencoded request" >> {

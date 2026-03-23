@@ -136,6 +136,12 @@ properties:
   reposts_count:
     description: Number of reposts.
     type: integer
+  reveal_stats:
+    description: Whether play and favorite counts are visible. When false (quiet mode), stats are hidden.
+    type: boolean
+  reveal_comments:
+    description: Whether comments are visible. When false (quiet mode), comments are hidden.
+    type: boolean
   secret_uri:
     description: Secret URL.
     type: string

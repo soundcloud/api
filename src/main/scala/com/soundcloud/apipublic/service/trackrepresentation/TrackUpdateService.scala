@@ -166,7 +166,9 @@ class TrackUpdateService(
       release = metadataUpdate.release,
       releaseDay = metadataUpdate.release_day,
       releaseMonth = metadataUpdate.release_month,
-      userTags = metadataUpdate.tag_list
+      userTags = metadataUpdate.tag_list,
+      revealStats = metadataUpdate.reveal_stats,
+      revealComments = metadataUpdate.reveal_comments
     )
   }
 }

@@ -41,3 +41,5 @@ value:
   user_playback_count: 1
   waveform_url: https://wave.sndcdn.com/someString.png
   access: playable
+  reveal_stats: true
+  reveal_comments: true

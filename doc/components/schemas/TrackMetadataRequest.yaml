@@ -61,5 +61,11 @@ properties:
       commentable:
         type: boolean
         default: true
+      reveal_stats:
+        type: boolean
+        description: When false (quiet mode), play and favorite counts are hidden.
+      reveal_comments:
+        type: boolean
+        description: When false (quiet mode), comments are hidden.
       isrc:
         type: string

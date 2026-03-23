@@ -72,7 +72,9 @@ object TrackRepresentationBuilder {
       downloadable = trackCoordinatorTrack.downloadable.getOrElse(false),
       policy = None,
       monetizationModel = None,
-      metaDataArtist = trackCoordinatorTrack.publisher_metadata.flatMap(metadata => metadata.artist)
+      metaDataArtist = trackCoordinatorTrack.publisher_metadata.flatMap(metadata => metadata.artist),
+      revealStats = trackCoordinatorTrack.reveal_stats,
+      revealComments = trackCoordinatorTrack.reveal_comments
     )
   }
 
@@ -131,7 +133,9 @@ object TrackRepresentationBuilder {
       downloadable = visibleTrack.downloadable,
       policy = getPolicy(visibleTrack.authorization.policy, agent),
       monetizationModel = getMonetizationModel(visibleTrack.authorization.monetizationModel, agent),
-      metaDataArtist = visibleTrack.metaDataArtist
+      metaDataArtist = visibleTrack.metaDataArtist,
+      revealStats = visibleTrack.revealStats,
+      revealComments = visibleTrack.revealComments
     )
   }
   private val baseUrl = "https://api.soundcloud.com/tracks"

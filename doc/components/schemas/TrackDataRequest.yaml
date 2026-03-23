@@ -62,6 +62,12 @@ properties:
   track[commentable]:
     type: boolean
     default: true
+  track[reveal_stats]:
+    type: boolean
+    description: When false (quiet mode), play and favorite counts are hidden.
+  track[reveal_comments]:
+    type: boolean
+    description: When false (quiet mode), comments are hidden.
   track[isrc]:
     type: string
   track[artwork_data]:
