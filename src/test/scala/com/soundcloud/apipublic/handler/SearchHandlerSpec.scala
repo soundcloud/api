@@ -241,6 +241,33 @@ class SearchHandlerSpec extends UnitSpecification {
       response.statusCode ==== 200
     }
 
+    "passes q=* to backend when only tags are present (no q)" in new Context {
+      override lazy val params = ParamMap(
+        "tags" -> "codex-collective",
+        "offset" -> "10",
+        "limit" -> "5",
+        "linked_partitioning" -> "1"
+      )
+      lazy val withAccessParams = ParamMap(
+        ParamMap(
+          "content_tier" -> "FREE",
+          "content_country" -> Geo.UNKNOWN_GEO.getCountryCode
+        ) ++ params ++ ParamMap("q" -> "*")
+      )
+
+      when(
+        searchService
+          .searchTracks(
+            ===(anonymousSession),
+            ===(withAccessParams.asTracksParams),
+            any[TrackPagination],
+            ===(access)
+          )
+      ).thenReturn(Good(tracksCollection).outcomeF)
+
+      response.statusCode ==== 200
+    }
+
     "adds wildcard q param to tracks request when ids are present" in new Context {
       override lazy val params = ParamMap(
         "ids" -> "1,2,3",

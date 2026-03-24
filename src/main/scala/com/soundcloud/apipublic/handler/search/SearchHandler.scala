@@ -122,10 +122,14 @@ class SearchHandler(
       val params =
         extraParams.map(p => paramsWithAccessFilters ++ p).map(ParamMap.apply).getOrElse(paramsWithAccessFilters)
 
-      // Backend expects non-empty q; when only urns/ids are present we still pass q=* for the search request
+      // Backend expects non-empty q; when the client sends only filters (no q), pass q=* like addWildcardIfNoSearchQuery
+      // used to after trackParams started including tags/genres/license (see SearchRateLimits.trackParams).
+      val qEmpty = params.get("q").isEmpty || params.get("q").exists(_.isEmpty)
+      val hasFilterOnlySearch =
+        params.contains("urns") || params.contains("ids") ||
+          params.contains("tags") || params.contains("genres") || params.contains("license")
       val paramsForSearch: ParamMap =
-        if ((params.get("q").isEmpty || params.get("q").exists(_.isEmpty)) &&
-          (params.contains("urns") || params.contains("ids"))) {
+        if (qEmpty && hasFilterOnlySearch) {
           ParamMap(params ++ ParamMap("q" -> "*"))
         } else {
           params
