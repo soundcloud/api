@@ -1,6 +1,9 @@
 type: object
 description: Soundcloud Track object.
 properties:
+  kind:
+    description: Type of object (track).
+    type: string
   title:
     description: Track title.
     type: string
@@ -9,10 +12,12 @@ properties:
     type: string
   bpm:
     description: Tempo.
-    type: integer
+    type: number
+    format: double
   comment_count:
     description: Number of comments.
     type: integer
+    format: int64
   commentable:
     description: Is commentable.
     type: boolean
@@ -23,13 +28,14 @@ properties:
     description: Track description.
     type: string
   download_count:
-    description: NUmber of downloads.
+    description: Number of downloads.
     type: integer
+    format: int64
   downloadable:
     description: Is downloadable.
-    type: string
+    type: boolean
   duration:
-    description: Track duration.
+    description: Track duration in milliseconds.
     type: integer
   embeddable_by:
     deprecated: true
@@ -38,20 +44,18 @@ properties:
   favoritings_count:
     description: Number of favoritings.
     type: integer
+    format: int64
   genre:
     description: Genre
     type: string
   urn:
-    description: Track identifier.
+    description: Track URN identifier.
     type: string
   isrc:
     description: ISRC code.
     type: string
   key_signature:
     description: Key signature.
-    type: string
-  kind:
-    description: Type of object (track).
     type: string
   label_name:
     description: Label user name.
@@ -68,6 +72,7 @@ properties:
   playback_count:
     description: Number of plays.
     type: integer
+    format: int64
   purchase_title:
     description: Purchase title.
     type: string
@@ -116,7 +121,7 @@ properties:
     description: Waveform URL.
     type: string
   available_country_codes:
-    description: List of countries where track is available.
+    description: List of country codes where track is available.
     type: string
   access:
     type: string
@@ -131,8 +136,9 @@ properties:
       - preview
       - blocked
   download_url:
-    description: URL to download a track.
+    description: URL to download a track. Omitted or null when track is not downloadable.
     type: string
+    nullable: true
   reposts_count:
     description: Number of reposts.
     type: integer

@@ -1,4 +1,5 @@
 value:
+  kind: track
   artwork_url: https://i1.sndcdn.com/artworks-large.jpg
   available_country_codes:
   bpm:
@@ -16,7 +17,6 @@ value:
   urn: soundcloud:tracks:1234
   isrc:
   key_signature:
-  kind: track
   label_name: some label
   license: all-rights-reserved
   permalink_url: https://soundcloud.com/userPermalink/trackPermalink
