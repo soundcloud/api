@@ -487,7 +487,7 @@ class TrackRepresentationSpec extends UnitSpecification {
       val json = Json.toJson(createTrackRepresentationFromVisibleTrack())
 
       json \ "policy" ==== JsDefined(JsNull)
-      json \ "monetization_model" ==== JsDefined(JsNull)
+      json.as[JsObject].keys.contains("monetization_model") ==== false
     }
 
     "sets the policy when the client is allowlisted" in new Context {

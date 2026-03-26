@@ -111,8 +111,10 @@ object TrackRepresentation {
         "reposts_count" -> rep.repostsCount,
         "downloadable" -> rep.downloadable,
         "access" -> rep.access.map(_.name),
-        "policy" -> rep.policy, // empty unless requested by allowlisted client
-        "monetization_model" -> rep.monetizationModel, // empty unless requested by allowlisted client
+        "policy" -> rep.policy // empty unless requested by allowlisted client
+      ) ++ rep.monetizationModel.fold(Json.obj()) { m =>
+        Json.obj("monetization_model" -> m) // omitted unless allowlisted client
+      } ++ Json.obj(
         "metadata_artist" -> rep.metaDataArtist.map(HtmlSanitizer.sanitize),
         "reveal_stats" -> rep.revealStats,
         "reveal_comments" -> rep.revealComments
