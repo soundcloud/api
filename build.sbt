@@ -1,6 +1,6 @@
 val jvmkitVersion = "17.8.2"
 val specs2Version = "4.12.0"
-val httpComponentsVersion = "4.5.12"
+val httpComponentsVersion = "4.5.14"
 
 lazy val apiPublic = project
   .in(file("."))
