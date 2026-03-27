@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package proto.soundcloud.counts.api;
+
+import "google/protobuf/field_mask.proto";
+
+option java_package = "proto.soundcloud.counts.api";
+
+service CountsApi {
+  rpc GetTotalCounts(GetTotalCountsRequest) returns (GetTotalCountsResponse) {}
+  rpc GetAllTotalCounts(GetAllCountsRequest) returns (GetAllCountsResponse) {}
+}
+
+message GetTotalCountsRequest {
+  repeated CountsRequest counts_request = 1;
+}
+
+message CountsRequest {
+  string track_urn = 1;
+  google.protobuf.FieldMask metrics_field_mask = 2;
+}
+
+message GetTotalCountsResponse {
+  repeated Counts counts = 1;
+}
+
+message Counts {
+  string track_urn = 1;
+  Metrics metrics = 2;
+}
+
+message GetAllCountsRequest {
+  repeated AllCountsRequest counts_request = 1;
+}
+
+message AllCountsRequest {
+  string urn = 1;
+  google.protobuf.FieldMask metrics_field_mask = 2;
+}
+
+message GetAllCountsResponse {
+  repeated AllCounts counts = 1;
+}
+
+message AllCounts {
+  string urn = 1;
+  Metrics metrics = 2;
+}
+
+message Metrics {
+  int64 plays = 1;
+  int64 downloads = 2;
+  int64 comments = 3;
+  int64 likes = 4;
+  int64 likes_playlists = 5;
+}

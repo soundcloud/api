@@ -10,10 +10,13 @@ import com.soundcloud.apipublic.client.reposts.RepostsClient
 import com.soundcloud.apipublic.service.users.UserOrderingUtils.sortByProvidedUrns
 import com.soundcloud.apipublic.subscriptions.SubmarineClient
 import com.soundcloud.apipublic.subscriptions.SubmarineCreatorSubscription
+import com.soundcloud.jvmkit.module.rollout.{Rollout, RolloutFeature}
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionHandler.FutureExtensions
 import com.twitter.util.Future
+import proto.soundcloud.counts.api.{AllCountsRequest, CountsApiService, GetAllCountsRequest, Metrics}
 import proto.soundcloud.likes.api.{BatchGetUserLikeCountRequest, LikesClientProtobuf}
+import scalapb.FieldMaskUtil
 
 import scala.util.control.NonFatal
 
@@ -22,8 +25,10 @@ class UserRepresentationsService(
     repostsClient: RepostsClient,
     okidokiClient: OkidokiClient,
     likesClient: LikesClientProtobuf,
+    countsApiService: CountsApiService,
     submarineClient: SubmarineClient,
-    exceptionCollector: ExceptionCollector
+    exceptionCollector: ExceptionCollector,
+    rollout: Rollout
 ) {
   def user(
       session: UserSession,
@@ -71,19 +76,46 @@ class UserRepresentationsService(
     else Future.value(Map.empty)
   }
 
+  private def useUnifiedLikeCounts = RolloutFeature("use-unified-counts")
+  private val USER_LIKE_MASK = Some(
+    FieldMaskUtil.selectFieldNumbers[Metrics](
+      Set(
+        Metrics.LIKES_FIELD_NUMBER,
+        Metrics.LIKES_PLAYLISTS_FIELD_NUMBER
+      )
+    )
+  )
+
   def getTotalLikesCount(urns: Set[Urn]): Future[Map[Urn, Long]] =
-    likesClient
-      .getUserLikeCountBatch(
-        BatchGetUserLikeCountRequest(urns.map(_.toString).toSeq)
-      )
-      .map(
-        _.users
-          .map(userCounts =>
-            (Urn.parse(userCounts.userUrn).get, userCounts.trackLikesCount + userCounts.playlistLikesCount)
+    rollout.isActive(useUnifiedLikeCounts).flatMap {
+      case true =>
+        countsApiService
+          .getAllTotalCounts(
+            GetAllCountsRequest.of(
+              urns
+                .map(urn => AllCountsRequest.of(urn.toString, USER_LIKE_MASK))
+                .toSeq
+            )
           )
-          .toMap
-      )
-      .handleAndReport(exceptionCollector) {
-        case NonFatal(_) => Map.empty
-      }
+          .map(_.counts.map(c => Urn.parse(c.urn).get -> (c.getMetrics.likes + c.getMetrics.likesPlaylists)).toMap)
+          .handleAndReport(exceptionCollector) {
+            case NonFatal(_) => Map.empty
+          }
+
+      case false =>
+        likesClient
+          .getUserLikeCountBatch(
+            BatchGetUserLikeCountRequest(urns.map(_.toString).toSeq)
+          )
+          .map(
+            _.users
+              .map(userCounts =>
+                (Urn.parse(userCounts.userUrn).get, userCounts.trackLikesCount + userCounts.playlistLikesCount)
+              )
+              .toMap
+          )
+          .handleAndReport(exceptionCollector) {
+            case NonFatal(_) => Map.empty
+          }
+    }
 }

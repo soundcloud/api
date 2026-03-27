@@ -102,6 +102,7 @@ prepare-package-layout:
 	sc add-config config/development
 	sc add-config config/e2e
 	sc add-config config/muzooka.enc
+	sc add-config config/counts_api_service_account.enc
 	sc add-config config/$(API_CONFIG)
 
 publish:

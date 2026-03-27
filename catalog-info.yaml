@@ -6,10 +6,12 @@ spec:
   owner: api-team
   dependsOn:
     - Component:api-public
+    - Component:counts-api
     - Component:system-playlists
   consumesApis:
     - authenticator-authenticator_access_grant_exchange.proto
     - comments-comments.proto
+    - counts-api-counts_api.proto
     - gatekeeper-gatekeeper_api.proto
     - hocuspocus-hocuspocus.proto
     - likes-likes_api.proto

@@ -1,4 +1,5 @@
 source muzooka
+source counts_api_service_account
 
 APP_NAME="api-public"
 
@@ -112,3 +113,7 @@ SECURE_SRV_RECORD=dnssrv!http.oauth.prod.api-auth.srv.${ZONE}.s-cloud.net.
 SECURE_CLIENT_REQUEST_TIMEOUT_MILLIS=5000
 
 AUTHENTICATOR_DISPENSER_SRV_RECORD="dnssrv!http.dispenser.prod.authenticator.srv.db.s-cloud.net."
+
+UNIFIED_COUNTS_HTTPS_ENDPOINT=https://counts-api-666030408108.europe-west1.run.app
+UNIFIED_COUNTS_API_KEY=$SECRET_UNIFIED_COUNTS_API_KEY
+

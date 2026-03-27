@@ -1,6 +1,7 @@
 package com.soundcloud.apipublic
 
 import com.soundcloud.apipublic.client._
+import com.soundcloud.apipublic.client.cloudrun.{CloudRunAuthenticationProxy, CloudRunCredentialsProvider}
 import com.soundcloud.apipublic.client.comments.CommentsTwirpClient
 import com.soundcloud.apipublic.client.followcounts.{FollowCountsClient, FollowsCountsTwirpClient}
 import com.soundcloud.apipublic.client.follows.FollowsClient
@@ -28,22 +29,25 @@ import com.soundcloud.apipublic.service.trackrepresentation.{
 import com.soundcloud.apipublic.service.tracks.VisibleTrackMapper
 import com.soundcloud.apipublic.service.users.{MeService, UserRepresentationsService}
 import com.soundcloud.apipublic.subscriptions.SubmarineClient
+import com.soundcloud.apipublic.utilities.ResponseUtilities
 import com.soundcloud.hocuspocus.HocuspocusClientProtobuf
 import com.soundcloud.jvmkit.module.bff.session.UserAuthentication
 import com.soundcloud.jvmkit.module.http.client.config.HttpClientConfig
 import com.soundcloud.jvmkit.module.http.client.{DynamicHttpClient, HttpClient, JsonClient}
 import com.soundcloud.jvmkit.module.rollout.Rollout
-import com.soundcloud.jvmkit.module.servicediscovery.HttpEndpoint
+import com.soundcloud.jvmkit.module.servicediscovery.{HttpEndpoint, HttpsEndpoint}
 import com.soundcloud.jvmkit.module.telemetry.Telemetry
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.twirp.TwirpClient
 import com.soundcloud.jvmkit.module.twirp.filters.ClientTelemetry
 import com.soundcloud.jvmkit.module.util.ResourceName
-import com.soundcloud.jvmkit.module.util.config.{AppConfig, DataSensitivity}
+import com.soundcloud.jvmkit.module.util.config.{AppConfig, ConfigConvention, DataSensitivity}
+import com.twitter.conversions.DurationOps.richDurationFromInt
 import com.twitter.finagle
 import com.twitter.finagle.http.{Request, Response}
 import proto.soundcloud.authenticator.access_grant_exchange.AccessGrantExchangeClientProtobuf
 import proto.soundcloud.comments.api.CommentsClientProtobuf
+import proto.soundcloud.counts.api.CountsApiClientProtobuf
 import proto.soundcloud.follows.api.FollowsClientProtobuf
 import proto.soundcloud.likes.api.v2.{LikesClientProtobuf => LikesClientV2Protobuf}
 import proto.soundcloud.likes.{api => likes}
@@ -250,14 +254,56 @@ class Clients(
 
   private val submarineClient = new SubmarineClient(jsonClient("submarine"))
 
+  def buildCountsApiClient(
+      config: AppConfig,
+      telemetry: Telemetry
+  ): (finagle.Service[Request, Response], ClientTelemetry) = {
+
+    val rn = ResourceName("UNIFIED_COUNTS")
+
+    val serviceUrl = config.get(rn, ConfigConvention.HTTPS_ENDPOINT)
+
+    val credentialsFunc = () => config.get(rn, ConfigConvention.API_KEY)
+    val credentialsProvider = CloudRunCredentialsProvider(serviceUrl, credentialsFunc)
+
+    val httpsEndpoint = HttpsEndpoint(serviceUrl)
+    val clientConfig = HttpClientConfig(
+      config.getApplicationName,
+      rn,
+      httpsEndpoint,
+      requestTimeout = 2.seconds,
+      hostConnectionLimit = 200,
+      retries = 6,
+      retryBudgetMinPerSecond = 100,
+      retryBudgetPercent = 0.5f
+    )
+
+    val svc = HttpClient[String](
+      clientConfig,
+      telemetry,
+      retryOn = Some(ResponseUtilities.idempotentRetries)
+    ).httpService
+    val clientTelemetry = ClientTelemetry.from(clientConfig, telemetry)
+
+    val authedService = CloudRunAuthenticationProxy(credentialsProvider, svc)
+    (authedService, clientTelemetry)
+  }
+
+  val (unifiedCountsTwirpClient, unifiedCountsTwirpTelemetry) = buildCountsApiClient(config, telemetry)
+  val countsApiClientProtobuf = new CountsApiClientProtobuf(
+    unifiedCountsTwirpClient,
+    unifiedCountsTwirpTelemetry
+  )
   val userRepresentationsService =
     new UserRepresentationsService(
       followCountsClient,
       repostsClient,
       okidokiClient,
       likesTwirpClient,
+      countsApiClientProtobuf,
       submarineClient,
-      exceptionCollector
+      exceptionCollector,
+      rolloutClient
     )
 
   val meService = new MeService(userRepresentationsService, okidokiClient, trackCoordinatorClient, exceptionCollector)

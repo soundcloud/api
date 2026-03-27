@@ -20,6 +20,8 @@ lazy val apiPublic = project
       "com.softwaremill.diffx" %% "diffx-core" % "0.4.5",
       "org.jsoup" % "jsoup" % "1.11.3",
       "io.lemonlabs" %% "scala-uri" % "1.5.1",
+      "com.auth0"         % "java-jwt"             % "3.18.2",
+      "com.google.auth"   % "google-auth-library-oauth2-http" % "1.32.1",
       "com.squareup.okhttp3" % "mockwebserver" % "3.11.0" % "test",
       "org.apache.httpcomponents" % "httpclient" % httpComponentsVersion % "test",
       "org.apache.httpcomponents" % "httpmime" % httpComponentsVersion % "test",
