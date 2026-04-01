@@ -64,9 +64,13 @@ service Reposts {
 message RepostTrackRequest {
     proto.soundcloud.common.session.UserSession user_session = 1;
     string track_urn = 2;
+    google.protobuf.StringValue caption = 3; // optional
 }
 
-message RepostTrackResponse {}
+message RepostTrackResponse {
+    google.protobuf.StringValue caption = 1; // optional
+    google.protobuf.StringValue caption_error = 2; // optional
+}
 
 message TrackRepostersRequest {
     proto.soundcloud.common.session.UserSession user_session = 1;
@@ -230,10 +234,14 @@ message GetOfflineSyncRequest {
     google.protobuf.BoolValue remux = 7; // optional
 }
 
+message License {
+    string token = 1;
+}
+
 message GetMediaStreamResponse {
     string url = 1;
     string mime_type = 2;
-     map<string, string> license_urls = 3;
+    License license = 3;
 }
 
 service Snippets {
@@ -370,6 +378,7 @@ enum TrackFlag {
 enum TranscodingFilterStrategy {
   LEGACY = 0;
   LEGACY_AND_NEW = 1;
+  INCLUDE_EVERY_NEW_PROTOCOL = 2;
 }
 
 message Track {
@@ -476,6 +485,14 @@ message Metadata {
     string profileUrn = 44; //deprecated
     google.protobuf.StringValue originalFilename = 45; // optional
     google.protobuf.StringValue disabled_reason = 46; // optional
+    State state = 47; // optional
+
+    enum State {
+        UNKNOWN = 0;
+        FINISHED = 1;
+        PROCESSING = 2;
+        FAILED = 3;
+    }
 }
 
 message ContentAuthorization {
@@ -492,6 +509,7 @@ message Transcoding {
         UNKNOWN = 0;
         HIGH = 1;
         STANDARD = 2;
+        LOW = 3;
     }
     string uuid = 1;
     string preset = 2;
@@ -649,10 +667,19 @@ message RecommendationsMeta {
    google.protobuf.Int32Value seed_count = 5;
 }
 
+enum TracksFilterStrategy {
+  ALL = 0;
+  PLAYABLE = 1;
+  PLAYABLE_OR_UPSELLABLE = 2;
+}
+
 message GetSimilarTracksRequest {
     proto.soundcloud.common.session.UserSession user_session = 1;
     repeated string seed_urns = 2;
     google.protobuf.Int32Value page_size = 3;
+    // USAGE: should use PLAYABLE_OR_UPSELLABLE in order to surface tracks that can be played or upsold in monetizable countries
+    // but needs to be backwards compatible for existing usage in BFFs which are filtering after receiving GetSimilarTracksResponse
+    optional TracksFilterStrategy filter = 4; // optional, default ALL
 }
 
 message GetSimilarTracksResponse {

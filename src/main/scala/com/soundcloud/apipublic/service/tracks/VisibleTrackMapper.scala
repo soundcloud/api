@@ -91,6 +91,7 @@ class VisibleTrackMapper {
           quality = transcoding.quality match {
             case Quality.HIGH => "hq"
             case Quality.STANDARD => "sq"
+            case Quality.LOW => "lq"
             case _ => "unknown"
           },
           durationMs = transcoding.durationMs,

@@ -172,6 +172,40 @@ class VisibleTrackMapperSpec extends Specification {
       visibleTrack.access ==== None
     }
 
+    "transcoding quality mapping" >> {
+      "maps HIGH quality to hq" in new Context {
+        val track = protoTrack.copy(
+          transcodings = Seq(protoTrack.transcodings.head.copy(quality = ProtoTranscoding.Quality.HIGH))
+        )
+        val visibleTrack = mapper(track, session)
+        visibleTrack.transcodings.head.quality ==== "hq"
+      }
+
+      "maps STANDARD quality to sq" in new Context {
+        val track = protoTrack.copy(
+          transcodings = Seq(protoTrack.transcodings.head.copy(quality = ProtoTranscoding.Quality.STANDARD))
+        )
+        val visibleTrack = mapper(track, session)
+        visibleTrack.transcodings.head.quality ==== "sq"
+      }
+
+      "maps LOW quality to lq" in new Context {
+        val track = protoTrack.copy(
+          transcodings = Seq(protoTrack.transcodings.head.copy(quality = ProtoTranscoding.Quality.LOW))
+        )
+        val visibleTrack = mapper(track, session)
+        visibleTrack.transcodings.head.quality ==== "lq"
+      }
+
+      "maps UNKNOWN quality to unknown" in new Context {
+        val track = protoTrack.copy(
+          transcodings = Seq(protoTrack.transcodings.head.copy(quality = ProtoTranscoding.Quality.UNKNOWN))
+        )
+        val visibleTrack = mapper(track, session)
+        visibleTrack.transcodings.head.quality ==== "unknown"
+      }
+    }
+
     "downloadable" >> {
       "track is downloadable if metadata and user allowed" in new Context {
         val metadata = Some(protoTrack.metadata.get.copy(downloadable = true))
