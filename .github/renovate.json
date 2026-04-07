@@ -1,6 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "github>soundcloud/renovate-presets//scala/default"
+    "github>soundcloud/renovate-presets//scala/default",
+    "github>soundcloud/renovate-presets//golang/default",
+    "github>soundcloud/renovate-presets//nodejs/default"
   ]
 }
