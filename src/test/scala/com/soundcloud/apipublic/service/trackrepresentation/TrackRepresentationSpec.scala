@@ -699,6 +699,25 @@ class TrackRepresentationSpec extends UnitSpecification {
           Json.toJson(createTrackRepresentationFromVisibleTrack(visibleTrack = defaultTrack.copy(artwork = artwork)))
         trackJson \ "artwork_url" ==== JsDefined(JsString("https://i1.sndcdn.com/donkey-large.jpg"))
       }
+
+      "does not prefix cdn root when filename is already an absolute URL" in new Context {
+        val fullUrl = "https://i1.sndcdn.com/artworks-vfcBYZmSWEj5dOIT-qAeFgQ-large.jpg"
+        val artwork = Artwork(filename = Some(fullUrl))
+        val trackJson =
+          Json.toJson(createTrackRepresentationFromVisibleTrack(visibleTrack = defaultTrack.copy(artwork = artwork)))
+        trackJson \ "artwork_url" ==== JsDefined(JsString(fullUrl))
+      }
+
+      "rewrites -original to -large on absolute URL without duplicating host" in new Context {
+        val artwork = Artwork(
+          filename = Some("https://i1.sndcdn.com/artworks-vfcBYZmSWEj5dOIT-qAeFgQ-original.jpg")
+        )
+        val trackJson =
+          Json.toJson(createTrackRepresentationFromVisibleTrack(visibleTrack = defaultTrack.copy(artwork = artwork)))
+        trackJson \ "artwork_url" ==== JsDefined(
+          JsString("https://i1.sndcdn.com/artworks-vfcBYZmSWEj5dOIT-qAeFgQ-large.jpg")
+        )
+      }
     }
 
     "sharing" in new Context {

@@ -16,6 +16,7 @@ object TrackRepresentationBuilder {
   private val snippetDurationMs = 30000
   private val AbletonLiveApplication = Urn("soundcloud", "applications", "45176")
   private val cdnRoot = "https://i1.sndcdn.com"
+  private val originalFilenamePattern = """(.*)-original\.\w*$""".r
 
   def fromTrackCoordinatorTrack(
       trackCoordinatorTrack: TrackCoordinatorTrack,
@@ -157,10 +158,12 @@ object TrackRepresentationBuilder {
   }
 
   private def imageUrl(imageFile: String): String = {
-    val s3FilenamePattern = """(.*)-original\.\w*""".r
+    val absolute = imageFile.startsWith("http://") || imageFile.startsWith("https://")
 
     imageFile match {
-      case s3FilenamePattern(s3filename) => cdnRoot + s"/$s3filename-large.jpg"
+      case originalFilenamePattern(base) if absolute => base + "-large.jpg"
+      case originalFilenamePattern(base) => cdnRoot + s"/$base-large.jpg"
+      case _ if absolute => imageFile
       case _ => cdnRoot + "/" + imageFile
     }
   }
