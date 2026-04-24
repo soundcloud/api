@@ -5,6 +5,7 @@ import com.soundcloud.jvmkit.module.http.server.{HandlerRequest, JsonResponseBui
 import com.soundcloud.jvmkit.module.json.play.UrnFormat._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.{LoggedInUserSession, UserSession}
+import com.soundcloud.apipublic.client.chrono.ChronoResponse
 import com.soundcloud.apipublic.client.follows._
 import com.soundcloud.apipublic.client.follows.representation._
 import com.soundcloud.apipublic.client.follows.representation.follow._
@@ -102,6 +103,9 @@ class UserFollowHandler(
   def fetchMyFollowers(request: HandlerRequest): Future[Response] =
     fetchPage(request, follows.followers, mapUsersToUsers, fans, requireLogin = true)
 
+  def fetchMyFollowingsChrono(request: HandlerRequest): Future[Response] =
+    fetchPageChrono(request, follows.followingsChrono, mapUsersToUsers, requireLogin = true)
+
   def fetchFollowings(request: HandlerRequest) =
     fetchPage(request, follows.followings, mapUsersToUsers, contacts, requireLogin = true)
 
@@ -144,6 +148,51 @@ class UserFollowHandler(
 
   private def cursorParam(request: HandlerRequest) = request.params.get("cursor")
 
+  private def limitChronoParam(request: HandlerRequest): Int =
+    request.params
+      .get("limit")
+      .orElse(request.params.get("page_size"))
+      .flatMap(s => scala.util.Try(s.toInt).toOption)
+      .getOrElse(20)
+
+  private def directionChronoParam(request: HandlerRequest): String =
+    request.params
+      .get("direction")
+      .orElse(request.params.get("order"))
+      .filter(d => d == "asc" || d == "desc")
+      .getOrElse("asc")
+
+  private def fetchPageChrono(
+      request: HandlerRequest,
+      fetchFunction: (UserSession, Urn, Option[String], Int, String) => Future[Option[ChronoResponse]],
+      serializeUsers: (List[UserRepresentation], Option[String]) => String,
+      requireLogin: Boolean
+  ): Future[Response] =
+    authenticateIfNeeded(request, requireLogin) { (session: UserSession, userToFetch: Urn) =>
+      fetchFunction(
+        session,
+        userToFetch,
+        cursorParam(request),
+        limitChronoParam(request),
+        directionChronoParam(request)
+      ).flatMap {
+        case None => Future.value(ErrorResponse(Status.ServiceUnavailable))
+        case Some(chrono) =>
+          val urns = chrono.items.map(_.urn).toSet
+          fetchUsers(session, urns).map { users =>
+            val next = nextHrefChrono(
+              baseUrl,
+              request.request.path,
+              request.params,
+              chrono.items.lastOption.map(_.cursor),
+              limitChronoParam(request),
+              directionChronoParam(request)
+            )
+            JsonResponseBuilder.ok(serializeUsers(users, next))
+          }
+      }
+    }
+
   private def fetchPage[T](
       request: HandlerRequest,
       fetchFunction: (UserSession, Urn, Option[String], Int) => Future[Option[FollowingsPage]],
@@ -159,10 +208,8 @@ class UserFollowHandler(
       } yield {
         affiliationsOption
           .map { affiliations =>
-            {
-              val next = nextHref(baseUrl, request.request.path, affiliations.next, request.params)
-              JsonResponseBuilder.ok(serializeUsers(users, next))
-            }
+            val next = nextHref(baseUrl, request.request.path, affiliations.next, request.params)
+            JsonResponseBuilder.ok(serializeUsers(users, next))
           }
           .getOrElse(ErrorResponse(Status.ServiceUnavailable))
       }
@@ -228,6 +275,19 @@ class UserFollowHandler(
       baseUrl + path + "?" + params.map { case (k, v) => s"$k=$v" }.mkString("&")
     }
   }
+
+  private def nextHrefChrono(
+      baseUrl: String,
+      path: String,
+      requestParams: Map[String, String],
+      cursor: Option[String],
+      limit: Int,
+      direction: String
+  ): Option[String] =
+    cursor.map { c =>
+      val params = requestParams ++ Map("cursor" -> c, "limit" -> limit.toString, "direction" -> direction) - "client_id"
+      baseUrl + path + "?" + params.map { case (k, v) => s"$k=$v" }.mkString("&")
+    }
 
   private def fetchUsers(session: UserSession, urns: Set[Urn]): Future[List[UserRepresentation]] = {
     userRepresentationsService.users(session, urns.toSeq, fetchSubscriptions = false)

@@ -9,7 +9,10 @@ import com.soundcloud.apipublic.client.follows.representation.follow._
 import com.soundcloud.apipublic.client.follows.representation.unfollow._
 import com.soundcloud.apipublic.client.follows.representation.{FilteredUserUrns, FollowingsPage}
 import com.soundcloud.apipublic.client.support.FetchClient
+import com.soundcloud.apipublic.client.chrono.ChronoResponse
+import com.twitter.finagle.http.Status
 import com.twitter.util.Future
+import play.api.libs.json._
 
 class FollowsClient(jsonService: JsonClient) extends FetchClient {
 
@@ -80,6 +83,26 @@ class FollowsClient(jsonService: JsonClient) extends FetchClient {
     )
 
   /**
+    * Returns a page of followings of the given user in chronological order (by follow date).
+    * Returns `None` in case of error.
+    *
+    */
+  def followingsChrono(
+      userSession: UserSession,
+      user: Urn,
+      cursor: Option[String],
+      limit: Int = 20,
+      direction: String = "asc"
+  ): Future[Option[ChronoResponse]] =
+    fetchChrono(
+      userSession,
+      Path() / "users" / user / "followings" / "chrono",
+      cursor,
+      limit,
+      direction
+    )
+
+  /**
     * Returns a page of followings of the given user, according to the pagination options.
     * Returns `None` in case of error.
     *
@@ -142,6 +165,29 @@ class FollowsClient(jsonService: JsonClient) extends FetchClient {
         Headers.empty
       )
       .map(SimpleMapper[FollowingsPage])
+
+  private def fetchChrono(
+      userSession: UserSession,
+      path: Path,
+      cursor: Option[String],
+      limit: Int,
+      direction: String
+  ): Future[Option[ChronoResponse]] =
+    jsonService
+      .getWithSession(
+        userSession,
+        path,
+        Params("limit" -> limit, "direction" -> direction) ++ cursor
+          .map(c => Params("cursor" -> c))
+          .getOrElse(Params.empty),
+        Headers.empty
+      )
+      .map { response =>
+        response.status match {
+          case Status.Ok => Some(Json.parse(response.contentString).as[ChronoResponse])
+          case _ => None
+        }
+      }
 
   private def filterUsers(
       userSession: UserSession,

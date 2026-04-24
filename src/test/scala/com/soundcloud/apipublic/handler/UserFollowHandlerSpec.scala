@@ -14,6 +14,7 @@ import com.soundcloud.apipublic.client.follows.representation.follow.{
   UserNotFound
 }
 import com.soundcloud.apipublic.client.follows.representation.unfollow.{UnfollowSuccessful, UserAsTarget}
+import com.soundcloud.apipublic.client.chrono.{ChronoItem, ChronoMeta, ChronoMetaParams, ChronoResponse}
 import com.soundcloud.apipublic.client.mothership.OkidokiClient
 import com.soundcloud.apipublic.service.users.UserRepresentationsService
 import com.soundcloud.apipublic.test.fixtures.Fixtures
@@ -218,6 +219,35 @@ class UserFollowHandlerSpec extends UnitSpecification {
         "collection" -> List(anotherUser123),
         "next_href" -> "http://foo/me/followers?cursor=123-1234&page_size=2"
       )
+    }
+  }
+
+  trait FollowingsChronoContext extends Context {
+    val followingUrn = Urn("soundcloud", "users", "123")
+    val chronoCursor = "2026-02-20T12:00:00.000Z,source:follow,00000000041170609376"
+    lazy val chronoResponse = ChronoResponse(
+      items = List(ChronoItem("2026-02-20T12:00:00.000Z", "follow", followingUrn, chronoCursor)),
+      meta = ChronoMeta(
+        params = ChronoMetaParams(cursor = None, limit = 20, direction = "asc"),
+        validForCaching = true
+      )
+    )
+    override def before: Any = {
+      super.before
+      followsMock.followingsChrono(session, userUrn, None, 20, "asc") returns Future.value(Some(chronoResponse))
+      val userRepresentation = UserRepresentationMapper(Fixtures.okidokiUsers.as[JsArray].value.last)
+      userServiceMock.users(session, Seq(followingUrn), false) returns Future.value(List(userRepresentation))
+    }
+  }
+
+  "GET /me/followings/chrono" >> {
+    "fetches authenticated user's followings in chronological order" in new FollowingsChronoContext {
+      val response = get("/me/followings/chrono")
+      response.status ==== Status.Ok
+      val json = Json.parse(response.contentString)
+      (json \ "collection").as[List[JsValue]].size ==== 1
+      (json \ "next_href").asOpt[String].get must contain("cursor=")
+      (json \ "next_href").asOpt[String].get must contain("direction=asc")
     }
   }
 

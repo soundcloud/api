@@ -46,7 +46,8 @@ object Routing {
   }
 
   def forUserFollowHandler(userFollowHandler: UserFollowHandler): List[(Method, String, Handler)] = {
-    route(Method.Get, "/users/:id/followings", userFollowHandler.fetchFollowingsWithoutAuth) :::
+    route(Method.Get, "/me/followings/chrono", userFollowHandler.fetchMyFollowingsChrono) :::
+      route(Method.Get, "/users/:id/followings", userFollowHandler.fetchFollowingsWithoutAuth) :::
       route(Method.Get, "/users/:id/followers", userFollowHandler.fetchFollowersWithoutAuth) :::
       route(Method.Get, "/users/:id/followings/:other_id", userFollowHandler.fetchPossibleFollowingWithoutAuth) ::: // deprecate
       route(Method.Get, "/me/followings", userFollowHandler.fetchFollowings) :::

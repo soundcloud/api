@@ -13,6 +13,7 @@ import com.soundcloud.apipublic.client.follows.representation.unfollow.{
   UserAsTarget => UnfollowUserAsTarget,
   UserNotFound => UnfollowUserNotFound
 }
+import com.soundcloud.apipublic.client.chrono.ChronoItem
 import com.twitter.util.{Await, Future}
 import org.joda.time.DateTime
 import play.api.libs.json.{JsNull, JsString, JsValue, Json}
@@ -36,6 +37,25 @@ object Fixtures {
   lazy val ageRestrictedUserError = fileJson("age_restricted_user_error")
   lazy val ageUnknownUserError = fileJson("age_unknown_user_error")
   lazy val notFollowingError = fileJson("not_following_error")
+  lazy val followingsChronoResponse = Json.parse("""
+      {
+        "items": [
+          {
+            "timestamp": "2026-02-20T12:00:00.000Z",
+            "type": "follow",
+            "urn": "soundcloud:users:2",
+            "cursor": "2026-02-20T12:00:00.000Z,source:follow,00000000041170609376"
+          }
+        ],
+        "meta": {
+          "params": {
+            "direction": "asc",
+            "limit": 20
+          },
+          "valid_for_caching": true
+        }
+      }
+    """)
 
   private def fileJson(name: String) = Json.parse(fileToString(name))
 
@@ -319,6 +339,65 @@ class FollowsClientSpec extends UnitSpecification {
       val pagination = Some(Pagination("12345", 1))
 
       result ==== Some(FollowingsPage(followings, pagination))
+    }
+  }
+
+  "#followingsChrono" >> {
+    trait FollowingsChronoContext extends Context with After {
+      val path = Path() / "users" / anotherUser / "followings" / "chrono"
+      val params = Params("limit" -> 20, "direction" -> "asc")
+
+      lazy val result = Await.result(client.followingsChrono(anonymousSession, anotherUser, None, 20, "asc"))
+
+      def mockWith(status: Status, body: JsValue) =
+        when(serviceMock.getWithSession(anonymousSession, path, params, Headers.empty))
+          .thenReturn(Future(jsonResponse(status, body)))
+
+      override def after: Any = {
+        verify(serviceMock).getWithSession(anonymousSession, path, params, Headers.empty)
+      }
+    }
+
+    "returns none when an error happens" in new FollowingsChronoContext {
+      mockWith(Status.InternalServerError, JsNull)
+
+      result ==== None
+    }
+
+    "returns empty response when no followings are found" in new FollowingsChronoContext {
+      mockWith(
+        Status.Ok,
+        Json.obj(
+          "items" -> Json.arr(),
+          "meta" -> Json.obj("params" -> Json.obj("direction" -> "asc", "limit" -> 20), "valid_for_caching" -> true)
+        )
+      )
+
+      result.map(_.items) ==== Some(List.empty)
+    }
+
+    "returns chrono response when followings are found" in new FollowingsChronoContext {
+      mockWith(Status.Ok, Fixtures.followingsChronoResponse)
+
+      val expectedItem = ChronoItem(
+        "2026-02-20T12:00:00.000Z",
+        "follow",
+        anotherUser,
+        "2026-02-20T12:00:00.000Z,source:follow,00000000041170609376"
+      )
+      result.map(_.items) ==== Some(List(expectedItem))
+      result.map(_.meta.params.direction) ==== Some("asc")
+      result.map(_.meta.params.limit) ==== Some(20)
+    }
+
+    "sends cursor when provided" in new Context with After {
+      val path = Path() / "users" / anotherUser / "followings" / "chrono"
+      val params = Params("limit" -> 20, "direction" -> "asc", "cursor" -> "some-cursor")
+      when(serviceMock.getWithSession(anonymousSession, path, params, Headers.empty))
+        .thenReturn(Future(jsonResponse(Status.Ok, Fixtures.followingsChronoResponse)))
+      val result = Await.result(client.followingsChrono(anonymousSession, anotherUser, Some("some-cursor"), 20, "asc"))
+      result.map(_.items.size) ==== Some(1)
+      override def after: Any = verify(serviceMock).getWithSession(anonymousSession, path, params, Headers.empty)
     }
   }
 
