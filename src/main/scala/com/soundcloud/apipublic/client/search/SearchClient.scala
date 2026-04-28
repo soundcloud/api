@@ -117,7 +117,8 @@ case class TracksParams(
     tags: Option[List[String]] = None,
     ids: Option[List[Long]] = None,
     clientId: Option[String] = None,
-    place: Option[String] = None
+    place: Option[String] = None,
+    cachingEnabled: Option[Boolean] = None
 )
 
 case class SearchQueryParams(
@@ -143,7 +144,8 @@ case class SearchQueryParams(
     tags: Option[List[String]] = None,
     ids: Option[List[Long]] = None,
     clientId: Option[String] = None,
-    place: Option[String] = None
+    place: Option[String] = None,
+    cachingEnabled: Option[Boolean] = None
 )
 
 trait SearchClient {

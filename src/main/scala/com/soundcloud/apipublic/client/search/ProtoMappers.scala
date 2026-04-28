@@ -109,6 +109,7 @@ object ProtoMappers {
       userSession = Some(session.asProtoSession),
       anonymousId = if (session.isAnonymous) generateAnonymousID else None,
       text = params.q,
+      cachingEnabled = params.cachingEnabled,
       filters = Some(
         SearchFilters(
           contentType = SearchFilters.ContentType.TRACKS,
@@ -161,6 +162,7 @@ object ProtoMappers {
       userSession = Some(session.asProtoSession),
       anonymousId = if (session.isAnonymous) generateAnonymousID else None,
       text = params.q,
+      cachingEnabled = params.cachingEnabled,
       filters = Some(
         SearchFilters(
           contentType = SearchFilters.ContentType.TRACKS,

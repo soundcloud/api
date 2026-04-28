@@ -29,6 +29,8 @@ class SearchHandler(
     searchService: SearchService,
     telemetry: Telemetry
 ) {
+  private case class TrackSearchParams(params: ParamMap, cachingEnabled: Option[Boolean])
+
   protected val userParams: Seq[String] = Seq(
     "q",
     "offset",
@@ -119,24 +121,15 @@ class SearchHandler(
           )
         }
 
-      val params =
-        extraParams.map(p => paramsWithAccessFilters ++ p).map(ParamMap.apply).getOrElse(paramsWithAccessFilters)
-
-      // Backend expects non-empty q; when the client sends only filters (no q), pass q=* like addWildcardIfNoSearchQuery
-      // used to after trackParams started including tags/genres/license (see SearchRateLimits.trackParams).
-      val qEmpty = params.get("q").isEmpty || params.get("q").exists(_.isEmpty)
-      val hasFilterOnlySearch =
-        params.contains("urns") || params.contains("ids") ||
-          params.contains("tags") || params.contains("genres") || params.contains("license")
-      val paramsForSearch: ParamMap =
-        if (qEmpty && hasFilterOnlySearch) {
-          ParamMap(params ++ ParamMap("q" -> "*"))
-        } else {
-          params
-        }
+      val searchParams: TrackSearchParams = createSearchParams(extraParams, paramsWithAccessFilters)
 
       val tracksCollection = searchService
-        .searchTracks(session, paramsForSearch.asTracksParams, pagination, access)
+        .searchTracks(
+          session,
+          searchParams.params.asTracksParams.copy(cachingEnabled = searchParams.cachingEnabled),
+          pagination,
+          access
+        )
         .value
         .onSuccess(recordIncompleteResponses(_, pagination.limit))
 
@@ -144,6 +137,35 @@ class SearchHandler(
     } catch {
       case _: IllegalArgumentException => Future.value(ErrorResponse.badRequest())
     }
+  }
+
+  private def createSearchParams(
+      extraParams: Option[ParamMap],
+      paramsWithAccessFilters: ParamMap
+  ): TrackSearchParams = {
+    val params =
+      extraParams.map(p => paramsWithAccessFilters ++ p).map(ParamMap.apply).getOrElse(paramsWithAccessFilters)
+
+    // Backend expects non-empty q; when the client sends only filters (no q), pass q=* like addWildcardIfNoSearchQuery
+    // used to after trackParams started including tags/genres/license (see SearchRateLimits.trackParams).
+    val qEmpty = !params.contains("q") || params.get("q").exists(_.isEmpty)
+    val hasFilterOnlySearch =
+      params.contains("urns") || params.contains("ids") ||
+        params.contains("tags") || params.contains("genres") || params.contains("license")
+    val paramsForSearch: ParamMap =
+      if (qEmpty && hasFilterOnlySearch) {
+        ParamMap(params ++ ParamMap("q" -> "*"))
+      } else {
+        params
+      }
+
+    val hasCreatedAtFilters =
+      paramsForSearch.get("created_at").exists(_.nonEmpty) ||
+        paramsForSearch.get("created_at[from]").exists(_.nonEmpty) ||
+        paramsForSearch.get("created_at[to]").exists(_.nonEmpty)
+
+    val cachingEnabled = if (hasCreatedAtFilters) Some(false) else None
+    TrackSearchParams(paramsForSearch, cachingEnabled)
   }
 
   private def searchPlaylists(
