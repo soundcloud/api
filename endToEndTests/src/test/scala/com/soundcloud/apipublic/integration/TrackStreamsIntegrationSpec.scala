@@ -27,8 +27,16 @@ class TrackStreamsIntegrationSpec extends IntegrationTest {
 
       response.status === 200
 
-      (response.json \ "http_mp3_128_url").as[String] must contain("http-preview")
-      (response.json \ "hls_mp3_128_url").as[String] mustNotEqual empty
+      val json = response.json
+      (json \ "preview_mp3_128_url").asOpt[String] must beSome.which(_ must contain("http-preview"))
+
+      (json \ "http_mp3_128_url").asOpt[String] match {
+        case Some(httpMp3) =>
+          httpMp3 must contain("http-preview")
+          (json \ "hls_mp3_128_url").asOpt[String] must beSome.which(_ mustNotEqual empty)
+        case None =>
+          ok
+      }
     }
 
     "should return an error for a track with api_streamable=false" in new TrackStreamContext {

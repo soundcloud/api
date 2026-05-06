@@ -9,6 +9,7 @@ import com.soundcloud.apipublic.authorization.AllowlistedClients
 import com.soundcloud.apipublic.authorization.policies.{Access, ContentPolicy, MonetizationModel, Reason}
 import com.soundcloud.apipublic.client.tracks.{TrackRequest, VisibleTrack}
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
+import com.soundcloud.apipublic.service.TrackVisibilityService.SUPPLY_CHAIN_STATUS_SUPPLY_CHAIN
 import com.soundcloud.apipublic.service.tracks.VisibleTrackMapper
 import com.twitter.util.Future
 import proto.soundcloud.tracks.api.{
@@ -77,6 +78,7 @@ class TrackVisibilityService(
         track.authorization.policy,
         track.authorization.monetizationModel,
         track.apiStreamable.getOrElse(true),
+        track.supplyChainStatus,
         client
       )
 
@@ -93,19 +95,24 @@ class TrackVisibilityService(
       policy: ContentPolicy,
       model: MonetizationModel,
       apiStreamable: Boolean,
+      supplyChainStatus: Option[String],
       client: Urn
   ): Access = {
-    (policy, model, apiStreamable) match {
-      case (_, _, false) | (ContentPolicy.BLOCK, _, _) => Access.Blocked
-      case (ContentPolicy.MONETIZE, MonetizationModel.SUB_HIGH_TIER, _) =>
+    (policy, model, apiStreamable, supplyChainStatus) match {
+      case (_, _, false, _) | (ContentPolicy.BLOCK, _, _, _) => Access.Blocked
+      case (ContentPolicy.MONETIZE, MonetizationModel.SUB_HIGH_TIER, _, _) =>
         if (!AllowlistedClients.clients.contains(client)) Access.Blocked else Access.Preview
-      case (ContentPolicy.SNIP, _, _) => Access.Preview
+      case (ContentPolicy.SNIP, _, _, _) => Access.Preview
+      case (_, _, _, Some(SUPPLY_CHAIN_STATUS_SUPPLY_CHAIN)) => Access.Preview
       case _ => Access.Playable
     }
   }
 }
 
 object TrackVisibilityService {
+
+  /** Tracks metadata `supply_chain_status` value denoting partner / supply-chain catalogue delivery. */
+  final val SUPPLY_CHAIN_STATUS_SUPPLY_CHAIN = "supply_chain"
 
   val DefaultTrackFieldMask: FieldMask = FieldMaskUtil.selectFieldNumbers[Track](
     Set(

@@ -1,6 +1,12 @@
 package com.soundcloud.apipublic.service.media
 
-import com.soundcloud.apipublic.authorization.policies.{ContentAuthorization, ContentPolicy, ContentRestriction, Reason}
+import com.soundcloud.apipublic.authorization.policies.{
+  Access,
+  ContentAuthorization,
+  ContentPolicy,
+  ContentRestriction,
+  Reason
+}
 import com.soundcloud.apipublic.client.tracks._
 import com.soundcloud.apipublic.handler.PlayParams
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
@@ -211,6 +217,40 @@ class StreamServiceSpec extends UnitSpecification {
           "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/http-preview"
         ).good
       }
+
+      "downgrades progressive and hls play URLs to preview when track access is Preview" in new Context {
+        override lazy val visibleTrack =
+          new VisibleTrackBuilder()
+            .setUrn(trackUrn)
+            .setUid(uid)
+            .setPublic(true)
+            .setSecretToken(secretToken)
+            .setAuthorization(contentAuth)
+            .setTranscodings(transcodings)
+            .setAccess(Some(Access.Preview))
+            .build
+
+        tracksMediaTwirpClient.getMediaPreview(any[GetMediaStreamRequest]) returns Future.value(
+          streamPreviewUrlTwirpResponse
+        )
+
+        Await.result(service.fetchStreamUrl(session, PlayParams(trackUrn, secretToken, "mp3-uuid", "http"))) ====
+          RedirectStreamResponse(
+            "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/http-preview"
+          ).good
+
+        tracksMediaTwirpClient.getMediaPreview(any[GetMediaStreamRequest]) returns Future.value(
+          GetMediaStreamResponse(
+            "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/aac-160-uuid/hls-preview",
+            """audio/mp4; codecs="mp4a.40.2""""
+          )
+        )
+
+        Await.result(service.fetchStreamUrl(session, PlayParams(trackUrn, secretToken, "aac-160-uuid", "hls"))) ====
+          RedirectStreamResponse(
+            "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/aac-160-uuid/hls-preview"
+          ).good
+      }
     }
   }
 
@@ -410,6 +450,28 @@ class StreamServiceSpec extends UnitSpecification {
         case Bad(_) =>
           failure("Expected Good result")
       }
+    }
+
+    "returns only preview_mp3_128_url for supply-chain tracks" in new Context {
+      override lazy val visibleTrack =
+        new VisibleTrackBuilder()
+          .setUrn(trackUrn)
+          .setUid(uid)
+          .setPublic(true)
+          .setSecretToken(secretToken)
+          .setAuthorization(contentAuth)
+          .setTranscodings(transcodings)
+          .setSupplyChainStatus(Some(TrackVisibilityService.SUPPLY_CHAIN_STATUS_SUPPLY_CHAIN))
+          .build
+
+      override lazy val transcodings: List[Transcoding] =
+        List(mp3ProgressiveAndHlsTranscoding, aac160kTranscoding, aac96kTranscoding)
+
+      val a = "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/http-preview"
+
+      val result: Outcome[MediaStreamUrls] = Await.result(service.fetchTranscodingUrls(session, trackUrn, secretToken))
+      result ====
+        MediaStreamUrls(None, None, None, None, Some(a)).good
     }
 
     "returns only MP3 urls if Opus transcoding is missing" in new Context {

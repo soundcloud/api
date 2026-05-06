@@ -1,6 +1,6 @@
 package com.soundcloud.apipublic.service.media
 
-import com.soundcloud.apipublic.authorization.policies.{ContentPolicy, ContentRestriction}
+import com.soundcloud.apipublic.authorization.policies.{Access, ContentPolicy, ContentRestriction}
 import com.soundcloud.apipublic.client.tracks._
 import com.soundcloud.apipublic.handler.PlayParams
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
@@ -61,6 +61,18 @@ class StreamService(
     track.authorization.policy == ContentPolicy.SNIP ||
       track.authorization.contentRestrictions.contains(ContentRestriction.NO_PROGRESSIVE_DOWNLOAD)
 
+  /** Full (non-preview) stream URLs must not be exposed when the track resolves to Preview access. */
+  private def usePreviewOnlyStreamEndpoints(track: VisibleTrack): Boolean =
+    streamNotAllowed(track) || track.access.contains(Access.Preview)
+
+  /**
+    * Supply-chain catalogue tracks keep only `preview_mp3_128_url` on GET /streams — not `http_mp3_128_url` / AAC HLS
+    * fields (those suggest full stream tiers). Other Preview access (e.g. high tier) still receives the multi-field
+    * response with snippet endpoints on each URL field; SNIP behaves the same way.
+    */
+  private def listResponsesWithOnlyPartialPreviewField(track: VisibleTrack): Boolean =
+    track.supplyChainStatus.exists(_ == TrackVisibilityService.SUPPLY_CHAIN_STATUS_SUPPLY_CHAIN)
+
   def fetchStreamUrl(session: UserSession, params: PlayParams): Future[Outcome[RedirectStreamResponse]] = {
     trackVisibilityService
       .tracks(
@@ -77,12 +89,12 @@ class StreamService(
             case PROTOCOL_PREVIEW_PROGRESSIVE =>
               fetchProgressivePreviewUrl(session, params.trackUrn, params.secretToken, params.transcoding)
             case PROTOCOL_PROGRESSIVE =>
-              if (streamNotAllowed(visibleTrack))
+              if (usePreviewOnlyStreamEndpoints(visibleTrack))
                 fetchProgressivePreviewUrl(session, params.trackUrn, params.secretToken, params.transcoding)
               else
                 fetchProgressiveUrl(session, params.trackUrn, params.secretToken, params.transcoding)
             case PROTOCOL_HLS =>
-              if (streamNotAllowed(visibleTrack))
+              if (usePreviewOnlyStreamEndpoints(visibleTrack))
                 fetchHlsPreviewUrl(session, params.trackUrn, params.secretToken, params.transcoding)
               else
                 fetchHlsUrl(session, params.trackUrn, params.secretToken, params.transcoding)
@@ -114,8 +126,9 @@ class StreamService(
   }
 
   private def fetchTranscodingUrls(track: VisibleTrack): Future[MediaStreamUrls] = {
-    val progressiveProtocol = if (streamNotAllowed(track)) PROTOCOL_PREVIEW_PROGRESSIVE else PROTOCOL_PROGRESSIVE
-    val hlsProtocol = if (streamNotAllowed(track)) PROTOCOL_PREVIEW_HLS else PROTOCOL_HLS
+    val progressiveProtocol =
+      if (usePreviewOnlyStreamEndpoints(track)) PROTOCOL_PREVIEW_PROGRESSIVE else PROTOCOL_PROGRESSIVE
+    val hlsProtocol = if (usePreviewOnlyStreamEndpoints(track)) PROTOCOL_PREVIEW_HLS else PROTOCOL_HLS
     val secretTokenParam = if (track.secretToken.isDefined) s"?secret_token=${track.secretToken.get}" else ""
 
     def buildStreamUrl(transcoding: Transcoding, protocol: String): String =
@@ -147,15 +160,25 @@ class StreamService(
       .find(_.mimeType == mp3MimeType)
       .map(mp3 => buildStreamUrl(mp3, PROTOCOL_PREVIEW_PROGRESSIVE))
 
-    Future.value(
-      MediaStreamUrls(
-        httpStream,
-        legacyHlsStream,
-        hls96kStream,
-        hls160kStream,
-        mp3Preview
-      )
-    )
+    val urls =
+      if (listResponsesWithOnlyPartialPreviewField(track))
+        MediaStreamUrls(
+          httpMp3 = None,
+          hlsMp3 = None,
+          hlsAac96k = None,
+          hlsAac160k = None,
+          httpPreviewMp3 = mp3Preview
+        )
+      else
+        MediaStreamUrls(
+          httpStream,
+          legacyHlsStream,
+          hls96kStream,
+          hls160kStream,
+          mp3Preview
+        )
+
+    Future.value(urls)
   }
 
   private def fetchHlsUrl: (UserSession, Urn, Option[String], String) => Future[Outcome[String]] =

@@ -1,13 +1,9 @@
 # API Public Release Notes
 
-## List user reposts (tracks and playlists)
+## Unsupported track transcodings
 
-- **GET /me/reposts/tracks** – Returns the authenticated user's track reposts (cursor-based pagination, supports `linked_partitioning` and `access`).
-- **GET /me/reposts/playlists** – Returns the authenticated user's playlist reposts (cursor-based pagination, supports `linked_partitioning`).
-- **GET /users/{user_urn}/reposts/tracks** – Returns a user's track reposts (cursor-based pagination, supports `linked_partitioning` and `access`).
-- **GET /users/{user_urn}/reposts/playlists** – Returns a user's playlist reposts (cursor-based pagination, supports `linked_partitioning`).
-
-Implements [api#62](https://github.com/soundcloud/api/issues/62) and [api#379](https://github.com/soundcloud/api/issues/379).
+- fixes https://github.com/soundcloud/api/issues/534 where unplayable tracks were returned as playable but then 403 was returned when trying to play 
+- The `/streams` JSON payload **no longer emits keys with null values**. Optional URL fields are **omitted entirely** when not applicable, instead of `"field": null`.
 
 <!--- Remove everything below and start over --->
 

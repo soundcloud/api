@@ -8,7 +8,7 @@ import com.soundcloud.apipublic.authorization.AllowlistedClients
 import com.soundcloud.apipublic.authorization.policies._
 import com.soundcloud.apipublic.client.tracks.{TrackRequest, Transcoding, VisibleTrackBuilder}
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
-import com.soundcloud.apipublic.service.TrackVisibilityService.DefaultTrackFieldMask
+import com.soundcloud.apipublic.service.TrackVisibilityService.{DefaultTrackFieldMask, SUPPLY_CHAIN_STATUS_SUPPLY_CHAIN}
 import com.soundcloud.apipublic.service.tracks.VisibleTrackMapper
 import com.twitter.util.{Await, Future}
 import org.joda.time.LocalDateTime
@@ -202,6 +202,88 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
         val expectedTrack = visibleTrack.copy(access = Some(Access.Blocked))
 
         Await.result(service.tracks(session, List(trackRequest), fieldMask, access)) ==== List(expectedTrack.good)
+      }
+    }
+
+    "supply chain status" >> {
+      trait SupplyChainTrackContext extends Context {
+        override lazy val visibleTrack =
+          (new VisibleTrackBuilder)
+            .setUrn(trackUrn)
+            .setUserUrn(userUrn)
+            .setDisabledAt(None)
+            .setTranscodings(transcodings)
+            .setSupplyChainStatus(Some(SUPPLY_CHAIN_STATUS_SUPPLY_CHAIN))
+            .build
+
+        val expectedTrack = visibleTrack.copy(access = Some(Access.Preview))
+      }
+
+      "returns track with preview access, default access" in new SupplyChainTrackContext {
+        Await.result(service.tracks(session, List(trackRequest), fieldMask, access)) ==== List(expectedTrack.good)
+      }
+
+      "does not change access for other supply_chain_status values" in new Context {
+        override lazy val visibleTrack =
+          (new VisibleTrackBuilder)
+            .setUrn(trackUrn)
+            .setUserUrn(userUrn)
+            .setDisabledAt(None)
+            .setTranscodings(transcodings)
+            .setSupplyChainStatus(Some("manual_upload"))
+            .build
+
+        val expectedTrack = visibleTrack.copy(access = Some(Access.Playable))
+
+        Await.result(service.tracks(session, List(trackRequest), fieldMask, access)) ==== List(expectedTrack.good)
+      }
+
+      "filters out track when client requests playable only" in new SupplyChainTrackContext {
+        override lazy val access = AccessParams(Set(Access.Playable))
+
+        Await.result(service.tracks(session, List(trackRequest), fieldMask, access)) ==== List(
+          CustomError(UnavailableByPolicy(trackUrn, Reason.UNKNOWN)).bad
+        )
+      }
+
+      "blocked policy takes precedence over supply chain preview" in new SupplyChainTrackContext {
+        override lazy val visibleTrack =
+          (new VisibleTrackBuilder)
+            .setUrn(trackUrn)
+            .setUserUrn(userUrn)
+            .setDisabledAt(None)
+            .setTranscodings(transcodings)
+            .setSupplyChainStatus(Some(SUPPLY_CHAIN_STATUS_SUPPLY_CHAIN))
+            .setAuthorization(
+              new ContentAuthorization(
+                trackUrn,
+                ContentPolicy.BLOCK,
+                Reason.GEO,
+                Set.empty[ContentRestriction],
+                MonetizationModel.NOT_APPLICABLE
+              )
+            )
+            .build
+
+        Await.result(service.tracks(session, List(trackRequest), fieldMask, access)) ==== List(
+          CustomError(UnavailableByPolicy(trackUrn, Reason.GEO)).bad
+        )
+      }
+
+      "non-api-streamable takes precedence over supply chain preview" in new SupplyChainTrackContext {
+        override lazy val visibleTrack =
+          (new VisibleTrackBuilder)
+            .setUrn(trackUrn)
+            .setUserUrn(userUrn)
+            .setDisabledAt(None)
+            .setTranscodings(transcodings)
+            .setApiStreamable(Some(false))
+            .setSupplyChainStatus(Some(SUPPLY_CHAIN_STATUS_SUPPLY_CHAIN))
+            .build
+
+        Await.result(service.tracks(session, List(trackRequest), fieldMask, access)) ==== List(
+          CustomError(UnavailableByPolicy(trackUrn, Reason.NOT_SUPPORTED)).bad
+        )
       }
     }
   }

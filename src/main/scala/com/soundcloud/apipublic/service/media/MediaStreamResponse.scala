@@ -17,13 +17,14 @@ object MediaStreamResponse {
     override def writes(resp: MediaStreamResponse): JsValue = resp match {
       case RedirectStreamResponse(httpMp3) => Json.obj("status" -> "302 - Found", "location" -> httpMp3)
       case MediaStreamUrls(httpMp3, hlsMp3, hlsAac96k, hlsAac160k, httpPreviewMp3) => {
-        val hls160k = hlsAac160k.map(hls => Json.obj("hls_aac_160_url" -> hls)).getOrElse(Json.obj())
-        val hls96k = hlsAac96k.map(hls => Json.obj("hls_aac_96k_url" -> hls)).getOrElse(Json.obj())
-        val preview = httpPreviewMp3.map(preview => Json.obj("preview_mp3_128_url" -> preview)).getOrElse(Json.obj())
-        Json.obj(
-          "http_mp3_128_url" -> httpMp3,
-          "hls_mp3_128_url" -> hlsMp3
-        ) ++ hls160k ++ hls96k ++ preview
+        val parts = Seq(
+          httpMp3.map(u => Json.obj("http_mp3_128_url" -> u)),
+          hlsMp3.map(u => Json.obj("hls_mp3_128_url" -> u)),
+          hlsAac160k.map(hls => Json.obj("hls_aac_160_url" -> hls)),
+          hlsAac96k.map(hls => Json.obj("hls_aac_96k_url" -> hls)),
+          httpPreviewMp3.map(preview => Json.obj("preview_mp3_128_url" -> preview))
+        ).flatten
+        parts.foldLeft(Json.obj())(_ ++ _)
       }
     }
   }
