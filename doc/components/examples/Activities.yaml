@@ -2,9 +2,16 @@ value:
   collection:
     - type: track:repost
       created_at: 2020/10/12 12:02:44 +0000
+      reposter: soundcloud:users:123
       origin:
         allOf:
           - $ref: "#/components/examples/Track/value"
+    - type: playlist:repost
+      created_at: 2020/10/12 12:01:00 +0000
+      reposter: soundcloud:users:456
+      origin:
+        allOf:
+          - $ref: "#/components/examples/Playlist/value"
     - type: playlist
       created_at: 2020/10/12 12:02:44 +0000
       origin:

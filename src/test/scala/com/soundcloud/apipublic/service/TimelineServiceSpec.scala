@@ -89,6 +89,24 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
       )
     )
 
+    val reposterUrn = Urn("soundcloud", "users", "999")
+    val timelineStreamWithTrackRepostMock: JsObject = Json.obj(
+      "events" -> Json.arr(
+        Json.obj(
+          "type" -> JsString("track:repost"),
+          "timestamp" -> JsString("2020/06/10 00:00:18 +0000"),
+          "urn" -> JsString(trackUrn.toString),
+          "actor" -> JsString(reposterUrn.toString),
+          "cursor" -> JsString("00000172-9b87-0a50-ffff-ffff8eec7ee8"),
+          "unique_id" -> JsString("00000172-9b87-0a50-ffff-ffff8eec7ee8")
+        )
+      ),
+      "meta" -> Json.obj(
+        "next_page_cursor" -> JsString("00000172-9b87-0a50-ffff-ffff8eec7ee8"),
+        "previous_page_cursor" -> JsString("00000172-9b87-0a50-ffff-ffff8eec7ee8")
+      )
+    )
+
     val baseUrl = "https://api.soundcloud.com"
     val pagination =
       CursorBasedPagination("https://api.soundcloud.com", "me/activities/*", ParamMap(), Some("2"), 3)
@@ -183,6 +201,36 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
       response must beAnInstanceOf[Timeline]
       response.timelineItems.length === 0
     }
+
+    "includes reposter URN for track repost" in new Context {
+      when(timelineClient.stream(session, None, 10, reverseCursor = false))
+        .thenReturn(Future.value(timelineStreamWithTrackRepostMock))
+
+      when(trackService.tracks(session, List(TrackRequest(trackUrn, None)), access))
+        .thenReturn(Future.value(List(mockTrackRepresentation)))
+
+      okidokiClient.mutings(any(), any()) returns List().goodF
+
+      val response = Await.result(
+        timelineService.fetchTimelineTracksForUser(
+          session.asInstanceOf[LoggedInUserSession],
+          access,
+          None,
+          reverseCursor = false,
+          10,
+          pagination
+        )
+      )
+
+      response.timelineItems.length === 1
+      val trackItem = response.timelineItems.head.asInstanceOf[TrackTimelineItem]
+      trackItem.reposterUrn === Some(reposterUrn)
+      trackItem.timelineItemType === "track:repost"
+
+      val json = Json.parse(response.getRepresentation())
+      val collection = (json \ "collection").as[List[JsObject]]
+      (collection.head \ "reposter").asOpt[String] === Some(reposterUrn.toString)
+    }
   }
 
   "#fetchTimelineForUser" >> {
@@ -243,6 +291,51 @@ class TimelineServiceSpec extends TrackRepresentationsSpecificationContext {
 
       response.metaInfo.nextPageCursor === Some("00000172-9b87-0a50-ffff-ffff8eec7ee8")
       response.metaInfo.previousPageCursor === Some("00000172-9b87-0a50-ffff-ffff8eec7ee8")
+    }
+
+    "includes reposter URN for repost activities and omits for non-reposts" in new SuccessCase {
+      setupMocksForTimelineResponse(session)
+
+      val response = Await.result(
+        timelineService.fetchTimelineForUser(
+          session.asInstanceOf[LoggedInUserSession],
+          access,
+          None,
+          reverseCursor = false,
+          10,
+          pagination
+        )
+      )
+
+      val playlist1Item = response.timelineItems.head.asInstanceOf[PlaylistTimelineItem]
+      val playlistRepostItem = response.timelineItems(1).asInstanceOf[PlaylistTimelineItem]
+      val trackItem = response.timelineItems(2).asInstanceOf[TrackTimelineItem]
+
+      playlist1Item.reposterUrn === None
+      playlistRepostItem.reposterUrn === Some(requestingUserUrn)
+      trackItem.reposterUrn === None
+    }
+
+    "serializes reposter in JSON for repost activities" in new SuccessCase {
+      setupMocksForTimelineResponse(session)
+
+      val response = Await.result(
+        timelineService.fetchTimelineForUser(
+          session.asInstanceOf[LoggedInUserSession],
+          access,
+          None,
+          reverseCursor = false,
+          10,
+          pagination
+        )
+      )
+
+      val json = Json.parse(response.getRepresentation())
+      val collection = (json \ "collection").as[List[JsObject]]
+
+      (collection.head \ "reposter").asOpt[String] === None
+      (collection(1) \ "reposter").asOpt[String] === Some(requestingUserUrn.toString)
+      (collection(2) \ "reposter").asOpt[String] === None
     }
 
     "filters out and returns data when response contains muted users" in new SuccessCase {

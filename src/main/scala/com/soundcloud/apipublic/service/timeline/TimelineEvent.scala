@@ -12,6 +12,6 @@ case class TimelineEvent(
     eventType: TimelineEventType,
     timestamp: String,
     urn: Urn,
-    actor: Urn,
+    reposter: Urn,
     cursor: Option[String] = None
 )

@@ -18,14 +18,15 @@ class TimelineResponseMapper {
   def mapEvent(json: JsObject): Option[TimelineEvent] = {
     val timestamp = rfc3339ToGMTFormat((json \ "timestamp").as[String])
     val urn = Urn.parse((json \ "urn").as[String]).get
-    val actor = Urn.parse((json \ "actor").as[String]).get
+    // Upstream timeline service sends "actor"; we expose it as "reposter" in our API
+    val reposter = Urn.parse((json \ "actor").as[String]).get
     val cursor = (json \ "cursor").asOpt[String]
 
     (json \ "type").as[String] match {
-      case "track" => Some(TimelineEvent(TrackTimelineEventType, timestamp, urn, actor, cursor))
-      case "track:repost" => Some(TimelineEvent(TrackRepostTimelineEventType, timestamp, urn, actor, cursor))
-      case "playlist" => Some(TimelineEvent(PlaylistTimelineEventType, timestamp, urn, actor, cursor))
-      case "playlist:repost" => Some(TimelineEvent(PlaylistRepostTimelineEventType, timestamp, urn, actor, cursor))
+      case "track" => Some(TimelineEvent(TrackTimelineEventType, timestamp, urn, reposter, cursor))
+      case "track:repost" => Some(TimelineEvent(TrackRepostTimelineEventType, timestamp, urn, reposter, cursor))
+      case "playlist" => Some(TimelineEvent(PlaylistTimelineEventType, timestamp, urn, reposter, cursor))
+      case "playlist:repost" => Some(TimelineEvent(PlaylistRepostTimelineEventType, timestamp, urn, reposter, cursor))
       case _ => None
     }
   }

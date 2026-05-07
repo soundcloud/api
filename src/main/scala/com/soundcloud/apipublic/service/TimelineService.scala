@@ -158,13 +158,15 @@ class TimelineService(
             new TrackTimelineItem(
               createdAt = event.timestamp,
               timelineItemType = "track:repost",
-              track = trackRep
+              track = trackRep,
+              reposterUrn = Some(event.reposter)
             )
           case _ =>
             new TrackTimelineItem(
               createdAt = event.timestamp,
               timelineItemType = "track",
-              track = trackRep
+              track = trackRep,
+              reposterUrn = None
             )
         }
       )
@@ -181,13 +183,15 @@ class TimelineService(
             new PlaylistTimelineItem(
               createdAt = event.timestamp,
               timelineItemType = "playlist:repost",
-              playlist = playlist
+              playlist = playlist,
+              reposterUrn = Some(event.reposter)
             )
           case _ =>
             new PlaylistTimelineItem(
               createdAt = event.timestamp,
               timelineItemType = "playlist",
-              playlist = playlist
+              playlist = playlist,
+              reposterUrn = None
             )
         }
       )

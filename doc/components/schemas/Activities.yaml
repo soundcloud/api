@@ -7,17 +7,21 @@ properties:
       type: object
       properties:
         type:
-          description: Type of activity (track).
+          description: Type of activity (e.g. track, track:repost, playlist, playlist:repost).
           type: string
         created_at:
           description: Created timestamp.
           type: string
         origin:
-          description: Origin.
+          description: Origin (track or playlist).
           type: object
           anyOf:
             - $ref: "#/components/schemas/Track"
             - $ref: "#/components/schemas/Playlist"
+        reposter:
+          description: URN of the user who reposted. Present for track:repost and playlist:repost items.
+          type: string
+          example: soundcloud:users:123
   next_href:
     type: string
   future_href:

@@ -1,7 +1,9 @@
 package com.soundcloud.apipublic.service.timeline
 
+import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.apipublic.handler.TimeLineHandlerTestData
 import com.soundcloud.apipublic.service.pagination.CursorBasedPagination
+import com.soundcloud.apipublic.service.playlists.PlaylistBuilder
 import com.twitter.finagle.http.Request
 import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
@@ -16,6 +18,55 @@ class TimelineTest extends Specification with Mockito {
     val mockTimelineItems = List(
       new TrackTimelineItem(createdAt = "2021-03-11T15:21:48.060+01:00", "track", mockTrackRepresentation)
     )
+  }
+
+  "TrackTimelineItem.getRepresentation" >> {
+    val reposterUrn = Urn("soundcloud", "users", "42")
+    "includes reposter when reposterUrn is set" in new Context {
+      val item = new TrackTimelineItem(
+        createdAt = "2021-03-11T15:21:48.060+01:00",
+        "track:repost",
+        mockTrackRepresentation,
+        reposterUrn = Some(reposterUrn)
+      )
+      val json = item.getRepresentation()
+      (json \ "reposter").asOpt[String] === Some(reposterUrn.toString)
+    }
+    "omits reposter when reposterUrn is None" in new Context {
+      val item = new TrackTimelineItem(
+        createdAt = "2021-03-11T15:21:48.060+01:00",
+        "track",
+        mockTrackRepresentation,
+        reposterUrn = None
+      )
+      val json = item.getRepresentation()
+      (json \ "reposter").asOpt[String] === None
+    }
+  }
+
+  "PlaylistTimelineItem.getRepresentation" >> {
+    val reposterUrn = Urn("soundcloud", "users", "42")
+    val mockPlaylist = new PlaylistBuilder().build
+    "includes reposter when reposterUrn is set" in new Context {
+      val item = new PlaylistTimelineItem(
+        createdAt = "2021-03-11T15:21:48.060+01:00",
+        "playlist:repost",
+        mockPlaylist,
+        reposterUrn = Some(reposterUrn)
+      )
+      val json = item.getRepresentation()
+      (json \ "reposter").asOpt[String] === Some(reposterUrn.toString)
+    }
+    "omits reposter when reposterUrn is None" in new Context {
+      val item = new PlaylistTimelineItem(
+        createdAt = "2021-03-11T15:21:48.060+01:00",
+        "playlist",
+        mockPlaylist,
+        reposterUrn = None
+      )
+      val json = item.getRepresentation()
+      (json \ "reposter").asOpt[String] === None
+    }
   }
 
   trait FilledCursorContext extends Context {
