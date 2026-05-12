@@ -28,16 +28,16 @@ func (f fakeTrackCoordinatorClient) createUserPolicy(filename string, fileSize i
 	return f.uid, f.userPolicyErr
 }
 
-func (f fakeTrackCoordinatorClient) triggerTranscodings(uid, filename string) error {
+func (f fakeTrackCoordinatorClient) triggerTranscodings(uid string) error {
 	return f.transcodingsErr
 }
 
 func TestUploaderSuccess(t *testing.T) {
 	tests := []struct {
-		filename, uid string
+		filename, uid, expectedContentDisposition string
 	}{
-		{"the_track.mp3", "uid1"},
-		{"the_tråck.mp3", "uid2"},
+		{"the_track.mp3", "uid1", `attachment; filename=the_track.mp3`},
+		{"the_tråck.mp3", "uid2", `attachment; filename*=utf-8''the_tr%C3%A5ck.mp3`}, // Non-ASCII characters are encoded inline with RFC 2231
 	}
 
 	for _, test := range tests {
@@ -65,6 +65,9 @@ func TestUploaderSuccess(t *testing.T) {
 			}
 			if want, got := test.uid, response.uid; want != got {
 				t.Errorf("wrong uid: want `%v`, got `%v`", want, got)
+			}
+			if want, got := test.expectedContentDisposition, *got.ContentDisposition; want != got {
+				t.Errorf("wrong Content-Disposition: want `%v`, got `%v`", want, got)
 			}
 		})
 	}

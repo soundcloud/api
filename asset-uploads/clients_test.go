@@ -133,7 +133,7 @@ func TestTriggerTranscodings_SuccessScenario(t *testing.T) {
 
 	defer srv.Close()
 
-	err := client.triggerTranscodings("someUid", "test.mp3")
+	err := client.triggerTranscodings("someUid")
 	if err != nil {
 		t.Errorf("Unexpected error. Got %s", err)
 	}
@@ -150,7 +150,7 @@ func TestTriggerTranscodings_SuccessScenario(t *testing.T) {
 		}
 	}
 
-	if want, got := `{"uid":"someUid","filename":"test.mp3"}`, m.incomingRequestBody.String(); want != got {
+	if want, got := `{"uid":"someUid"}`, m.incomingRequestBody.String(); want != got {
 		t.Errorf("error in request body. Want: %v ; Got: %v", want, got)
 	}
 }
@@ -182,7 +182,7 @@ func TestTriggerTranscodings_FailureScenarios(t *testing.T) {
 
 		defer srv.Close()
 
-		err := client.triggerTranscodings("someUid", "test.mp3")
+		err := client.triggerTranscodings("someUid")
 		if err == nil {
 			t.Errorf("Missing error. Want: %s ", tt.expectedError)
 		}

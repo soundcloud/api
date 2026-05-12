@@ -15,7 +15,7 @@ const (
 
 type trackCoordinatorClientAPI interface {
 	createUserPolicy(filename string, fileSize int64, session *EnrichedSessionResponse) (string, error)
-	triggerTranscodings(uid, filename string) error
+	triggerTranscodings(uid string) error
 }
 
 type trackCoordinatorClient struct {
@@ -33,8 +33,7 @@ type policy struct {
 }
 
 type transcodingsRequest struct {
-	Uid      string `json:"uid"`
-	Filename string `json:"filename"`
+	Uid string `json:"uid"`
 }
 
 func (t *trackCoordinatorClient) createUserPolicy(filename string, fileSize int64, session *EnrichedSessionResponse) (string, error) {
@@ -92,9 +91,9 @@ func (t *trackCoordinatorClient) parseUid(body io.ReadCloser, userUrn string) (s
 	return policy.Uid, nil
 }
 
-func (t *trackCoordinatorClient) triggerTranscodings(uid, filename string) error {
+func (t *trackCoordinatorClient) triggerTranscodings(uid string) error {
 	url := fmt.Sprintf("%s/transcodings", t.host)
-	bs, err := json.Marshal(transcodingsRequest{Uid: uid, Filename: filename})
+	bs, err := json.Marshal(transcodingsRequest{Uid: uid})
 	if err != nil {
 		return err
 	}

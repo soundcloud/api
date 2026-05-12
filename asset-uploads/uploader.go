@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"mime"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
@@ -44,15 +45,16 @@ func (u uploader) uploadTrack(req *uploadTrackRequest) (*uploadTrackResponse, er
 	md5 := md5.New()
 	tee := io.TeeReader(req.data, md5)
 	out, err := u.s3Uploader.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(u.s3Bucket),
-		Key:    aws.String(uid),
-		Body:   tee,
+		Bucket:             aws.String(u.s3Bucket),
+		Key:                aws.String(uid),
+		Body:               tee,
+		ContentDisposition: aws.String(mime.FormatMediaType("attachment", map[string]string{"filename": req.filename})),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	if err := u.trackCoordinator.triggerTranscodings(uid, req.filename); err != nil {
+	if err := u.trackCoordinator.triggerTranscodings(uid); err != nil {
 		return nil, err
 	}
 

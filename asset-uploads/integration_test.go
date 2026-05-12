@@ -32,7 +32,7 @@ func (a alwaysSucceedTrackCoordinator) createUserPolicy(filename string, fileSiz
 	return a.uid, nil
 }
 
-func (a alwaysSucceedTrackCoordinator) triggerTranscodings(string, string) error { return nil }
+func (a alwaysSucceedTrackCoordinator) triggerTranscodings(string) error { return nil }
 
 type alwaysAllowedAuthenticator struct{}
 
