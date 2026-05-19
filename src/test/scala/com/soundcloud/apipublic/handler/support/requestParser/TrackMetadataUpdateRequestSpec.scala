@@ -73,6 +73,35 @@ class TrackMetadataUpdateRequestSpec extends UnitSpecification {
       metadataUpdates ==== metadataUpdatesExpected.good
     }
 
+    "succeeds with track[field] form keys" in new Context {
+      val inputArgMap = Map(
+        "track[streamable]" -> "true",
+        "track[commentable]" -> "true",
+        "track[description]" -> "a random description",
+        "track[downloadable]" -> "false",
+        "track[embeddable_by]" -> "all",
+        "track[genre]" -> "bossa nova",
+        "track[geo_blockings]" -> "EN,DE",
+        "track[isrc]" -> "is-rc",
+        "track[label_name]" -> "alexxx",
+        "track[license]" -> "test_license",
+        "track[permalink]" -> "permalinky",
+        "track[purchase_url]" -> "purchase.com/track",
+        "track[release]" -> "1234",
+        "track[release_date]" -> "2008/04/29 22:14:25 +0000",
+        "track[sharing]" -> "all",
+        "track[tag_list]" -> "tags, tags, tags",
+        "track[title]" -> "new title",
+        "track[reveal_stats]" -> "false",
+        "track[reveal_comments]" -> "true",
+        "track[purchase_title]" -> "new title",
+        "track[metadata_artist]" -> "new artist"
+      )
+
+      val metadataUpdates = TrackMetadataUpdateRequest.fromForm(inputArgMap)
+      metadataUpdates ==== metadataUpdatesExpected.good
+    }
+
     trait BooleanTestContext extends Context {
       def inputMap(booleanString: String): Map[String, String] = {
         Map(

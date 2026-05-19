@@ -1,0 +1,72 @@
+type: object
+properties:
+  track[title]:
+    type: string
+  track[permalink]:
+    type: string
+  track[sharing]:
+    type: string
+    enum:
+      - public
+      - private
+    default: public
+  track[embeddable_by]:
+    type: string
+    enum:
+      - all
+      - me
+      - none
+    description: 'who can embed this track "all", "me", or "none"'
+  track[purchase_url]:
+    type: string
+  track[description]:
+    type: string
+  track[genre]:
+    type: string
+  track[tag_list]:
+    type: string
+    description: |
+      The tag_list property contains a list of tags separated by spaces. Multiword tags are quoted in double quotes. We also support machine tags that follow the pattern NAMESPACE:KEY=VALUE. For example: geo:lat=43.555
+      camel:size=medium
+      "machine:tag=with space"
+      Machine tags are not revealed to the user on the track pages.
+  track[label_name]:
+    type: string
+  track[release]:
+    type: string
+  track[release_date]:
+    writeOnly: true
+    type: string
+    description: string, formatted as yyyy-mm-dd, representing release date
+  track[streamable]:
+    type: boolean
+    default: true
+  track[downloadable]:
+    type: boolean
+    default: true
+  track[license]:
+    type: string
+    enum:
+      - no-rights-reserved
+      - all-rights-reserved
+      - cc-by
+      - cc-by-nc
+      - cc-by-nd
+      - cc-by-sa
+      - cc-by-nc-nd
+      - cc-by-nc-sa
+  track[commentable]:
+    type: boolean
+    default: true
+  track[reveal_stats]:
+    type: boolean
+    description: When false (quiet mode), play and favorite counts are hidden.
+  track[reveal_comments]:
+    type: boolean
+    description: When false (quiet mode), comments are hidden.
+  track[isrc]:
+    type: string
+  track[artwork_data]:
+    type: string
+    format: binary
+    description: Track artwork in binary format. Only for PRO users. Supported formats are gif, jpeg and png.

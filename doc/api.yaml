@@ -536,10 +536,10 @@ paths:
               $ref: "#/components/schemas/TrackMetadataRequest"
           multipart/form-data:
             schema:
-              $ref: "#/components/schemas/TrackDataRequest"
+              $ref: "#/components/schemas/TrackUpdateFormRequest"
           multipart/x-www-form-urlencoded:
             schema:
-              $ref: "#/components/schemas/TrackDataRequest"
+              $ref: "#/components/schemas/TrackUpdateFormRequest"
       responses:
         200:
           $ref: "#/components/responses/Track"
@@ -1052,6 +1052,8 @@ components:
       $ref: "./components/schemas/CreateUpdatePlaylistFormRequest.yaml"
     TrackDataRequest:
       $ref: "./components/schemas/TrackDataRequest.yaml"
+    TrackUpdateFormRequest:
+      $ref: "./components/schemas/TrackUpdateFormRequest.yaml"
     Found:
       type: object
       properties:
