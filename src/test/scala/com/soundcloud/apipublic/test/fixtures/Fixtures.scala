@@ -53,6 +53,7 @@ object Fixtures {
   lazy val webProfiles = contentsOf("moshimoshi", "web-profiles")
 
   lazy val similarSoundsNonEmpty = contentsOf("similar-sounds", "non-empty")
+  lazy val similarCreatorsNonEmpty = contentsOf("similar-creators", "non-empty")
 
   lazy val updateTrackJson = fileJson("tracks", "update_track_json")
   lazy val createTrackJson = fileJson("tracks", "create_track")

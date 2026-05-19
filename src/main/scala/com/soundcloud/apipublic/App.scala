@@ -82,6 +82,7 @@ object App {
           forSingleTrackHandler(handlers.singleTrackHandler),
           forPlaylistHandler(handlers.playlistsHandler),
           forSimilarTracksHandler(handlers.similarTracksHandler),
+          forRelatedArtistsHandler(handlers.relatedArtistsHandler),
           forTracksHandler(handlers.tracksHandler),
           forSearchHandler(handlers.searchHandler),
           forUserTracksHandler(handlers.userTracksHandler),

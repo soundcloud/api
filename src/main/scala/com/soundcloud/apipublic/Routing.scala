@@ -84,6 +84,10 @@ object Routing {
     route(Method.Get, "/tracks/:trackId/related", similarTracksHandler.handleSimilarTracks)
   }
 
+  def forRelatedArtistsHandler(relatedArtistsHandler: RelatedArtistsHandler): List[(Method, String, Handler)] = {
+    route(Method.Get, "/users/:id/related", relatedArtistsHandler.handleRelatedArtists)
+  }
+
   def forTracksHandler(tracksHandler: TracksHandler): List[(Method, String, Handler)] = {
     route(Method.Put, trackIdPath, tracksHandler.handleUpdateTrack) :::
       route(Method.Post, "/tracks", tracksHandler.handleCreateTrack) :::

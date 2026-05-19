@@ -69,6 +69,9 @@ class Handlers(
     )
   }
 
+  val relatedArtistsHandler: RelatedArtistsHandler =
+    new RelatedArtistsHandler(userAuthentication, relatedArtistsService, baseUrl)
+
   val playlistsHandler =
     new PlaylistsHandler(
       userAuthentication,

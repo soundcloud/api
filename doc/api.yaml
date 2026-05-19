@@ -716,6 +716,23 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         404:
           $ref: "#/components/responses/NotFound"
+  /users/{user_urn}/related:
+    get:
+      summary: Returns related artist recommendations for a user on SoundCloud.
+      tags:
+        - users
+      parameters:
+        - $ref: "#/components/parameters/user_urn"
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/offset"
+        - $ref: "#/components/parameters/linked_partitioning"
+      responses:
+        200:
+          $ref: "#/components/responses/Users"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
   /users/{user_urn}/favorites:
     get:
       summary: Returns a list of user's favorited or liked tracks. (use /users/:userId/likes/tracks instead, to fetch a user's likes)

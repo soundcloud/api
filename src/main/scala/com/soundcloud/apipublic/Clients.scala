@@ -306,6 +306,8 @@ class Clients(
       rolloutClient
     )
 
+  val relatedArtistsService = new RelatedArtistsService(userRepresentationsService, systemPlaylistsClient)
+
   val meService = new MeService(userRepresentationsService, okidokiClient, trackCoordinatorClient, exceptionCollector)
 
   val searchService =
