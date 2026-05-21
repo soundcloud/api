@@ -2,6 +2,16 @@
 
 This document provides essential technical specifications for AI agents, LLMs, and automated tools attempting to integrate with the SoundCloud API.
 
+## Cursor Agent Skills
+
+Structured skills for coding assistants live in [.cursor/skills/](.cursor/skills/README.md):
+
+- **soundcloud-api-integration** — OpenAPI sources, URNs, auth headers, pagination, streaming, rate limits
+- **soundcloud-api-auth** — OAuth 2.1 PKCE and Client Credentials
+- **soundcloud-api-discovery** — search, related tracks, related artists
+
+Human-oriented prompt templates: [Building with AI](https://developers.soundcloud.com/docs/building-with-ai). Quick reference: [LLM context](https://developers.soundcloud.com/docs/llm-context).
+
 ## API Specification
 The SoundCloud API is defined via Swagger/OpenAPI. Agents should use the following specification for endpoint discovery and schema validation:
 
@@ -41,4 +51,13 @@ For detailed logic, refer to the [SoundCloud Authentication Guide](https://devel
 
 ### Cursor-Based Paging (Preferred)
 **AI Agents should prioritize cursor-based pagination over static page numbers.** * **Why:** Cursors are more resilient to real-time data changes and offer better performance for deep-scrolling large datasets.
-* **Implementation:** Look for the `next_href` or `cursor` field in the API response. Use this entire URL or token for the subsequent request rather than manually incrementing an `offset
+* **Implementation:** Look for the `next_href` field in the API response. Use that URL for the next request, or pass `linked_partitioning=true` with `limit` / `offset` as documented per endpoint.
+
+### Resource URNs
+
+Path parameters use **SoundCloud URNs** (e.g. `soundcloud:tracks:308946187`, `soundcloud:users:948745750`). Numeric ids are deprecated.
+
+### Discovery endpoints
+
+- **Related tracks:** `GET /tracks/{track_urn}/related` — supports `limit`, `offset`, `linked_partitioning`, `access`
+- **Related artists:** `GET /users/{user_urn}/related` — same pagination model (see [releases](https://github.com/soundcloud/api/releases))
