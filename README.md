@@ -9,6 +9,8 @@ Please check the [releases] page.
 ### Quick links
 * [API documentation] 
 * [Developer portal]
+* [Cursor Agent Skills](.cursor/skills/README.md) — skills for AI-assisted API integration
+* [Agents.md](Agents.md) — agent integration guide
 * [Backstage blog]
 * [API announcements]
 
