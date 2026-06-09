@@ -1,6 +1,11 @@
 package com.soundcloud.apipublic
 
 import com.soundcloud.apipublic.client._
+import com.soundcloud.apipublic.client.applications.{
+  ClientApplicationMetadataClient,
+  ClientApplicationsClient,
+  CreatorSubscriptionsClient
+}
 import com.soundcloud.apipublic.client.cloudrun.{CloudRunAuthenticationProxy, CloudRunCredentialsProvider}
 import com.soundcloud.apipublic.client.comments.CommentsTwirpClient
 import com.soundcloud.apipublic.client.followcounts.{FollowCountsClient, FollowsCountsTwirpClient}
@@ -252,7 +257,8 @@ class Clients(
     )
   val userPlaylistsService = new UserPlaylistsService(playlistService, okidokiClient)
 
-  private val submarineClient = new SubmarineClient(jsonClient("submarine"))
+  private val submarineJsonClient = jsonClient("submarine")
+  private val submarineClient = new SubmarineClient(submarineJsonClient)
 
   def buildCountsApiClient(
       config: AppConfig,
@@ -370,6 +376,10 @@ class Clients(
       JsonClient(HttpClientConfig.from(ResourceName("AUTHENTICATOR_DISPENSER"), config), telemetry)
     new TokenDispenserClient(client)
   }
+
+  val clientApplicationsClient = new ClientApplicationsClient(jsonClient("client_applications"))
+  val clientApplicationMetadataClient = new ClientApplicationMetadataClient(jsonClient("clientapplication_metadata"))
+  val creatorSubscriptionsClient = new CreatorSubscriptionsClient(submarineJsonClient)
 
   private def twirpAWSClient(name: String): (finagle.Service[Request, Response], ClientTelemetry) = {
     val endpointValue = config.get(s"${name}_HTTP_ENDPOINT", DataSensitivity.NON_SENSITIVE)

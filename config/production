@@ -19,6 +19,10 @@ DEFAULT_REQUEST_LATENCY_BUCKETS="0.001,0.005,0.010,0.020,0.050,0.100,0.200,0.300
 
 AUTHENTICATOR_SRV_RECORD="dnssrv!http.api.prod.authenticator.srv.${ZONE}.s-cloud.net."
 DYNAMIC_HTTP_ADDRESS="https://unused.address.to.init.dynamic.client"
+CLIENT_APPLICATIONS_SRV_RECORD="dnssrv!http.web.prod.clientapplications.srv.db.s-cloud.net."
+CLIENT_APPLICATIONS_ADDRESS="dnssrv!http.web.prod.clientapplications.srv.db.s-cloud.net."
+CLIENTAPPLICATION_METADATA_SRV_RECORD="dnssrv!http.api.prod.clientapplication-metadata.srv.db.s-cloud.net."
+CLIENTAPPLICATION_METADATA_ADDRESS="dnssrv!http.api.prod.clientapplication-metadata.srv.db.s-cloud.net."
 GOBBLY_SRV_RECORD="dnssrv!http.api.prod.gobbly.srv.db.s-cloud.net."
 GEOIP_SRV_RECORD="dnssrv!http.geoip2http.prod.geoip.srv.${ZONE}.s-cloud.net."
 REPOSTS_SRV_RECORD="dnssrv!http.api.prod.reposts.srv.${ZONE}.s-cloud.net."

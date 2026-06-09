@@ -1,0 +1,23 @@
+{
+  "collection": {
+    "items": [
+      {
+        "self": {
+          "urn": "soundcloud:applications:2"
+        },
+        "name": "listenAPP!",
+        "owner": {
+          "urn": "soundcloud:users:123"
+        },
+        "description": "Proof of concept, taking input from soundcloud / alonetone.",
+        "url": "http://listenApp.com",
+        "credentials": {
+          "client-id": "MWBKn2XvQD8RsCUy8dZkQ",
+          "self": {
+            "urn": "soundcloud:credentials:1"
+          }
+        }
+      }
+    ]
+  }
+}

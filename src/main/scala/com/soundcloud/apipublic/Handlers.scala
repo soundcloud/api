@@ -110,6 +110,14 @@ class Handlers(
 
   val webProfilesHandler = new WebProfilesHandler(userAuthentication, moshimoshiClient)
 
+  val clientApplicationsHandler = new ClientApplicationsHandler(
+    userAuthentication,
+    clientApplicationsClient,
+    clientApplicationMetadataClient,
+    creatorSubscriptionsClient,
+    exceptionCollector
+  )
+
   val imageDownloader = new ImageDownloader()
 
   val muzookaWebhookHandler =

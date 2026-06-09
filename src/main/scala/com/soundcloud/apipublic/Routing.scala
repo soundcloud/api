@@ -108,6 +108,13 @@ object Routing {
     route(Method.Get, "/users/:userId/web-profiles", webProfilesHandler.getWebProfiles)
   }
 
+  def forClientApplicationsHandler(
+      clientApplicationsHandler: ClientApplicationsHandler
+  ): List[(Method, String, Handler)] = {
+    route(Method.Get, "/me/apps", clientApplicationsHandler.getUserApplications) :::
+      route(Method.Post, "/me/apps", clientApplicationsHandler.createUserApplication)
+  }
+
   def forSearchHandler(searchHandler: SearchHandler): List[(Method, String, Handler)] = {
     route(Method.Get, "/tracks", searchHandler.searchTracks) :::
       route(Method.Get, "/users", searchHandler.searchUsers) :::
