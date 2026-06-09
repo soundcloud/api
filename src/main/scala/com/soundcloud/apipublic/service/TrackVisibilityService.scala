@@ -125,6 +125,13 @@ object TrackVisibilityService {
     )
   )
 
+  val TrackVisibilityFieldMask: FieldMask = FieldMaskUtil.selectFieldNumbers[Track](
+    Set(
+      Track.METADATA_FIELD_NUMBER,
+      Track.AUTHORIZATION_FIELD_NUMBER
+    )
+  )
+
   val TrackWithTranscodingsFieldMask: FieldMask = FieldMaskUtil.selectFieldNumbers[Track](
     Set(
       Track.METADATA_FIELD_NUMBER,

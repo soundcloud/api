@@ -5,7 +5,7 @@ import com.soundcloud.apipublic.client.shortlinks.ShortLinksClient
 import com.soundcloud.apipublic.client.mothership.MoshimoshiClient
 import com.soundcloud.apipublic.client.tracks.TrackRequest
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
-import com.soundcloud.apipublic.service.TrackVisibilityService.TrackWithTranscodingsFieldMask
+import com.soundcloud.apipublic.service.TrackVisibilityService.TrackVisibilityFieldMask
 import com.soundcloud.apipublic.service.playlists.PlaylistRequest
 import com.soundcloud.apipublic.service.resolve.ResourceURLs.PermalinkURL
 import com.soundcloud.apipublic.service.{PlaylistsService, TrackVisibilityService}
@@ -56,7 +56,7 @@ class ResolveService(
   ): Future[Option[String]] = {
     val trackRequest = TrackRequest(urn, permalink.secretToken)
     trackVisibilityService
-      .visibleTracks(session, List(trackRequest), TrackWithTranscodingsFieldMask, AccessParams.explicitAccess)
+      .visibleTracks(session, List(trackRequest), TrackVisibilityFieldMask, AccessParams.explicitAccess)
       .map { tracks =>
         if (tracks.nonEmpty) Some(buildTrackUrl(urn, preservedQueryParams)) else None
       }

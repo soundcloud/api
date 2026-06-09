@@ -12,6 +12,8 @@ import com.soundcloud.apipublic.service.playlists.PlaylistBuilder
 import com.soundcloud.apipublic.client.tracks.TrackRequest
 import org.mockito.Mockito.verify
 import com.soundcloud.apipublic.service.playlists.PlaylistRequest
+import com.soundcloud.apipublic.service.TrackVisibilityService.TrackVisibilityFieldMask
+import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
 
 class ResolveServiceSpec extends UnitSpecification {
   trait Context extends Scope {
@@ -104,7 +106,12 @@ class ResolveServiceSpec extends UnitSpecification {
           "passes secret token to track service" in new VisibleTrackContext {
             val result = Await.result(resolveService.resolveUrl(session, permalink))
             val expectedRequest = TrackRequest(trackUrn, Some("s-0aQFV0COfSw"))
-            verify(mockTrackVisibilityService).visibleTracks(any, ===(List(expectedRequest)), any, any)
+            verify(mockTrackVisibilityService).visibleTracks(
+              any,
+              ===(List(expectedRequest)),
+              ===(TrackVisibilityFieldMask),
+              ===(AccessParams.explicitAccess)
+            )
           }
 
           "returns track url" in new VisibleTrackContext {
