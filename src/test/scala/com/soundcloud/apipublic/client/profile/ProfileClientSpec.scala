@@ -3,6 +3,7 @@ package com.soundcloud.apipublic.client.profile
 import com.soundcloud.apipublic.test.UnitSpecification
 import com.soundcloud.jvmkit.module.util.session.AnonymousUserSession
 import com.soundcloud.jvmkit.module.util.{Geo, Urn}
+import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
 import com.twitter.util.{Await, Future}
 import org.specs2.mock.Mockito
 import proto.soundcloud.common.session.{UserSession => ProtoUserSession}
@@ -45,5 +46,20 @@ class ProfilesClientSpec extends UnitSpecification with Mockito {
         ChronoItem(trackUrn1.toString),
         ChronoItem(trackUrn2.toString)
       )
+  }
+
+  "resolves permalink to urn" in new Context {
+    val permalink = "https://soundcloud.com/some-user/some-track"
+    val response = ResolvePermalinkResponse(urn = Some(trackUrn1.toString))
+    doReturn(Future.value(response)).when(profilesService).resolvePermalink(any)
+    Await.result(profilesClient.resolvePermalink(session, permalink)) ==== Some(trackUrn1)
+  }
+
+  "returns None when profiles responds with NotFound" in new Context {
+    val permalink = "https://soundcloud.com/some-user/some-track"
+    doReturn(Future.exception(TwinagleException(ErrorCode.NotFound, "not found")))
+      .when(profilesService)
+      .resolvePermalink(any)
+    Await.result(profilesClient.resolvePermalink(session, permalink)) ==== None
   }
 }

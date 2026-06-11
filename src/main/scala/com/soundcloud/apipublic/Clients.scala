@@ -367,7 +367,7 @@ class Clients(
   val grantExchangeService = new GrantExchangeService(oauthGrantExchangeClient)
 
   val resolveService =
-    new ResolveService(moshimoshiClient, shortLinksClient, trackVisibilityService, playlistService, baseUrl)
+    new ResolveService(profilesClient, shortLinksClient, trackVisibilityService, playlistService, baseUrl)
 
   val muzookaApiKey = config.get("MUZOOKA_API_KEY", DataSensitivity.SENSITIVE)
 

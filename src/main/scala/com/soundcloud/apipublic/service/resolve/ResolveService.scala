@@ -1,25 +1,29 @@
 package com.soundcloud.apipublic.service.resolve
 
 import com.soundcloud.apipublic.Routing
+import com.soundcloud.apipublic.client.profile.ProfilesClient
 import com.soundcloud.apipublic.client.shortlinks.ShortLinksClient
-import com.soundcloud.apipublic.client.mothership.MoshimoshiClient
 import com.soundcloud.apipublic.client.tracks.TrackRequest
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
 import com.soundcloud.apipublic.service.TrackVisibilityService.TrackVisibilityFieldMask
 import com.soundcloud.apipublic.service.playlists.PlaylistRequest
-import com.soundcloud.apipublic.service.resolve.ResourceURLs.PermalinkURL
+import com.soundcloud.apipublic.service.resolve.ResourceURLs.{PermalinkURL, PlaylistPermalinkUrl, TrackPermalinkUrl}
 import com.soundcloud.apipublic.service.{PlaylistsService, TrackVisibilityService}
 import com.soundcloud.jvmkit.module.util.Urn
-import com.soundcloud.jvmkit.module.util.session.UserSession
+import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
 import com.twitter.util.Future
 
+import scala.jdk.CollectionConverters._
+
 class ResolveService(
-    moshimoshiClient: MoshimoshiClient,
+    profilesClient: ProfilesClient,
     shortLinksClient: ShortLinksClient,
     trackVisibilityService: TrackVisibilityService,
     playlistsService: PlaylistsService,
     baseUrl: String
 ) {
+  private val TrackAdminScope = "track-admin"
+  private val PlaylistAdminScope = "playlist-admin"
 
   def resolveUrl(session: UserSession, url: String): Future[Option[String]] = {
     val maybePermalink =
@@ -33,7 +37,7 @@ class ResolveService(
 
     maybePermalink.flatMap {
       case Some(permalink) =>
-        moshimoshiClient.resolveToUrn(session, permalink.normalized).flatMap {
+        profilesClient.resolvePermalink(resolveSession(session, permalink), permalink.normalized).flatMap {
           case Some(urn) =>
             val preservedQueryParams = ResourceURLs.queryParams(url, permalink.secretToken)
             urn.collection match {
@@ -90,4 +94,15 @@ class ResolveService(
     val base = s"$baseUrl${Routing.playlistIdPath.replace(":id", urn.toString)}"
     base + queryParams
   }
+
+  private def resolveSession(session: UserSession, permalink: PermalinkURL): UserSession =
+    permalink match {
+      case _: TrackPermalinkUrl | _: PlaylistPermalinkUrl => sessionWithAdminScopes(session)
+      case _ => session
+    }
+
+  private def sessionWithAdminScopes(session: UserSession): UserSession =
+    new UserSessionBuilder(session)
+      .setScopes((session.getScopes.asScala ++ Seq(TrackAdminScope, PlaylistAdminScope)).asJava)
+      .build()
 }
