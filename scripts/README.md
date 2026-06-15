@@ -2,7 +2,7 @@
 
 ## sc-api-auth.mjs
 
-Obtain a `client_id` for your API application via OAuth sign-in and app registration.
+Obtain a `client_id` for your API application via OAuth sign-in and app registration (requires Node.js 18+).
 
 Download the latest:
 
