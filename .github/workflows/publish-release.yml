@@ -29,7 +29,9 @@ jobs:
         ref: ${{ inputs.ref }}
     - name: Set up sc-tools
       uses: soundcloud/sc-github-actions/sc-tools@master
-    - name: make publish-changelog
+    - name: publish release notes and OpenAPI
       env:
         GH_TOKEN: ${{ secrets.SC_GITHUB_BOT_PAT }}
-      run: make publish-changelog
+      run: |
+        git diff-index --exit-code HEAD~1 RELEASE_NOTES.md && echo 'No release notes to publish...' && exit 0
+        ./scripts/release
