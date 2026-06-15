@@ -10,6 +10,7 @@ Please check the [releases] page.
 * [API documentation] 
 * [Developer portal]
 * [OpenAPI spec](openapi/) — YAML for client generation
+* [API credentials CLI](https://github.com/soundcloud/api-public-auth-cli) — obtain a `client_id` from the command line
 * [Cursor Agent Skills](.cursor/skills/README.md) — skills for AI-assisted API integration
 * [Agents.md](Agents.md) — agent integration guide
 * [Backstage blog]
@@ -19,6 +20,7 @@ Please check the [releases] page.
 
 | Path | Contents |
 |------|----------|
+| [`scripts/`](scripts/) | CLI scripts (e.g. [`sc-api-auth.mjs`](scripts/sc-api-auth.mjs)) |
 | [`openapi/`](openapi/) | OpenAPI 3 spec (`api.yaml`), updated on each API release |
 
 ## Opening an issue
@@ -38,7 +40,13 @@ Please don't post security issues or vulnerabilities here. Refer to [Security.md
 
 ## Frequently asked questions
 ### Can I request an API key for a new app?
-You can register for an API key by going to your profile [you/apps](https://www.soundcloud.com/you/apps)
+You can register for an API key by going to your profile [you/apps](https://www.soundcloud.com/you/apps), or use the [API credentials CLI](https://github.com/soundcloud/api-public-auth-cli) (`scripts/sc-api-auth.mjs`):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/soundcloud/api/master/scripts/sc-api-auth.mjs -o sc-api-auth.mjs
+node sc-api-auth.mjs --name "My App" --description "…" --website "https://example.com"
+```
+
 Please also subscribe to our `@SoundCloudDev` on [X](https://x.com/SoundCloudDev) or [Bluesky](https://bsky.app/profile/soundcloud.dev) or our [Backstage Blog] for API Announcements
 
 ### How can I update my app's `redirect_uri`?
