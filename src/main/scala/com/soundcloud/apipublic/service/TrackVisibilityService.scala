@@ -58,8 +58,7 @@ class TrackVisibilityService(
       ),
       trackFieldMask = Some(fieldMask),
       userSession = Some(session.asProtoSession),
-      // Request for both legacy and new transcodings excluding DRM protocols
-      transcodingFilterStrategy = Some(TranscodingFilterStrategy.LEGACY_AND_NEW)
+      transcodingFilterStrategy = transcodingFilterStrategyFor(fieldMask)
     )
 
     tracksTwinagleClient.getVisibleTracks(request).map { tracksResponse =>
@@ -70,6 +69,13 @@ class TrackVisibilityService(
         .filter(visibleTrack => visibleTrack.disabledAt.isEmpty)
         .map(applyRules(session.getAgent, _, access.access))
     }
+  }
+
+  private def transcodingFilterStrategyFor(fieldMask: FieldMask): Option[TranscodingFilterStrategy] = {
+    if (fieldMask.paths.exists(TrackVisibilityService.TranscodingPaths.contains))
+      Some(TranscodingFilterStrategy.LEGACY_AND_NEW)
+    else
+      None
   }
 
   private def applyRules(client: Urn, track: VisibleTrack, allowedAccesses: Set[Access]): Outcome[VisibleTrack] = {
@@ -139,4 +145,7 @@ object TrackVisibilityService {
       Track.TRANSCODINGS_FIELD_NUMBER
     )
   )
+
+  val TranscodingPaths: Set[String] =
+    FieldMaskUtil.selectFieldNumbers[Track](Set(Track.TRANSCODINGS_FIELD_NUMBER)).paths.toSet
 }

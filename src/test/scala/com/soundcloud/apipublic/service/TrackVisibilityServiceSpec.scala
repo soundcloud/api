@@ -8,7 +8,12 @@ import com.soundcloud.apipublic.authorization.AllowlistedClients
 import com.soundcloud.apipublic.authorization.policies._
 import com.soundcloud.apipublic.client.tracks.{TrackRequest, Transcoding, VisibleTrackBuilder}
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
-import com.soundcloud.apipublic.service.TrackVisibilityService.{DefaultTrackFieldMask, SUPPLY_CHAIN_STATUS_SUPPLY_CHAIN}
+import com.soundcloud.apipublic.service.TrackVisibilityService.{
+  DefaultTrackFieldMask,
+  TrackVisibilityFieldMask,
+  TrackWithTranscodingsFieldMask,
+  SUPPLY_CHAIN_STATUS_SUPPLY_CHAIN
+}
 import com.soundcloud.apipublic.service.tracks.VisibleTrackMapper
 import com.twitter.util.{Await, Future}
 import org.joda.time.LocalDateTime
@@ -52,13 +57,12 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
       Transcoding("mp3-uuid", "preset", "audio/mpeg", List("progressive"), None, "sq", 180000, None)
     )
     val protoTrack = ProtoTrack()
-    val fieldMask = DefaultTrackFieldMask
-    val request = GetVisibleTracksRequest(
+    lazy val fieldMask = DefaultTrackFieldMask
+    lazy val request = GetVisibleTracksRequest(
       trackRequests =
         List(trackRequest).map(trackRequest => ProtoTrackRequest(trackRequest.urn.toString, trackRequest.secretToken)),
       trackFieldMask = Some(fieldMask),
-      userSession = Some(session.asProtoSession),
-      transcodingFilterStrategy = Some(TranscodingFilterStrategy.LEGACY_AND_NEW)
+      userSession = Some(session.asProtoSession)
     )
 
     tracksTwinagleClient.getVisibleTracks(request) returns Future.value(
@@ -69,6 +73,41 @@ class TrackVisibilityServiceSpec extends Specification with Mockito {
 
   "#tracks" >> {
     "returns visible tracks by default" in new Context {
+      Await.result(service.tracks(session, List(trackRequest), fieldMask, access)) ==== List(visibleTrack.good)
+    }
+
+    "omits transcoding filter strategy when transcodings are not in the field mask" in new Context {
+      override lazy val fieldMask = TrackVisibilityFieldMask
+      override lazy val request = GetVisibleTracksRequest(
+        trackRequests = List(trackRequest).map(trackRequest =>
+          ProtoTrackRequest(trackRequest.urn.toString, trackRequest.secretToken)
+        ),
+        trackFieldMask = Some(fieldMask),
+        userSession = Some(session.asProtoSession)
+      )
+
+      tracksTwinagleClient.getVisibleTracks(request) returns Future.value(
+        GetVisibleTracksResponse(tracks = Seq(protoTrack))
+      )
+
+      Await.result(service.tracks(session, List(trackRequest), fieldMask, access)) ==== List(visibleTrack.good)
+    }
+
+    "requests transcodings when they are in the field mask" in new Context {
+      override lazy val fieldMask = TrackWithTranscodingsFieldMask
+      override lazy val request = GetVisibleTracksRequest(
+        trackRequests = List(trackRequest).map(trackRequest =>
+          ProtoTrackRequest(trackRequest.urn.toString, trackRequest.secretToken)
+        ),
+        trackFieldMask = Some(fieldMask),
+        userSession = Some(session.asProtoSession),
+        transcodingFilterStrategy = Some(TranscodingFilterStrategy.LEGACY_AND_NEW)
+      )
+
+      tracksTwinagleClient.getVisibleTracks(request) returns Future.value(
+        GetVisibleTracksResponse(tracks = Seq(protoTrack))
+      )
+
       Await.result(service.tracks(session, List(trackRequest), fieldMask, access)) ==== List(visibleTrack.good)
     }
 

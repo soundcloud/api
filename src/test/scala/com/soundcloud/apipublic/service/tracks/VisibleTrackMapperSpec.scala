@@ -5,7 +5,7 @@ import com.soundcloud.jvmkit.module.util.{Url, Urn}
 import com.soundcloud.apipublic.authorization.policies._
 import com.soundcloud.apipublic.client.tracks._
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
-import org.joda.time.LocalDateTime
+import org.joda.time.{DateTimeZone, LocalDateTime}
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import proto.soundcloud.tracks.api.{
@@ -109,7 +109,10 @@ class VisibleTrackMapperSpec extends Specification {
       visibleTrack.userUrn ==== userUrn
       visibleTrack.uid ==== None
       visibleTrack.title ==== "Some title"
-      visibleTrack.createdAt ==== new LocalDateTime(Instant.parse("2013-08-19T02:29:15.000Z").toEpochMilli)
+      visibleTrack.createdAt ==== new LocalDateTime(
+        Instant.parse("2013-08-19T02:29:15.000Z").toEpochMilli,
+        DateTimeZone.UTC
+      )
       visibleTrack.disabledAt ==== None
       visibleTrack.downloadable ==== false
       visibleTrack.duration ==== 123
