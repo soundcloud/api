@@ -74,10 +74,9 @@ class ResolveService(
   ): Future[Option[String]] = {
     val playlistRequest = PlaylistRequest(urn, permalink.secretToken)
     playlistsService
-      .fetchPlaylistsMetadataOnly(session, List(playlistRequest))
-      .map { playlists =>
-        if (playlists.nonEmpty) Some(buildPlaylistUrl(urn, preservedQueryParams))
-        else None
+      .playlistIsVisible(session, playlistRequest)
+      .map { visible =>
+        if (visible) Some(buildPlaylistUrl(urn, preservedQueryParams)) else None
       }
   }
 

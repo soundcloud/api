@@ -189,13 +189,13 @@ class ResolveServiceSpec extends UnitSpecification {
 
         "playlist is visible" >> {
           trait VisiblePlaylistContext extends ProfilesSuccessContext {
-            mockPlaylistsService fetchPlaylistsMetadataOnly (any, any) returns Future.value(List(playlist))
+            mockPlaylistsService playlistIsVisible (any, any) returns Future.value(true)
           }
 
           "passes secret token to playlist service" in new VisiblePlaylistContext {
             val result = Await.result(resolveService.resolveUrl(session, permalink))
             val expectedRequest = PlaylistRequest(playlistUrn, Some("s-I5aouttNwKq"))
-            verify(mockPlaylistsService).fetchPlaylistsMetadataOnly(any, ===(List(expectedRequest)))
+            verify(mockPlaylistsService).playlistIsVisible(any, ===(expectedRequest))
           }
 
           "returns playlist url" in new VisiblePlaylistContext {
@@ -237,7 +237,7 @@ class ResolveServiceSpec extends UnitSpecification {
 
         "playlist is NOT visible" >> {
           trait NotVisiblePlaylistContext extends ProfilesSuccessContext {
-            mockPlaylistsService fetchPlaylistsMetadataOnly (any, any) returns Future.value(List.empty)
+            mockPlaylistsService playlistIsVisible (any, any) returns Future.value(false)
           }
 
           "returns None" in new NotVisiblePlaylistContext {
@@ -251,7 +251,7 @@ class ResolveServiceSpec extends UnitSpecification {
       "when profiles does not resolve permalink to urn" >> {
         trait ProfilesFailureContext extends PlaylistsContext {
           stubProfilesResolve(None)
-          mockPlaylistsService fetchPlaylistsMetadataOnly (any, any) returns Future.value(List(playlist))
+          mockPlaylistsService playlistIsVisible (any, any) returns Future.value(true)
         }
 
         "returns None" in new ProfilesFailureContext {

@@ -508,6 +508,48 @@ class PlaylistsServiceSpec extends UnitSpecification {
     }
   }
 
+  "#playlistIsVisible" >> {
+    "returns true when playlist is visible" in new SuccessContext {
+      val emptyPagination = PlaylistPagination()
+      val request = requestWithPagination.copy(pagination = Some(emptyPagination))
+      val getPlaylistRequest =
+        GetVisiblePlaylistsRequest(
+          playlistRequests = Seq(request),
+          userSession = Some(protoSession),
+          fieldMask = Some(PlaylistsService.playlistVisibilityFieldMask)
+        )
+
+      when(playlistsTwirpServiceMock.getVisiblePlaylists(getVisiblePlaylistsRequest = getPlaylistRequest))
+        .thenReturn(
+          Future.value(
+            GetVisiblePlaylistsResponse(
+              playlistResponse = Seq(PlaylistResponse(playlist = Some(protoPlaylist)))
+            )
+          )
+        )
+
+      Await.result(playlistsService.playlistIsVisible(session, playlistRequests.head)) ==== true
+      verifyNoInteractions(moshimoshiClientMock)
+    }
+
+    "returns false when playlist is not visible" in new SuccessContext {
+      val emptyPagination = PlaylistPagination()
+      val request = requestWithPagination.copy(pagination = Some(emptyPagination))
+      val getPlaylistRequest =
+        GetVisiblePlaylistsRequest(
+          playlistRequests = Seq(request),
+          userSession = Some(protoSession),
+          fieldMask = Some(PlaylistsService.playlistVisibilityFieldMask)
+        )
+
+      when(playlistsTwirpServiceMock.getVisiblePlaylists(getVisiblePlaylistsRequest = getPlaylistRequest))
+        .thenReturn(Future.value(GetVisiblePlaylistsResponse(playlistResponse = Seq.empty)))
+
+      Await.result(playlistsService.playlistIsVisible(session, playlistRequests.head)) ==== false
+      verifyNoInteractions(moshimoshiClientMock)
+    }
+  }
+
   "#fetchPlaylistMetadataOnly" >> {
     "returns playlists without tracks field" in new SuccessContext {
       val emptyPagination = PlaylistPagination()

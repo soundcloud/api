@@ -154,6 +154,16 @@ class PlaylistsService(
     } yield playlists
   }
 
+  def playlistIsVisible(session: UserSession, playlistRequest: PlaylistRequest): Future[Boolean] = {
+    val playlistPagination = PlaylistPagination()
+    getPlaylistObjects(
+      session,
+      List(playlistRequest),
+      Some(playlistPagination),
+      Some(PlaylistsService.playlistVisibilityFieldMask)
+    ).map(_.exists(_.playlist.isDefined))
+  }
+
   def createPlaylist(
       session: UserSession,
       playlistCreate: PlaylistCreateOrUpdate,
@@ -425,5 +435,9 @@ object PlaylistsService {
 
   val playlistWithCountsFieldMask: FieldMask = FieldMaskUtil.selectFieldNumbers[ProtoPlaylist](
     Set(ProtoPlaylist.COUNTS_FIELD_NUMBER)
+  )
+
+  val playlistVisibilityFieldMask: FieldMask = FieldMaskUtil.selectFieldNumbers[ProtoPlaylist](
+    Set(ProtoPlaylist.URN_FIELD_NUMBER)
   )
 }
