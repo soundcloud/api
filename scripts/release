@@ -13,11 +13,17 @@ TAG="$(date +%Y-%m-%d)"
 WORKDIR="$(mktemp -d)"
 trap 'cd "$REPO_ROOT" && rm -rf "$WORKDIR"' EXIT
 
-echo "Compiling OpenAPI spec..."
-if command -v sc >/dev/null 2>&1; then
-  sc crun nodejs-18 -- make --directory="$REPO_ROOT/doc" resolve_api
-else
-  make --directory="$REPO_ROOT/doc" resolve_api
+compile_openapi() {
+  if command -v sc >/dev/null 2>&1; then
+    sc crun nodejs-18 -- bash -c "cd \"${REPO_ROOT}/doc\" && npm ci && ./node_modules/.bin/multi-file-swagger -o yaml api.yaml > compiled_api.yaml"
+  else
+    make --directory="$REPO_ROOT/doc" resolve_api
+  fi
+}
+
+if [ ! -s "$REPO_ROOT/doc/compiled_api.yaml" ]; then
+  echo "Compiling OpenAPI spec..."
+  compile_openapi
 fi
 
 if [ ! -s "$REPO_ROOT/doc/compiled_api.yaml" ]; then

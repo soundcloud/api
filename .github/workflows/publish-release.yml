@@ -26,12 +26,19 @@ jobs:
       uses: actions/checkout@v3
       with:
         fetch-depth: 0
-        ref: ${{ inputs.ref }}
+        ref: master
     - name: Set up sc-tools
       uses: soundcloud/sc-github-actions/sc-tools@master
     - name: publish release notes and OpenAPI
       env:
         GH_TOKEN: ${{ secrets.SC_GITHUB_BOT_PAT }}
+        REF: ${{ inputs.ref }}
       run: |
-        git diff-index --exit-code HEAD~1 RELEASE_NOTES.md && echo 'No release notes to publish...' && exit 0
+        COMMIT=$(git rev-parse "$REF^{commit}")
+        git checkout "$COMMIT" -- RELEASE_NOTES.md doc
+        if git cat-file -e "$COMMIT:publish/openapi-README.md" 2>/dev/null; then
+          git checkout "$COMMIT" -- publish
+        fi
+        git diff-index --exit-code "${COMMIT}~1" RELEASE_NOTES.md && echo 'No release notes to publish...' && exit 0
+        sc crun nodejs-18 -- bash -c "cd doc && npm ci && ./node_modules/.bin/multi-file-swagger -o yaml api.yaml > compiled_api.yaml"
         ./scripts/release
