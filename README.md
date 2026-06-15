@@ -40,7 +40,7 @@ Please don't post security issues or vulnerabilities here. Refer to [Security.md
 
 ## Frequently asked questions
 ### Can I request an API key for a new app?
-You can register for an API key by going to your profile [you/apps](https://www.soundcloud.com/you/apps), or use the [API credentials CLI](https://github.com/soundcloud/api-public-auth-cli) (`scripts/sc-api-auth.mjs`):
+You can register for an API key by going to your profile [you/apps](https://www.soundcloud.com/you/apps), or use the [API credentials CLI](https://github.com/soundcloud/api-public-auth-cli) ([`scripts/sc-api-auth.mjs`](scripts/sc-api-auth.mjs)):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/soundcloud/api/master/scripts/sc-api-auth.mjs -o sc-api-auth.mjs
