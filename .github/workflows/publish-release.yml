@@ -27,6 +27,8 @@ jobs:
       with:
         fetch-depth: 0
         ref: ${{ inputs.ref }}
+    - name: Set up sc-tools
+      uses: soundcloud/sc-github-actions/sc-tools@master
     - name: make publish-changelog
       env:
         GH_TOKEN: ${{ secrets.SC_GITHUB_BOT_PAT }}
