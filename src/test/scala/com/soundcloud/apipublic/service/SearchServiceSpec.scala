@@ -4,6 +4,7 @@ import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.apipublic.client.mothership.response.mapper.UserRepresentationMapper
 import com.soundcloud.apipublic.client.search.{Doc, SearchClient, SearchResponse, TracksParams}
+import com.google.protobuf.field_mask.FieldMask
 import com.soundcloud.apipublic.client.tracks.TrackRequest
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
 import com.soundcloud.apipublic.service.pagination.OffsetBasedPagination
@@ -135,7 +136,8 @@ class SearchServiceSpec extends TrackRepresentationsSpecificationContext {
           ===(session),
           anyObject[List[TrackRequest]],
           anyObject[AccessParams],
-          ===(true)
+          ===(true),
+          anyObject[FieldMask]
         )
       ).thenReturn(Future.value(tracks))
       when(searchClient.searchTracks(===(session), any[TracksParams], anyObject, ===(accessParam))).thenReturn(response)

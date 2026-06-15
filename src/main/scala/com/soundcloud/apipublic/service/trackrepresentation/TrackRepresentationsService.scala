@@ -1,5 +1,6 @@
 package com.soundcloud.apipublic.service.trackrepresentation
 
+import com.google.protobuf.field_mask.FieldMask
 import com.soundcloud.apipublic.client.followcounts.FollowCountsClient
 import com.soundcloud.apipublic.client.mothership.RichOkidokiClient
 import com.soundcloud.apipublic.client.mothership.response.representation.Geoblockings
@@ -30,13 +31,18 @@ class TrackRepresentationsService(
       session: UserSession,
       trackRequests: List[TrackRequest],
       access: AccessParams,
-      addLikedStatus: Boolean = false
+      addLikedStatus: Boolean = false,
+      fieldMask: FieldMask = DefaultTrackFieldMask
   ): Future[List[TrackRepresentation]] = {
-    for {
-      visibleTracks <- trackVisibilityService.visibleTracks(session, trackRequests, DefaultTrackFieldMask, access)
-      enrichedTracks <- enrichTracks(session, visibleTracks, addLikedStatus)
-    } yield {
-      enrichedTracks
+    if (trackRequests.isEmpty) {
+      Future.value(Nil)
+    } else {
+      trackVisibilityService
+        .visibleTracks(session, trackRequests, fieldMask, access)
+        .flatMap {
+          case Nil => Future.value(Nil)
+          case visibleTracks => enrichTracks(session, visibleTracks, addLikedStatus)
+        }
     }
   }
 

@@ -138,6 +138,14 @@ object TrackVisibilityService {
     )
   )
 
+  val RelatedTracksFieldMask: FieldMask = FieldMaskUtil.selectFieldNumbers[Track](
+    Set(
+      Track.METADATA_FIELD_NUMBER,
+      Track.AUTHORIZATION_FIELD_NUMBER,
+      Track.COUNTS_FIELD_NUMBER
+    )
+  )
+
   val TrackWithTranscodingsFieldMask: FieldMask = FieldMaskUtil.selectFieldNumbers[Track](
     Set(
       Track.METADATA_FIELD_NUMBER,

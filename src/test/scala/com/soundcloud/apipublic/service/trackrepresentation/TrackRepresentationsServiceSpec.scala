@@ -6,7 +6,7 @@ import com.soundcloud.apipublic.client.trackmetadata.TrackmetadataClient
 import com.soundcloud.apipublic.client.tracks.{TrackRequest, VisibleTrack}
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
 import com.soundcloud.apipublic.service.TrackVisibilityService
-import com.soundcloud.apipublic.service.TrackVisibilityService.DefaultTrackFieldMask
+import com.soundcloud.apipublic.service.TrackVisibilityService.{DefaultTrackFieldMask, RelatedTracksFieldMask}
 import com.soundcloud.jvmkit.module.util.session.{UserSession, UserSessionBuilder}
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito._
@@ -58,6 +58,35 @@ class TrackRepresentationsServiceSpec extends TrackRepresentationsSpecificationC
   }
 
   "#tracks" >> {
+
+    "passes the provided field mask to track visibility service" in new Context {
+      val track = trackVisibilityTrack()
+      when(
+        trackVisibilityService
+          .visibleTracks(session, List(trackRequest), RelatedTracksFieldMask, AccessParams.explicitAccess)
+      ).thenReturn(Future.value(List(track)))
+      when(okidokiClient.fetchUserObjects(session, Set(trackOwnerUrn)))
+        .thenReturn(Future.value(List(trackOwner)))
+      when(okidokiClient.fetchTrackGeoblockings(session, Set(trackUrn))).thenReturn(Future.value(geoblockings))
+      when(followCountsClient.counts(Seq(trackOwnerUrn)))
+        .thenReturn(Future.value(Seq(FollowCounts(trackOwnerUrn, 0, 0))))
+
+      Await.result(
+        tracksService.tracks(
+          session,
+          List(trackRequest),
+          AccessParams.explicitAccess,
+          fieldMask = RelatedTracksFieldMask
+        )
+      )
+
+      verify(trackVisibilityService).visibleTracks(
+        session,
+        List(trackRequest),
+        RelatedTracksFieldMask,
+        AccessParams.explicitAccess
+      )
+    }
 
     "does not call likedTracksService if addLikedStatus is false" in new Context {
       val track = trackVisibilityTrack()

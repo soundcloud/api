@@ -5,6 +5,7 @@ import com.soundcloud.apipublic.client.SystemPlaylistsClient
 import com.soundcloud.apipublic.client.tracks.{TrackRequest, Transcoding, VisibleTrackBuilder}
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
 import com.soundcloud.apipublic.mapper.similarsounds.{SimilarSounds, SimilarSoundsMeta}
+import com.soundcloud.apipublic.service.TrackVisibilityService.RelatedTracksFieldMask
 import com.soundcloud.apipublic.service.representation.collection.Collection
 import com.soundcloud.apipublic.service.trackrepresentation.{
   TrackPagination,
@@ -77,7 +78,12 @@ class SimilarTracksServiceSpec extends UnitSpecification {
       when(systemPlaylistsClient.fetchSimilar(session, track)).thenReturn(Future(Some(similarSoundsMock)))
       when(
         trackRepresentationService
-          .tracks(session, similarSoundsMockUrns.map(TrackRequest(_, None)), AccessParams.defaultAccess)
+          .tracks(
+            session,
+            similarSoundsMockUrns.map(TrackRequest(_, None)),
+            AccessParams.defaultAccess,
+            fieldMask = RelatedTracksFieldMask
+          )
       ).thenReturn(Future(List(trackRepresentationMock)))
 
       val similarTracks =
@@ -91,8 +97,14 @@ class SimilarTracksServiceSpec extends UnitSpecification {
 
     "returns None when no track recommendations" in new Context {
       when(systemPlaylistsClient.fetchSimilar(session, track)).thenReturn(Future(None))
-      when(trackRepresentationService.tracks(session, List.empty, AccessParams.defaultAccess))
-        .thenReturn(Future(List.empty))
+      when(
+        trackRepresentationService.tracks(
+          session,
+          List.empty,
+          AccessParams.defaultAccess,
+          fieldMask = RelatedTracksFieldMask
+        )
+      ).thenReturn(Future(List.empty))
 
       val similarTracks =
         Await.result(similarTracksService.similarTracks(session, track, AccessParams.defaultAccess, trackPagination))

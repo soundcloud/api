@@ -5,6 +5,7 @@ import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.apipublic.client.SystemPlaylistsClient
 import com.soundcloud.apipublic.client.tracks.TrackRequest
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
+import com.soundcloud.apipublic.service.TrackVisibilityService.RelatedTracksFieldMask
 import com.soundcloud.apipublic.service.representation.collection.Collection
 import com.soundcloud.apipublic.service.trackrepresentation.{
   TrackPagination,
@@ -28,7 +29,12 @@ class SimilarTracksService(
       similarTracks <- systemPlaylistsClient.fetchSimilar(session, trackUrn)
       trackUrns = similarTracks.map(similarTrack => similarTrack.similarTracks).getOrElse(List.empty).toList
       trackUrnsPage = trackPagination.calculateTrackUrnPage(trackUrns).toList
-      tracks <- trackRepresentationsService.tracks(session, trackUrnsPage.map(TrackRequest(_, None)), access)
+      tracks <- trackRepresentationsService.tracks(
+        session,
+        trackUrnsPage.map(TrackRequest(_, None)),
+        access,
+        fieldMask = RelatedTracksFieldMask
+      )
       finalPage = trackPagination.calculateFinalPage(tracks)
     } yield {
       finalPage match {
