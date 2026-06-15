@@ -176,9 +176,8 @@ deploy-prometheus:
 		--rule=https://ent.int.s-cloud.net/prometheus/rules/canary_vs_release.yml \
 		--env=production
 
-GITHUB_SHA ?= HEAD
 publish-changelog:
-	git diff-index --exit-code $(GITHUB_SHA)~1 RELEASE_NOTES.md && echo 'No release notes to publish...' && exit 0; \
+	git diff-index --exit-code HEAD~1 RELEASE_NOTES.md && echo 'No release notes to publish...' && exit 0; \
 		./scripts/release
 
 .PHONY: validate-manifest

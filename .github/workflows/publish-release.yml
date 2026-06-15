@@ -7,7 +7,7 @@ on:
     inputs:
       ref:
         required: true
-        description: 'The ref that triggered the workflow'
+        description: 'Git ref to publish (branch, tag, or full commit SHA)'
         type: string
   workflow_call:
     inputs:
