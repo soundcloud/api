@@ -100,6 +100,10 @@ object Routing {
       route(Method.Get, "/users/me", meHandler.me)
   }
 
+  def forRecentlyPlayedHandler(recentlyPlayedHandler: RecentlyPlayedHandler): List[(Method, String, Handler)] = {
+    route(Method.Get, "/me/recently-played/tracks", recentlyPlayedHandler.getRecentlyPlayedTracks)
+  }
+
   def forUsersHandler(usersHandler: UsersHandler): List[(Method, String, Handler)] = {
     route(Method.Get, userIdPath, usersHandler.user)
   }

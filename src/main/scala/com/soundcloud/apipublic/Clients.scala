@@ -14,6 +14,7 @@ import com.soundcloud.apipublic.client.media.TrackAccessRecorderClient
 import com.soundcloud.apipublic.client.mothership.{MoshimoshiClient, OkidokiClient, RichOkidokiClient}
 import com.soundcloud.apipublic.client.playlists.PlaylistDeletionClient
 import com.soundcloud.apipublic.client.profile.ProfilesClient
+import com.soundcloud.apipublic.client.recentlyplayed.RecentlyPlayedClient
 import com.soundcloud.apipublic.client.reposts.RepostsClient
 import com.soundcloud.apipublic.client.search.SearchApiClient
 import com.soundcloud.apipublic.client.secure.SecureClient
@@ -315,6 +316,10 @@ class Clients(
   val relatedArtistsService = new RelatedArtistsService(userRepresentationsService, systemPlaylistsClient)
 
   val meService = new MeService(userRepresentationsService, okidokiClient, trackCoordinatorClient, exceptionCollector)
+
+  val recentlyPlayedClient = new RecentlyPlayedClient(jsonClient("chronicles"))
+
+  val recentlyPlayedService = new RecentlyPlayedService(recentlyPlayedClient, tracksService)
 
   val searchService =
     new SearchService(

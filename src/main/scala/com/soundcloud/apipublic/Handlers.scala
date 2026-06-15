@@ -102,6 +102,9 @@ class Handlers(
 
   val meHandler = new MeHandler(userAuthentication, meService)
 
+  val recentlyPlayedHandler =
+    new RecentlyPlayedHandler(userAuthentication, recentlyPlayedService)
+
   val usersHandler = new UsersHandler(userAuthentication, userRepresentationsService)
 
   val resolveHandler = new ResolveHandler(userAuthentication, resolveService)

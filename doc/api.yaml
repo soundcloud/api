@@ -113,6 +113,19 @@ paths:
           $ref: "#/components/responses/Activities"
         401:
           $ref: "#/components/responses/Unauthorized"
+  /me/recently-played/tracks:
+    get:
+      summary: Returns the authenticated user's last 25 recently played tracks.
+      description: Returns up to 25 full track objects in reverse chronological order. Duplicate tracks are omitted, keeping only the most recent play. Tracks that are not visible to the caller are omitted. This endpoint does not support pagination or a `limit` query parameter.
+      tags:
+        - me
+      parameters:
+        - $ref: "#/components/parameters/access_explicit"
+      responses:
+        200:
+          $ref: "#/components/responses/Tracks"
+        401:
+          $ref: "#/components/responses/Unauthorized"
   /me/likes/tracks:
     get:
       summary: Returns a list of favorited or liked tracks of the authenticated user.

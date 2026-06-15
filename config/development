@@ -106,5 +106,7 @@ SECURE_CLIENT_REQUEST_TIMEOUT_MILLIS=2000
 
 AUTHENTICATOR_DISPENSER_SRV_RECORD="dnssrv!http.dispenser.prod.authenticator.srv.db.s-cloud.net."
 
+CHRONICLES_SRV_RECORD="dnssrv!_first16.http.api.prod.chronicles.srv.db.s-cloud.net."
+
 UNIFIED_COUNTS_HTTPS_ENDPOINT=https://counts-api-666030408108.europe-west1.run.app
 UNIFIED_COUNTS_API_KEY=$SECRET_UNIFIED_COUNTS_API_KEY

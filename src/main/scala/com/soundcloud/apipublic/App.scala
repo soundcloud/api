@@ -94,6 +94,7 @@ object App {
           forLikesHandler(handlers.likesHandler),
           forCommentsHandler(handlers.commentsHandler),
           forMeHandler(handlers.meHandler),
+          forRecentlyPlayedHandler(handlers.recentlyPlayedHandler),
           forUsersHandler(handlers.usersHandler),
           forResolveHandler(handlers.resolveHandler),
           forConnectHandler(handlers.connectHandler),

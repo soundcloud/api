@@ -1,8 +1,8 @@
 # API Public Release Notes
 
-## Related artists
+## Recently played tracks
 
-- **GET /users/{user_urn}/related** returns related artist recommendations for a user, with optional `limit`, `offset`, and `linked_partitioning` (same pagination style as **GET /tracks/{track_urn}/related**).
+- **GET /me/recently-played/tracks** returns the authenticated user's last 25 recently played tracks as full track objects in reverse chronological order, with duplicate tracks omitted (no pagination).
 
 <!--- Remove everything below and start over --->
 

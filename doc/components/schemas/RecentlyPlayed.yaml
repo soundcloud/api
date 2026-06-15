@@ -1,0 +1,10 @@
+type: array
+maxItems: 50
+description: Up to 50 recently played tracks, most recent first.
+items:
+  type: object
+  properties:
+    urn:
+      type: string
+    played_at:
+      type: integer
