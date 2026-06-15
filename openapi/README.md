@@ -2,7 +2,7 @@
 
 Single-file [OpenAPI 3](https://swagger.io/specification/) spec for the SoundCloud public API (`https://api.soundcloud.com`).
 
-Updated on each [release](https://github.com/soundcloud/api/releases) when the API changes.
+Updated on each [api-public release](https://github.com/soundcloud/api/releases).
 
 ## Download
 
@@ -15,7 +15,7 @@ curl -fsSL https://raw.githubusercontent.com/soundcloud/api/master/openapi/api.y
 Or pin to a [release tag](https://github.com/soundcloud/api/releases):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/soundcloud/api/2026-05-19/openapi/api.yaml -o soundcloud-api.yaml
+curl -fsSL https://raw.githubusercontent.com/soundcloud/api/YYYY-MM-DD/openapi/api.yaml -o soundcloud-api.yaml
 ```
 
 ## Generate a client
