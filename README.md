@@ -59,13 +59,18 @@ sc crun --interactive base-dev sh access-grant-exchange-acceptance-tests/test-su
 
 ## Release notes
 
-Release Notes are posted to our public repo soundcloud/api to keep users up-to-date.
+Release notes and the compiled OpenAPI spec are published to [soundcloud/api](https://github.com/soundcloud/api) on each release to keep users up-to-date.
 
 In case you are introducing breaking changes or changes worth mentioning to the users please:
-* fill in the [RELEASE_NOTES.md](RELEASE_NOTES.md) to generate a release with a current changelog. 
+* fill in the [RELEASE_NOTES.md](RELEASE_NOTES.md) to generate a release with a current changelog.
+
+The publish workflow (via `make publish-changelog` or the **publish-release** GitHub Action):
+
+- Copies the compiled OpenAPI spec → `soundcloud/api/openapi/api.yaml`
+- Creates a dated GitHub release on `soundcloud/api` with the `RELEASE_NOTES.md` body
 
 **IMPORTANT**: If your PR is a part of a bigger epic, please create a release for the latest PR only and include all the relevant info.
 
-Note: Markdown formatting is preserved. Check the previous [releases](https://github.com/soundcloud/api/releases). 
+Note: Markdown formatting is preserved. Check the previous [releases](https://github.com/soundcloud/api/releases).
 
 For any questions reach out to #api-team.

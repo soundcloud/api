@@ -1,3 +1,59 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-gh api -X POST -H "Accept: application/vnd.github.v3+json" -H "Authorization: token $GH_TOKEN" /repos/soundcloud/api/releases -F tag_name=$(date "+%Y-%m-%d") -F name=$(date "+%Y-%m-%d") -F body=@RELEASE_NOTES.md
+PUBLIC_REPO="soundcloud/api"
+PUBLIC_BRANCH="master"
+OPENAPI_DEST="openapi/api.yaml"
+OPENAPI_README_SRC="publish/openapi-README.md"
+
+export GH_TOKEN="${GH_TOKEN:?GH_TOKEN is required}"
+
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+TAG="$(date +%Y-%m-%d)"
+WORKDIR="$(mktemp -d)"
+trap 'cd "$REPO_ROOT" && rm -rf "$WORKDIR"' EXIT
+
+echo "Compiling OpenAPI spec..."
+if command -v sc >/dev/null 2>&1; then
+  sc crun nodejs-18 -- make --directory="$REPO_ROOT/doc" resolve_api
+else
+  make --directory="$REPO_ROOT/doc" resolve_api
+fi
+
+if [ ! -s "$REPO_ROOT/doc/compiled_api.yaml" ]; then
+  echo "Error: Compiled OpenAPI spec is empty or does not exist." >&2
+  exit 1
+fi
+
+gh auth setup-git
+git clone --depth 1 --branch "$PUBLIC_BRANCH" \
+  "https://github.com/${PUBLIC_REPO}.git" \
+  "$WORKDIR/repo"
+
+mkdir -p "$WORKDIR/repo/openapi"
+cp "$REPO_ROOT/doc/compiled_api.yaml" "$WORKDIR/repo/$OPENAPI_DEST"
+cp "$REPO_ROOT/$OPENAPI_README_SRC" "$WORKDIR/repo/openapi/README.md"
+rm -f "$WORKDIR/repo/openapi/.gitkeep"
+
+cd "$WORKDIR/repo"
+git config user.name "sc-github-bot"
+git config user.email "41898282+sc-github-bot[bot]@users.noreply.github.com"
+
+git add openapi/
+if git diff --cached --quiet; then
+  echo "No OpenAPI changes to publish to ${PUBLIC_REPO}."
+else
+  git commit -m "chore: update OpenAPI spec"
+  git push origin "$PUBLIC_BRANCH"
+  echo "Published OpenAPI spec to ${PUBLIC_REPO}@${PUBLIC_BRANCH}."
+fi
+
+gh api -X POST \
+  -H "Accept: application/vnd.github+json" \
+  -H "Authorization: Bearer ${GH_TOKEN}" \
+  "/repos/${PUBLIC_REPO}/releases" \
+  -F "tag_name=${TAG}" \
+  -F "name=${TAG}" \
+  -F "body=@${REPO_ROOT}/RELEASE_NOTES.md"
+
+echo "Created release ${TAG} on ${PUBLIC_REPO}."
