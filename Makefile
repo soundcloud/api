@@ -105,9 +105,11 @@ prepare-package-layout:
 	sc add-config config/counts_api_service_account.enc
 	sc add-config config/$(API_CONFIG)
 
+.PHONY: publish
 publish:
 	sc artifact-manager publish
 
+.PHONY: publish-deploy
 publish-deploy:
 	sc artifact-manager deploy publish \
 		--zones=$(ZONES) \
