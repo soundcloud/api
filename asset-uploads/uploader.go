@@ -54,10 +54,6 @@ func (u uploader) uploadTrack(req *uploadTrackRequest) (*uploadTrackResponse, er
 		return nil, err
 	}
 
-	if err := u.trackCoordinator.triggerTranscodings(uid); err != nil {
-		return nil, err
-	}
-
 	return &uploadTrackResponse{
 		location: out.Location,
 		md5:      fmt.Sprintf("%x", md5.Sum(nil)),

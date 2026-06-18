@@ -19,17 +19,12 @@ func (s3 fakeS3) Upload(in *s3manager.UploadInput, opts ...func(*s3manager.Uploa
 }
 
 type fakeTrackCoordinatorClient struct {
-	uid             string
-	userPolicyErr   error
-	transcodingsErr error
+	uid           string
+	userPolicyErr error
 }
 
 func (f fakeTrackCoordinatorClient) createUserPolicy(filename string, fileSize int64, session *EnrichedSessionResponse) (string, error) {
 	return f.uid, f.userPolicyErr
-}
-
-func (f fakeTrackCoordinatorClient) triggerTranscodings(uid string) error {
-	return f.transcodingsErr
 }
 
 func TestUploaderSuccess(t *testing.T) {
@@ -75,21 +70,19 @@ func TestUploaderSuccess(t *testing.T) {
 
 func TestUploaderFailure(t *testing.T) {
 	tests := []struct {
-		description     string
-		userPolicyErr   error
-		uploadErr       error
-		transcodingsErr error
-		expectedErr     string
+		description   string
+		userPolicyErr error
+		uploadErr     error
+		expectedErr   string
 	}{
 		{description: "should propagate errors generating user policy", userPolicyErr: fmt.Errorf("not permitted to perform upload"), expectedErr: "not permitted to perform upload"},
 		{description: "should propagate errors uploading to s3", uploadErr: fmt.Errorf("s3 connection issue"), expectedErr: "s3 connection issue"},
-		{description: "should propagate errors triggering transcodings", transcodingsErr: fmt.Errorf("500 - could not reach service"), expectedErr: "500 - could not reach service"},
 	}
 
 	for _, test := range tests {
 		t.Run(test.description, func(t *testing.T) {
 			up := uploader{
-				trackCoordinator: fakeTrackCoordinatorClient{uid: "someUid", userPolicyErr: test.userPolicyErr, transcodingsErr: test.transcodingsErr},
+				trackCoordinator: fakeTrackCoordinatorClient{uid: "someUid", userPolicyErr: test.userPolicyErr},
 				s3Bucket:         "bucket",
 				s3Uploader: fakeS3{
 					uploadFn: func(in *s3manager.UploadInput) (*s3manager.UploadOutput, error) {

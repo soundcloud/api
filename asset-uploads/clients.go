@@ -15,7 +15,6 @@ const (
 
 type trackCoordinatorClientAPI interface {
 	createUserPolicy(filename string, fileSize int64, session *EnrichedSessionResponse) (string, error)
-	triggerTranscodings(uid string) error
 }
 
 type trackCoordinatorClient struct {
@@ -29,10 +28,6 @@ type policyRequest struct {
 }
 
 type policy struct {
-	Uid string `json:"uid"`
-}
-
-type transcodingsRequest struct {
 	Uid string `json:"uid"`
 }
 
@@ -89,33 +84,4 @@ func (t *trackCoordinatorClient) parseUid(body io.ReadCloser, userUrn string) (s
 	}
 
 	return policy.Uid, nil
-}
-
-func (t *trackCoordinatorClient) triggerTranscodings(uid string) error {
-	url := fmt.Sprintf("%s/transcodings", t.host)
-	bs, err := json.Marshal(transcodingsRequest{Uid: uid})
-	if err != nil {
-		return err
-	}
-
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(bs))
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Content-Type", jsonContentType)
-	req.Header.Set("Sc-System", clientSystemName)
-
-	resp, err := t.client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusCreated {
-		var msg []byte
-		msg, _ = io.ReadAll(resp.Body)
-		return fmt.Errorf("failed to trigger transcoding for uid: %s; status: %d; resp: %s;", uid, resp.StatusCode, string(msg))
-	}
-
-	return nil
 }

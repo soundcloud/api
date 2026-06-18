@@ -32,8 +32,6 @@ func (a alwaysSucceedTrackCoordinator) createUserPolicy(filename string, fileSiz
 	return a.uid, nil
 }
 
-func (a alwaysSucceedTrackCoordinator) triggerTranscodings(string) error { return nil }
-
 type alwaysAllowedAuthenticator struct{}
 
 func (a alwaysAllowedAuthenticator) GetSessionByToken(ctx context.Context, token string, headers http.Header) (*authenticator.SessionResponse, error, int) {
