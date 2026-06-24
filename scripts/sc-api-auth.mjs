@@ -181,13 +181,32 @@ function credentialsFromAppsPage(page) {
   }
   return {
     client_id: app.client_id,
-    urn: app.urn,
+    client_secret: app.client_secret,
     name: app.name,
     description: app.description,
     website: app.url,
     redirect_uri: app.redirect_uri,
-    credentials: app.credentials,
   };
+}
+
+function publicCredentialFields(credentials) {
+  const fields = {};
+  for (const key of ["client_id", "client_secret", "name", "description", "website", "redirect_uri"]) {
+    if (credentials[key] !== undefined && credentials[key] !== null) {
+      fields[key] = credentials[key];
+    }
+  }
+  return fields;
+}
+
+function formatCredentialOutput(credentials) {
+  const publicCredentials = publicCredentialFields(credentials);
+  const lines = [`client_id=${publicCredentials.client_id}`];
+  if (publicCredentials.client_secret) {
+    lines.push(`client_secret=${publicCredentials.client_secret}`);
+  }
+  lines.push("", JSON.stringify(publicCredentials, null, 2), "");
+  return lines.join("\n");
 }
 
 async function createOrFetchUserAppCredentials({ accessToken, name, description, website }) {
@@ -263,7 +282,7 @@ if (helpArg) {
   console.log(`Usage: sc-api-auth [options]
 
   Opens the SoundCloud login page, receives the redirect on a local server,
-  then calls POST /me/apps and prints the client_id.
+  then calls POST /me/apps and prints the client_id and client_secret.
 
 Options:
   --name            Required. App name for POST /me/apps
@@ -388,10 +407,7 @@ const p = new Promise((resolve, reject) => {
           if (result.existing && result.notice) {
             console.error(result.notice);
           }
-          const { client_id } = result.credentials;
-          process.stdout.write(
-            `client_id=${client_id}\n\n` + JSON.stringify(result.credentials, null, 2) + "\n"
-          );
+          process.stdout.write(formatCredentialOutput(result.credentials));
         }
         server?.close();
         process.exit(0);
