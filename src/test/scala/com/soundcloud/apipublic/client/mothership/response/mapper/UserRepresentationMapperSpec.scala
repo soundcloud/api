@@ -124,4 +124,56 @@ class UserRepresentationMapperSpec extends UnitSpecification {
     override lazy val user = UserRepresentationMapper(json = userJson, maybeTotalLikesCounts = totalLikesCount)
     user.public_favorites_count ==== Some(6)
   }
+
+  "Location details" >> {
+    "Requested user is from GDPR country" >> {
+      trait GdprUserContext extends Context {
+        override lazy val userJson = Fixtures.moshiUser
+      }
+
+      "hides location when requester is not the requested user" in new GdprUserContext {
+        override lazy val user =
+          UserRepresentationMapper(userJson, loggedInUser = Some(Urn("soundcloud", "users", "123")))
+        user.city ==== None
+        user.country ==== None
+      }
+
+      "hides location when requester is anonymous" in new GdprUserContext {
+        override lazy val user = UserRepresentationMapper(userJson, loggedInUser = None)
+        user.city ==== None
+        user.country ==== None
+      }
+
+      "shows location when requester is the requested user" in new GdprUserContext {
+        user.city ==== Some("Berlin")
+        user.country ==== Some("Germany")
+      }
+    }
+
+    "Requested user is not from GDPR country" >> {
+      trait NonGdprUserContext extends Context {
+        override lazy val userJson = Fixtures.moshiUser2
+      }
+
+      "shows location when requester is not the requested user" in new NonGdprUserContext {
+        override lazy val user =
+          UserRepresentationMapper(userJson, loggedInUser = Some(Urn("soundcloud", "users", "123")))
+        user.city must not be None
+        user.country must not be None
+      }
+
+      "shows location when requester is anonymous" in new NonGdprUserContext {
+        override lazy val user = UserRepresentationMapper(userJson, loggedInUser = None)
+        user.city must not be None
+        user.country must not be None
+      }
+
+      "shows location when requester is the requested user" in new NonGdprUserContext {
+        override lazy val user =
+          UserRepresentationMapper(userJson, loggedInUser = Some(Urn("soundcloud", "users", "2")))
+        user.city must not be None
+        user.country must not be None
+      }
+    }
+  }
 }

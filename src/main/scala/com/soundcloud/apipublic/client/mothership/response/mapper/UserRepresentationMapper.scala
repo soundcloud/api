@@ -35,6 +35,41 @@ object UserRepresentationMapper {
 
   val MockTimestampForOtherUsers = "1970/01/01 00:00:00 +0000"
 
+  private val gdprCountryCodes = Set(
+    "AT",
+    "BE",
+    "BG",
+    "CH",
+    "CY",
+    "CZ",
+    "DE",
+    "DK",
+    "EE",
+    "ES",
+    "FI",
+    "FR",
+    "GB",
+    "GR",
+    "HR",
+    "HU",
+    "IE",
+    "IS",
+    "IT",
+    "LI",
+    "LT",
+    "LU",
+    "LV",
+    "MT",
+    "NL",
+    "NO",
+    "PL",
+    "PT",
+    "RO",
+    "SE",
+    "SI",
+    "SK"
+  )
+
   private def getMoshiSubscriptions(json: JsValue): Seq[CreatorSubscription] = {
     (json \ "subscriptions")
       .asOpt[Seq[JsObject]]
@@ -73,6 +108,7 @@ object UserRepresentationMapper {
   ): UserRepresentation = {
     val urn = (json \ "self" \ "urn").as[Urn]
     val isLoggedInUser = loggedInUser.contains(urn)
+    val hideLocationInfo = shouldHideLocationInfo(isLoggedInUser, json)
     val followCount = maybeFollowCounts.flatMap(_.get(urn))
     val repostCount = maybeRepostsCounts.flatMap(_.get(urn))
     val publicFavoritesCount = maybeTotalLikesCounts.flatMap(_.get(urn))
@@ -85,8 +121,8 @@ object UserRepresentationMapper {
       username = (json \ "username").as[String],
       avatar_url = (json \ "avatar_url").as[String],
       permalink_url = (json \ "permalink_url").as[String].annotate(loggedinApplicaton),
-      city = (json \ "city").asOpt[String],
-      country = (json \ "country").asOpt[String],
+      city = if (hideLocationInfo) None else (json \ "city").asOpt[String],
+      country = if (hideLocationInfo) None else (json \ "country").asOpt[String],
       tracks_count = (json \ "tracks_count").as[Int],
       public_tracks_count = (json \ "public_tracks_count").asOpt[Int],
       followings_count = followCount.map(_.followings).orElse((json \ "followings_count").asOpt[Long]),
@@ -116,5 +152,12 @@ object UserRepresentationMapper {
       likes_count = (json \ "public_favorites_count").asOpt[Long],
       reposts_count = repostCount.orElse((json \ "reposts_count").asOpt[Long])
     )
+  }
+
+  private def shouldHideLocationInfo(isLoggedInUser: Boolean, json: JsValue): Boolean = {
+    !isLoggedInUser &&
+    (json \ "country_code")
+      .asOpt[String]
+      .exists(code => gdprCountryCodes.contains(code.toUpperCase(java.util.Locale.ENGLISH)))
   }
 }
