@@ -47,6 +47,8 @@ curl -fsSL https://raw.githubusercontent.com/soundcloud/api/master/scripts/sc-ap
 node sc-api-auth.mjs --name "My App" --description "…" --website "https://example.com"
 ```
 
+Add **`--remote`** for SSH, CI, or headless sign-in (pairing code instead of a local browser callback).
+
 Please also subscribe to our `@SoundCloudDev` on [X](https://x.com/SoundCloudDev) or [Bluesky](https://bsky.app/profile/soundcloud.dev) or our [Backstage Blog] for API Announcements
 
 ### How can I update my app's `redirect_uri`?
