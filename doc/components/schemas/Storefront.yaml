@@ -1,0 +1,47 @@
+type: object
+description: A track's storefront (Artist Storefront / buy module) shown on the track page.
+properties:
+  track_urn:
+    type: string
+    description: The urn of the track the storefront belongs to.
+    example: soundcloud:tracks:1495999657
+  title:
+    type: string
+    description: Card title shown on the storefront module.
+    example: Download now
+  type:
+    type: string
+    enum:
+      - digital
+      - vinyl
+      - cd
+      - cassette
+      - apparel
+      - sample_pack
+      - subscription
+      - live_event
+      - live_stream
+      - other
+    description: The type of item offered.
+  link:
+    type: string
+    description: External URL the storefront button opens.
+    example: https://example.com/my-track
+  link_title:
+    type: string
+    nullable: true
+    description: Label of the storefront button.
+    example: Download
+  description:
+    type: string
+    nullable: true
+    description: Description shown on the storefront module.
+  image_url:
+    type: string
+    nullable: true
+    description: Image shown on the storefront module. Read-only; managed on soundcloud.com.
+  price:
+    type: string
+    nullable: true
+    description: Display-only price text shown next to the item type. No payment is processed by SoundCloud.
+    example: "0"

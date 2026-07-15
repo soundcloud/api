@@ -571,6 +571,41 @@ paths:
           description: Success
         404:
           $ref: "#/components/responses/NotFound"
+  /tracks/{track_urn}/storefront:
+    put:
+      summary: Creates or updates the storefront (Artist Storefront) of a track.
+      description: |
+        Creates or updates the storefront module shown on the track page. The request replaces
+        the whole storefront: optional fields (link_title, description, price) are cleared when
+        omitted, so always send every value the storefront should keep. The request fails with
+        403 when the authenticated user does not own the track, and also when the user does not
+        hold a creator subscription that includes external purchase options. The storefront
+        links to an external page — no payment is processed by SoundCloud.
+      tags:
+        - tracks
+      parameters:
+        - $ref: "#/components/parameters/track_urn"
+      requestBody:
+        description: Storefront payload
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StorefrontUpdateRequest"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: "#/components/schemas/Storefront"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        404:
+          $ref: "#/components/responses/NotFound"
   /tracks/{track_urn}/preview:
     get:
       summary: Starts playback of a preview of the track
@@ -1059,6 +1094,10 @@ components:
       $ref: "./components/schemas/OAuthToken.yaml"
     TrackMetadataRequest:
       $ref: "./components/schemas/TrackMetadataRequest.yaml"
+    Storefront:
+      $ref: "./components/schemas/Storefront.yaml"
+    StorefrontUpdateRequest:
+      $ref: "./components/schemas/StorefrontUpdateRequest.yaml"
     CreateUpdatePlaylistRequest:
       $ref: "./components/schemas/CreateUpdatePlaylistRequest.yaml"
     CreateUpdatePlaylistFormRequest:

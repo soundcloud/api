@@ -95,6 +95,10 @@ object Routing {
       route(Method.Delete, trackIdPath, tracksHandler.handleDeleteTrack)
   }
 
+  def forStorefrontHandler(storefrontHandler: StorefrontHandler): List[(Method, String, Handler)] = {
+    route(Method.Put, trackIdPath + "/storefront", storefrontHandler.handleUpsertStorefront)
+  }
+
   def forMeHandler(meHandler: MeHandler): List[(Method, String, Handler)] = {
     route(Method.Get, "/me", meHandler.me) :::
       route(Method.Get, "/users/me", meHandler.me)

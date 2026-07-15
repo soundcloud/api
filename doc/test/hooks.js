@@ -14,6 +14,7 @@ var skipTransactionIds = [
     "POST (200) /oauth2/token",
     "POST (401) /oauth2/token",
     "PUT (200) /tracks/soundcloud%3Atracks%3A308946187",
+    "PUT (200) /tracks/soundcloud%3Atracks%3A308946187/storefront", // needs an eligible creator owning the track; not satisfiable in the e2e stack
     "POST (201) /tracks/soundcloud%3Atracks%3A308946187/comments"
 ];
 var replacePlaylistIdTransactionIds = [

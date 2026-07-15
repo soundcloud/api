@@ -43,6 +43,9 @@ class Handlers(
   val singleTrackHandler =
     new SingleTrackHandler(userAuthentication, tracksService)
 
+  val storefrontHandler =
+    new StorefrontHandler(userAuthentication, storefrontService)
+
   val userTracksHandler = new UserTracksHandler(
     userAuthentication,
     userTracksService,

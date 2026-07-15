@@ -1,0 +1,166 @@
+// Vendored from soundcloud/fan-monetization rpc/fan_monetization_api.proto.
+// The DeleteBuyModule and UpdateBuyModuleConfiguration rpcs are omitted because they return
+// google.protobuf.Empty, which the twinagle code generator cannot compile, and api-public
+// does not call them.
+
+syntax = "proto3";
+
+package proto.soundcloud.fan_monetization.api;
+
+option go_package="fan_monetization/api";
+
+import "common_session.proto";
+import "google/protobuf/wrappers.proto";
+
+/*
+Naming convention for proto rpc, request, and response messages is shown at the top of this post:
+
+https://medium.com/@akhaku/protobuf-definition-best-practices-87f281576f31
+
+with elaboration in points 1 and 3.
+
+RPC + request and response message naming convention:
+
+1) RPC names should always begin with a verb (e.g. Get, List, Create, Update, Delete, Send, Ping, Check).
+
+2) An RPC called DoFoo should have this definition in proto IDL:
+
+  rpc DoFoo (DoFooRequest) returns (DoFooResponse) {}
+*/
+
+
+message GetBuyModuleRequest {
+  proto.soundcloud.common.session.UserSession user_session = 1;
+  string track_urn = 2 [deprecated = true];
+  google.protobuf.StringValue urn = 3;
+}
+
+message GetBuyModulesRequest {
+  proto.soundcloud.common.session.UserSession user_session = 1;
+  string track_urn = 2 [deprecated = true];
+  google.protobuf.StringValue urn = 3;
+}
+
+enum BuyModuleType {
+    BUY_MODULE_TYPE_UNSPECIFIED = 0;
+    DIGITAL = 1;
+    VINYL = 2;
+    CD = 3;
+    CASSETTE = 4;
+    APPAREL = 5;
+    SAMPLE_PACK = 6;
+    SUBSCRIPTION = 7;
+    LIVE_EVENT = 8;
+    LIVE_STREAM = 9;
+    OTHER = 10;
+}
+
+message GetBuyModuleResponse {
+    string title = 1;
+    BuyModuleType type = 2;
+    string link  = 3;
+    google.protobuf.StringValue description = 4;
+    google.protobuf.StringValue link_title = 5;
+    google.protobuf.StringValue image_url = 6;
+    string price = 7;
+    string id = 8;
+    string track_urn = 9 [deprecated = true];
+    google.protobuf.StringValue urn = 10;
+}
+
+message GetBuyModulesResponse {
+    repeated BuyModule modules = 1;
+}
+
+message BuyModule {
+    string title = 1;
+    BuyModuleType type = 2;
+    string link  = 3;
+    google.protobuf.StringValue description = 4;
+    google.protobuf.StringValue link_title = 5;
+    google.protobuf.StringValue image_url = 6;
+    string price = 7;
+    string id = 8;
+    string track_urn = 9 [deprecated = true];
+    google.protobuf.StringValue urn = 10;
+}
+
+message SaveBuyModuleRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1;
+    string track_urn = 2 [deprecated = true];
+    string title = 3;
+    BuyModuleType type = 4;
+    string link  = 5;
+    google.protobuf.StringValue description = 6;
+    google.protobuf.StringValue link_title = 7;
+    google.protobuf.StringValue image_url = 8;
+    string price = 9;
+    google.protobuf.StringValue id = 10;
+    google.protobuf.StringValue urn = 11;
+}
+
+message SaveBuyModuleResponse {
+    string title = 1;
+    BuyModuleType type = 2;
+    string link  = 3;
+    google.protobuf.StringValue description = 4;
+    google.protobuf.StringValue link_title = 5;
+    google.protobuf.StringValue image_url = 6;
+    string price = 7;
+    string id = 8;
+}
+
+message DeleteBuyModuleRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1;
+    string track_urn = 2 [deprecated = true];
+    google.protobuf.StringValue urn = 3;
+}
+
+enum BuyModuleState {
+    BUY_MODULE_STATE_UNSPECIFIED = 0;
+    EMPTY_STATE_DISMISSED = 5;
+    EMPTY_STATE_NOT_DISMISSED = 6;
+}
+
+message UpdateBuyModuleConfigurationRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1;
+    string track_urn = 2 [deprecated = true];
+    BuyModuleState state = 3;
+    google.protobuf.StringValue id = 4;
+    google.protobuf.StringValue urn = 5;
+}
+
+message GetBuyModuleConfigurationRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1;
+    string track_urn = 2 [deprecated = true];
+    google.protobuf.StringValue urn = 3;
+}
+
+message GetBuyModuleConfigurationResponse {
+    BuyModuleState state = 1;
+    string id = 2;
+}
+
+message BatchGetBuyModulesRequest {
+    proto.soundcloud.common.session.UserSession user_session = 1;
+    repeated string track_urns = 2 [deprecated = true];
+    repeated google.protobuf.StringValue urns = 3;
+}
+
+message TrackBuyModules {
+    string track_urn = 1 [deprecated = true];
+    repeated BuyModule modules = 2;
+    google.protobuf.StringValue urn = 3;
+}
+
+message BatchGetBuyModulesResponse {
+    repeated TrackBuyModules track_modules = 1;
+}
+
+service FanMonetization {
+    rpc GetBuyModule (GetBuyModuleRequest) returns (GetBuyModuleResponse);
+    rpc GetBuyModules (GetBuyModulesRequest) returns (GetBuyModulesResponse);
+    rpc BatchGetBuyModules (BatchGetBuyModulesRequest) returns (BatchGetBuyModulesResponse);
+    rpc SaveBuyModule (SaveBuyModuleRequest) returns (SaveBuyModuleResponse);
+    rpc GetBuyModuleConfiguration (GetBuyModuleConfigurationRequest) returns (GetBuyModuleConfigurationResponse);
+}

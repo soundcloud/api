@@ -8,6 +8,7 @@ import com.soundcloud.apipublic.client.applications.{
 }
 import com.soundcloud.apipublic.client.cloudrun.{CloudRunAuthenticationProxy, CloudRunCredentialsProvider}
 import com.soundcloud.apipublic.client.comments.CommentsTwirpClient
+import com.soundcloud.apipublic.client.fanmonetization.FanMonetizationTwirpClient
 import com.soundcloud.apipublic.client.followcounts.{FollowCountsClient, FollowsCountsTwirpClient}
 import com.soundcloud.apipublic.client.follows.FollowsClient
 import com.soundcloud.apipublic.client.media.TrackAccessRecorderClient
@@ -27,6 +28,7 @@ import com.soundcloud.apipublic.service.comments.CommentService
 import com.soundcloud.apipublic.service.media.{StreamService, TrackAccessRecorderService}
 import com.soundcloud.apipublic.service.oauth.GrantExchangeService
 import com.soundcloud.apipublic.service.resolve.ResolveService
+import com.soundcloud.apipublic.service.storefront.StorefrontService
 import com.soundcloud.apipublic.service.trackrepresentation.{
   LikedTracksService,
   TrackRepresentationsService,
@@ -54,6 +56,7 @@ import com.twitter.finagle.http.{Request, Response}
 import proto.soundcloud.authenticator.access_grant_exchange.AccessGrantExchangeClientProtobuf
 import proto.soundcloud.comments.api.CommentsClientProtobuf
 import proto.soundcloud.counts.api.CountsApiClientProtobuf
+import proto.soundcloud.fan_monetization.api.FanMonetizationClientProtobuf
 import proto.soundcloud.follows.api.FollowsClientProtobuf
 import proto.soundcloud.likes.api.v2.{LikesClientProtobuf => LikesClientV2Protobuf}
 import proto.soundcloud.likes.{api => likes}
@@ -235,6 +238,15 @@ class Clients(
   val userTracksService = new UserTracksService(tracksService, profilesClient)
   val trackUpdateService =
     new TrackUpdateService(trackCoordinatorClient, okidokiClient, hocuspocusClient, tracksService)
+
+  val gatekeeperClient = new GatekeeperClient(jsonClient("gatekeeper"))
+
+  private val (fanMonetizationHttpClient, fanMonetizationTelemetry) = twirpAWSClient("FAN_MONETIZATION")
+  val fanMonetizationClient = new FanMonetizationTwirpClient(
+    new FanMonetizationClientProtobuf(fanMonetizationHttpClient, fanMonetizationTelemetry)
+  )
+
+  val storefrontService = new StorefrontService(fanMonetizationClient, gatekeeperClient, trackMetadataTwirpClient)
   val similarTracksService = new SimilarTracksService(tracksService, systemPlaylistsClient)
   val playlistService =
     new PlaylistsService(
