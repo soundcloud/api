@@ -2,7 +2,7 @@
 
 Single-file [OpenAPI 3](https://swagger.io/specification/) spec for the SoundCloud public API (`https://api.soundcloud.com`).
 
-Updated on each [release](https://github.com/soundcloud/api/releases) when the API changes.
+Updated on each [api-public release](https://github.com/soundcloud/api/releases).
 
 ## Download
 

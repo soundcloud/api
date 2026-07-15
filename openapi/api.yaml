@@ -589,6 +589,51 @@ paths:
           description: Success
         '404':
           $ref: '#/components/responses/NotFound'
+  '/tracks/{track_urn}/storefront':
+    put:
+      summary: Creates or updates the storefront (Artist Storefront) of a track.
+      description: >
+        Creates or updates the storefront module shown on the track page. The
+        request replaces
+
+        the whole storefront: optional fields (link_title, description, price)
+        are cleared when
+
+        omitted, so always send every value the storefront should keep. The
+        request fails with
+
+        403 when the authenticated user does not own the track, and also when
+        the user does not
+
+        hold a creator subscription that includes external purchase options. The
+        storefront
+
+        links to an external page — no payment is processed by SoundCloud.
+      tags:
+        - tracks
+      parameters:
+        - $ref: '#/components/parameters/track_urn'
+      requestBody:
+        description: Storefront payload
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StorefrontUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/Storefront'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   '/tracks/{track_urn}/preview':
     get:
       summary: Starts playback of a preview of the track
@@ -1540,6 +1585,116 @@ components:
               description: 'When false (quiet mode), comments are hidden.'
             isrc:
               type: string
+    Storefront:
+      type: object
+      description: >-
+        A track's storefront (Artist Storefront / buy module) shown on the track
+        page.
+      properties:
+        track_urn:
+          type: string
+          description: The urn of the track the storefront belongs to.
+          example: 'soundcloud:tracks:1495999657'
+        title:
+          type: string
+          description: Card title shown on the storefront module.
+          example: Download now
+        type:
+          type: string
+          enum:
+            - digital
+            - vinyl
+            - cd
+            - cassette
+            - apparel
+            - sample_pack
+            - subscription
+            - live_event
+            - live_stream
+            - other
+          description: The type of item offered.
+        link:
+          type: string
+          description: External URL the storefront button opens.
+          example: 'https://example.com/my-track'
+        link_title:
+          type: string
+          nullable: true
+          description: Label of the storefront button.
+          example: Download
+        description:
+          type: string
+          nullable: true
+          description: Description shown on the storefront module.
+        image_url:
+          type: string
+          nullable: true
+          description: >-
+            Image shown on the storefront module. Read-only; managed on
+            soundcloud.com.
+        price:
+          type: string
+          nullable: true
+          description: >-
+            Display-only price text shown next to the item type. No payment is
+            processed by SoundCloud.
+          example: '0'
+    StorefrontUpdateRequest:
+      type: object
+      description: >
+        Creates or updates the storefront (Artist Storefront / buy module) of a
+        track. The request
+
+        replaces the whole storefront - omitted optional fields are cleared, so
+        always send every
+
+        value the storefront should keep.
+      required:
+        - title
+        - type
+        - link
+      properties:
+        title:
+          type: string
+          maxLength: 100
+          description: Card title shown on the storefront module.
+          example: Download now
+        type:
+          type: string
+          enum:
+            - digital
+            - vinyl
+            - cd
+            - cassette
+            - apparel
+            - sample_pack
+            - subscription
+            - live_event
+            - live_stream
+            - other
+          description: The type of item offered.
+        link:
+          type: string
+          maxLength: 255
+          description: External http(s) URL the storefront button opens.
+          example: 'https://example.com/my-track'
+        link_title:
+          type: string
+          maxLength: 50
+          description: Label of the storefront button. Omit to clear.
+          example: Download
+        description:
+          type: string
+          maxLength: 500
+          description: Description shown on the storefront module. Omit to clear.
+          example: Get the track original files for free.
+        price:
+          type: string
+          maxLength: 20
+          description: >-
+            Display-only price text shown next to the item type. No payment is
+            processed by SoundCloud. Omit to clear.
+          example: '0'
     CreateUpdatePlaylistRequest:
       type: object
       properties:
