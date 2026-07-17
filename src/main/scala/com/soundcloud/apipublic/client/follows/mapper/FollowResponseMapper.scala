@@ -20,6 +20,7 @@ object FollowResponseMapper {
           case Some("UserAsTarget") => UserAsTarget
           case Some("AgeRestrictedUser") => AgeRestrictedUser
           case Some("AgeUnknownUser") => AgeUnknownUser
+          case Some(name) => FollowingRejected(name)
           case _ => unknownError(Status.UnprocessableEntity, response.contentString)
         }
       case status => unknownError(status, response.contentString)

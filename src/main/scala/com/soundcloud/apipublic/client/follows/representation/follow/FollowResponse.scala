@@ -13,6 +13,12 @@ sealed trait FollowingNotPossible extends FollowResponse
 case object UserNotFound extends FollowingNotPossible
 case object SpamBlocked extends FollowingNotPossible
 case object MaxFollowingsReached extends FollowingNotPossible
+
+/**
+  * A follow rejection whose error name api-public does not recognize. Carries the name reported
+  * by the follows service so new rejection reasons surface as a 422 rather than a 500.
+  */
+final case class FollowingRejected(name: String) extends FollowingNotPossible
 case object UserAsTarget extends FollowingNotPossible
 case object BlockedByTarget extends FollowingNotPossible
 case object AgeRestrictedUser extends FollowingNotPossible

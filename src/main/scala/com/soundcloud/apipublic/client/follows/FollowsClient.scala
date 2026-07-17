@@ -20,7 +20,7 @@ class FollowsClient(jsonService: JsonClient) extends FetchClient {
     * Follows the target user.
     * Returns `FollowingCreated` when the target user is followed successfully.
     * Returns `AlreadyFollowing` when the target user is already being followed.
-    * Returns one of the `FollowingNotPossible` case objects when is not possible to follow the target user.
+    * Returns one of the `FollowingNotPossible` responses when is not possible to follow the target user.
     * Returns `UnknownError` when an unknown error happens.
     *
     * @see https://github.com/soundcloud/follows#post-followtarget_urn

@@ -27,6 +27,14 @@ import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTimeZone, LocalDate, Years}
 import play.api.libs.json._
 
+object UserFollowHandler {
+  val MaxFollowingsReachedMessage =
+    "You have reached the maximum number of users you can follow. To follow a new user, unfollow another user first."
+
+  // Shown for follow rejections whose error name api-public does not recognize.
+  val FollowingRejectedMessage = "This user cannot be followed."
+}
+
 class UserFollowHandler(
     userAuthentication: UserAuthentication,
     okidoki: OkidokiClient,
@@ -45,7 +53,10 @@ class UserFollowHandler(
             case AlreadyFollowing => renderStatus()
             case UserNotFound => renderError(Status.NotFound)
             case SpamBlocked => renderError(Status.TooManyRequests)
-            case MaxFollowingsReached => renderError(Status.UnprocessableEntity)
+            case MaxFollowingsReached =>
+              renderError(Status.UnprocessableEntity, UserFollowHandler.MaxFollowingsReachedMessage)
+            case FollowingRejected(_) =>
+              renderError(Status.UnprocessableEntity, UserFollowHandler.FollowingRejectedMessage)
             case BlockedByTarget => renderError(Status.Forbidden)
             case UserAsTarget => renderError(Status.BadRequest)
             case AgeRestrictedUser =>
@@ -92,7 +103,8 @@ class UserFollowHandler(
       ).build
     )
 
-  private def renderError(status: Status): Future[Response] = Future.value(ErrorResponse(status))
+  private def renderError(status: Status, message: String = ""): Future[Response] =
+    Future.value(ErrorResponse(status, message))
 
   def fetchFollowersWithoutAuth(request: HandlerRequest): Future[Response] =
     fetchPage(request, follows.followers, mapUsersToUsers, fans, requireLogin = false)

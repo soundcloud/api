@@ -197,6 +197,7 @@ paths:
           $ref: "#/components/responses/NotFound"
     put:
       summary: Follows a user.
+      description: Fails with 422 when the user cannot be followed, for example when the authenticated user has reached the maximum number of followings. The response `message` states the reason.
       tags:
         - me
       parameters:
@@ -210,6 +211,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         404:
           $ref: "#/components/responses/NotFound"
+        422:
+          $ref: "#/components/responses/UnprocessableEntity"
     delete:
       summary: Deletes a user who is followed by the authenticated user.
       tags:

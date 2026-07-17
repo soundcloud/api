@@ -11,6 +11,8 @@ import com.soundcloud.apipublic.client.follows.representation.follow.{
   AgeRestrictedUser,
   AgeUnknownUser,
   FollowingCreated,
+  FollowingRejected,
+  MaxFollowingsReached,
   UserNotFound
 }
 import com.soundcloud.apipublic.client.follows.representation.unfollow.{UnfollowSuccessful, UserAsTarget}
@@ -401,6 +403,30 @@ class UserFollowHandlerSpec extends UnitSpecification {
       val response = put("/me/followings/999")
       response.status ==== Status.NotFound
       (Json.parse(response.contentString) \ "status").get === JsString("404 - Not Found")
+    }
+
+    "render a descriptive message on the max-followings-reached error" in new Context {
+      override def before: Any = {
+        super.before
+        followsMock.follow(session, userUrn) returns Future.value(MaxFollowingsReached)
+      }
+
+      val response = put("/me/followings/999")
+      response.status ==== Status.UnprocessableEntity
+      (Json.parse(response.contentString) \ "message").as[String] ====
+        UserFollowHandler.MaxFollowingsReachedMessage
+    }
+
+    "render a generic message on rejection reasons it does not recognize" in new Context {
+      override def before: Any = {
+        super.before
+        followsMock.follow(session, userUrn) returns Future.value(FollowingRejected("SomeNewRejection"))
+      }
+
+      val response = put("/me/followings/999")
+      response.status ==== Status.UnprocessableEntity
+      (Json.parse(response.contentString) \ "message").as[String] ====
+        UserFollowHandler.FollowingRejectedMessage
     }
   }
 

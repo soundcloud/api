@@ -129,6 +129,15 @@ class FollowsClientSpec extends UnitSpecification {
       result ==== MaxFollowingsReached
     }
 
+    "indicates rejection reasons it does not recognize" in new FollowContext {
+      mockWith(
+        Status.UnprocessableEntity,
+        Json.obj("error" -> Json.obj("name" -> "SomeNewRejection", "message" -> "some new reason"))
+      )
+
+      result ==== FollowingRejected("SomeNewRejection")
+    }
+
     "indicates when the user tries to follow themselves" in new FollowContext {
       mockWith(Status.UnprocessableEntity, Fixtures.userAsTargetError)
 
