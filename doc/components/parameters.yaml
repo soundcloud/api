@@ -169,6 +169,18 @@ linked_partitioning:
     type: boolean
   description: Returns paginated collection of items (recommended, returning a list without pagination is deprecated and should not be used)
   example: true
+sort:
+  in: query
+  name: sort
+  required: false
+  schema:
+    type: string
+    enum:
+      - asc
+      - desc
+    default: desc
+  description: Sort order of tracks by upload date. `desc` returns newest tracks first; `asc` returns oldest first. Also accepts `direction` or `order` as aliases.
+  example: desc
 secret_token:
   in: query
   name: secret_token

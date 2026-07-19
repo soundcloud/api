@@ -39,6 +39,14 @@ class UserTracksServiceSpec extends TrackRepresentationsSpecificationContext {
         )
       )
     )
+
+    val pagination = CursorBasedPagination(
+      "https://api.soundcloud.com",
+      "/me/tracks/",
+      ParamMap(),
+      Some(cursor),
+      limit
+    )
   }
 
   "#userTracks" >> {
@@ -47,37 +55,35 @@ class UserTracksServiceSpec extends TrackRepresentationsSpecificationContext {
         trackRepresentationsService
           .tracks(session, List(TrackRequest(track.urn, Option.empty)), access)
       ).thenReturn(Future.value(List(track)))
-      when(proflesClient.fetchTracksUploadedByUserFromProfiles(session, trackOwnerUrn, limit, cursor))
-        .thenReturn(Future.value(chronoResponse))
+      when(
+        proflesClient.fetchTracksUploadedByUserFromProfiles(session, trackOwnerUrn, limit, cursor, ChronoDirection.desc)
+      ).thenReturn(Future.value(chronoResponse))
 
-      val pagination = CursorBasedPagination(
-        "https://api.soundcloud.com",
-        "/me/tracks/",
-        ParamMap(),
-        Some(cursor),
-        limit
-      )
       val tracksCollection = Await.result(userTracksService.userTracks(session, trackOwnerUrn, access, pagination))
 
       tracksCollection match {
         case rep =>
           rep must beAnInstanceOf[Collection[TrackRepresentation]]
       }
+    }
 
-      "when data is not available" in new Context {
-        when(
-          trackRepresentationsService
-            .tracks(session, List(TrackRequest(track.urn, Option.empty)), access)
-        ).thenReturn(Future.value(List.empty))
-        when(
-          proflesClient
-            .fetchTracksUploadedByUserFromProfiles(session, trackOwnerUrn, pagination.pageSize, pagination.cursor.get)
-        ).thenReturn(Future.value(ChronoResponse.defaultInstance))
+    "when data is not available" in new Context {
+      when(trackRepresentationsService.tracks(session, List.empty[TrackRequest], access))
+        .thenReturn(Future.value(List.empty))
+      when(
+        proflesClient
+          .fetchTracksUploadedByUserFromProfiles(
+            session,
+            trackOwnerUrn,
+            pagination.pageSize,
+            pagination.cursor.get,
+            ChronoDirection.desc
+          )
+      ).thenReturn(Future.value(ChronoResponse.defaultInstance))
 
-        val tracksCollection = Await.result(userTracksService.userTracks(session, trackOwnerUrn, access, pagination))
-        tracksCollection.items ==== List.empty
-        tracksCollection.nextHref ==== Option.empty
-      }
+      val tracksCollection = Await.result(userTracksService.userTracks(session, trackOwnerUrn, access, pagination))
+      tracksCollection.items ==== List.empty
+      tracksCollection.nextHref ==== Option.empty
     }
   }
 }

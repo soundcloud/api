@@ -282,6 +282,7 @@ paths:
         - me
       parameters:
         - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/sort"
         - $ref: "#/components/parameters/linked_partitioning"
       responses:
         200:
@@ -869,6 +870,7 @@ paths:
         - $ref: "#/components/parameters/user_urn"
         - $ref: "#/components/parameters/access"
         - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/sort"
         - $ref: "#/components/parameters/linked_partitioning"
       responses:
         200:

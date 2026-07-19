@@ -5,8 +5,8 @@ import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.twinagle.{ErrorCode, TwinagleException}
 import com.twitter.util.Future
-import proto.soundcloud.profiles.api.ChronoDirection.desc
 import proto.soundcloud.profiles.api.{
+  ChronoDirection,
   ChronoParams,
   ChronoResponse,
   GetTracksChronoRequest,
@@ -20,7 +20,8 @@ class ProfilesClient(profilesService: ProfilesService) {
       session: UserSession,
       userUrn: Urn,
       pageSize: Int,
-      cursor: String
+      cursor: String,
+      direction: ChronoDirection = ChronoDirection.desc
   ): Future[ChronoResponse] = {
     val request = GetTracksChronoRequest(
       Some(session.asProtoSession),
@@ -28,7 +29,7 @@ class ProfilesClient(profilesService: ProfilesService) {
       Some(
         ChronoParams(
           limit = pageSize,
-          direction = desc,
+          direction = direction,
           cursor = cursor
         )
       )

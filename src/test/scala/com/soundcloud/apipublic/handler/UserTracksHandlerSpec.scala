@@ -12,7 +12,8 @@ import com.soundcloud.apipublic.test.{HandlerSpecificationScope, UnitSpecificati
 import com.twitter.finagle.http.{Request, Status}
 import com.twitter.util.Future
 import org.joda.time.DateTimeZone
-import org.mockito.Mockito.when
+import org.mockito.Mockito.{verify, when}
+import proto.soundcloud.profiles.api.ChronoDirection
 
 import java.util.TimeZone
 
@@ -45,7 +46,11 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationSp
 
       def paginationParams(path: String): CursorBasedPagination = {
         val mockRequest = Request(path)
-        CursorBasedPagination.build("localhost", mockRequest, Seq("linked_partitioning"))
+        CursorBasedPagination.build(
+          "localhost",
+          mockRequest,
+          Seq("linked_partitioning", "access", "sort", "direction", "order")
+        )
 
       }
 
@@ -53,9 +58,10 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationSp
           user: Urn,
           path: String,
           collection: Collection[TrackRepresentation],
-          access: AccessParams = AccessParams.defaultAccess
+          access: AccessParams = AccessParams.defaultAccess,
+          direction: ChronoDirection = ChronoDirection.desc
       ) = {
-        when(userTracksService.userTracks(session, user, access, paginationParams(path)))
+        when(userTracksService.userTracks(session, user, access, paginationParams(path), direction))
           .thenReturn(Future.value(collection))
       }
     }
@@ -80,6 +86,24 @@ class UserTracksHandlerSpec extends UnitSpecification with TrackRepresentationSp
           response.headerMap.get("Cache-Control").get === "public, max-age=60, must-revalidate"
           response.contentString ==== expectedResponse
         }
+      }
+
+      "passes sort=asc to the service" in new TracksForUserContext with SuccessfulResponse {
+        val user = Urn("soundcloud", "users", "7110")
+        val path = s"/users/7110/tracks?sort=asc&linked_partitioning=true"
+
+        stubService(user, path, tracksCollection, direction = ChronoDirection.asc)
+
+        val response = get(path)
+        response.status ==== Status.Ok
+
+        verify(userTracksService).userTracks(
+          session,
+          user,
+          AccessParams.defaultAccess,
+          paginationParams(path),
+          ChronoDirection.asc
+        )
       }
     }
 

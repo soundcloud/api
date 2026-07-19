@@ -12,6 +12,7 @@ import com.soundcloud.apipublic.support.ErrorResponse
 import com.soundcloud.apipublic.support.UserUrnUtil.getUserUrn
 import com.twitter.finagle.http.Response
 import com.twitter.util.{Future, Return, Throw, Try}
+import proto.soundcloud.profiles.api.ChronoDirection
 
 class UserTracksHandler(
     userAuthentication: UserAuthentication,
@@ -42,15 +43,32 @@ class UserTracksHandler(
       isPrivate: Boolean
   ): Future[Response] = {
     val hasLinkedPartitioning = req.params.contains("linked_partitioning")
-    val pagination = CursorBasedPagination.build(baseUrl, req, Seq("linked_partitioning", "access"))
+    val pagination = CursorBasedPagination.build(
+      baseUrl,
+      req,
+      Seq("linked_partitioning", "access", "sort", "direction", "order")
+    )
+    val direction = chronoDirectionParam(req)
 
     Try(getUserUrn(userId)) match {
       case Return(urn) =>
         val tracksCollection = userTracksService
-          .userTracks(session, urn, access, pagination)
+          .userTracks(session, urn, access, pagination, direction)
           .map(Good(_))
         CollectionResponse.handleCollectionResponse(tracksCollection, hasLinkedPartitioning, isPrivate)
       case Throw(e) => Future.value(ErrorResponse.badRequest(e.getMessage))
     }
   }
+
+  private def chronoDirectionParam(req: HandlerRequest): ChronoDirection =
+    req.params
+      .get("sort")
+      .orElse(req.params.get("direction"))
+      .orElse(req.params.get("order"))
+      .flatMap {
+        case "asc" => Some(ChronoDirection.asc)
+        case "desc" => Some(ChronoDirection.desc)
+        case _ => None
+      }
+      .getOrElse(ChronoDirection.desc)
 }

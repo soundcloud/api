@@ -48,6 +48,33 @@ class ProfilesClientSpec extends UnitSpecification with Mockito {
       )
   }
 
+  "fetches tracks uploaded by user in ascending order" in new Context {
+    val request = GetTracksChronoRequest(
+      Some(protoSession),
+      userUrn.toString,
+      Some(
+        ChronoParams(
+          limit = limit,
+          direction = ChronoDirection.asc,
+          cursor = cursor
+        )
+      )
+    )
+    val response = ChronoResponse(
+      Seq(ChronoItem(trackUrn2.toString), ChronoItem(trackUrn1.toString))
+    )
+    doReturn(Future.value(response)).when(profilesService).getTracksChrono(request)
+    Await
+      .result(
+        profilesClient.fetchTracksUploadedByUserFromProfiles(session, userUrn, limit, cursor, ChronoDirection.asc)
+      )
+      .items ====
+      Seq(
+        ChronoItem(trackUrn2.toString),
+        ChronoItem(trackUrn1.toString)
+      )
+  }
+
   "resolves permalink to urn" in new Context {
     val permalink = "https://soundcloud.com/some-user/some-track"
     val response = ResolvePermalinkResponse(urn = Some(trackUrn1.toString))

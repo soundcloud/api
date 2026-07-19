@@ -9,7 +9,7 @@ import com.soundcloud.apipublic.service.pagination.CursorBasedPagination
 import com.soundcloud.apipublic.service.representation.collection.Collection
 import com.soundcloud.apipublic.service.trackrepresentation.{TrackRepresentation, TrackRepresentationsService}
 import com.twitter.util.Future
-import proto.soundcloud.profiles.api.ChronoItem
+import proto.soundcloud.profiles.api.{ChronoDirection, ChronoItem}
 
 class UserTracksService(
     trackRepresentationsService: TrackRepresentationsService,
@@ -20,14 +20,16 @@ class UserTracksService(
       session: UserSession,
       userUrn: Urn,
       access: AccessParams,
-      pagination: CursorBasedPagination
+      pagination: CursorBasedPagination,
+      direction: ChronoDirection = ChronoDirection.desc
   ): Future[Collection[TrackRepresentation]] = {
     for {
       userTracksResponse <- profilesClient.fetchTracksUploadedByUserFromProfiles(
         session,
         userUrn,
         pagination.pageSize,
-        pagination.cursor.getOrElse("")
+        pagination.cursor.getOrElse(""),
+        direction
       )
       enrichedTracks <- trackRepresentationsService.tracks(
         session,

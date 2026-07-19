@@ -1,7 +1,7 @@
 # API Public Release Notes
 
-## Follow rejection reason in the 422 response
+## Sort parameter for user tracks
 
-- **PUT /me/followings/{user_urn}** now returns a descriptive `message` in the 422 response when the follow is rejected — for example when the authenticated user has reached the maximum number of followings. Previously the response body carried an empty message.
+- **GET /users/{user_urn}/tracks** and **GET /me/tracks** now accept an optional `sort` query parameter (`asc` or `desc`) to control upload-date order. Newest-first (`desc`) remains the default. `direction` and `order` are accepted as aliases.
 
 <!--- Remove everything below and start over --->
