@@ -303,6 +303,7 @@ paths:
         - me
       parameters:
         - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sort'
         - $ref: '#/components/parameters/linked_partitioning'
       responses:
         '200':
@@ -908,6 +909,7 @@ paths:
         - $ref: '#/components/parameters/user_urn'
         - $ref: '#/components/parameters/access'
         - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sort'
         - $ref: '#/components/parameters/linked_partitioning'
       responses:
         '200':
@@ -1307,6 +1309,21 @@ components:
         Returns paginated collection of items (recommended, returning a list
         without pagination is deprecated and should not be used)
       example: true
+    sort:
+      in: query
+      name: sort
+      required: false
+      schema:
+        type: string
+        enum:
+          - asc
+          - desc
+        default: desc
+      description: >-
+        Sort order of tracks by upload date. `desc` returns newest tracks first;
+        `asc` returns oldest first. Also accepts `direction` or `order` as
+        aliases.
+      example: desc
     secret_token:
       in: query
       name: secret_token
