@@ -1,6 +1,5 @@
 package com.soundcloud.apipublic.service
 
-import com.google.protobuf.timestamp.Timestamp
 import com.soundcloud.apipublic.client.tracks.TrackRequest
 import com.soundcloud.apipublic.handler.support.requestParser.AccessParams
 import com.soundcloud.apipublic.service.pagination.CursorBasedPagination
@@ -18,7 +17,6 @@ import com.soundcloud.jvmkit.module.outcome.{
   NotValid,
   Outcome
 }
-import com.soundcloud.jvmkit.module.rollout.{Rollout, RolloutFeature}
 import com.soundcloud.jvmkit.module.twirp.proto.UserSessionOps._
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSession
@@ -29,8 +27,6 @@ import proto.soundcloud.likes.api.{
   ChronoDirection,
   ChronoParams,
   GetLikesByUserChronoRequest,
-  GetLikesByUserChronoResponse,
-  GetLikesChronoResponseItem,
   Collection => likesCollection,
   LikesClientProtobuf => LikesClient
 }
@@ -49,9 +45,6 @@ import proto.soundcloud.tracks.api.{
   LikesClientProtobuf => TrackLikesClientProtobuf
 }
 
-import java.time.format.DateTimeFormatter
-import java.time.{Instant, ZoneOffset}
-
 case class CreateLikeResponse()
 
 case class DeleteLikeResponse()
@@ -64,11 +57,8 @@ class LikesService(
     likesClient: LikesClient,
     v2LikesClient: v2LikesClient,
     tracksClient: TrackLikesClientProtobuf,
-    playlistsClient: PlaylistLikesClientProtobuf,
-    rollout: Rollout
+    playlistsClient: PlaylistLikesClientProtobuf
 ) {
-  private def useLikesV2RolloutFlag = RolloutFeature("likes-v2")
-
   def createTrackLike(
       session: UserSession,
       urn: Urn
@@ -152,7 +142,7 @@ class LikesService(
       access: AccessParams,
       pagination: CursorBasedPagination
   ): Future[Collection[TrackRepresentation]] = {
-    def toCollection(likesPage: GetLikesByUserChronoResponse): Future[Collection[TrackRepresentation]] = {
+    def toCollection(likesPage: v2ChronoResponse): Future[Collection[TrackRepresentation]] = {
       val trackRequests = likesPage.items.map(like => TrackRequest(Urn.parse(like.targetUrn).get, None)).toList
       for {
         enrichedTracks <- trackRepresentationsService.tracks(session, trackRequests, access)
@@ -165,36 +155,21 @@ class LikesService(
       }
     }
 
-    val request = GetLikesByUserChronoRequest(
-      userUrn = userUrn.toString,
-      chronoParams = Some(
-        ChronoParams(
-          direction = ChronoDirection.DESC,
-          limit = Some(pagination.pageSize),
-          cursor = pagination.cursor
-        )
-      ),
-      collections = Seq(likesCollection.TRACKS)
-    )
-
-    rollout.isActive(useLikesV2RolloutFlag).flatMap {
-      case true =>
-        getV2ChronoResponse(
-          request,
+    v2LikesClient
+      .getLikesByUserChrono(
+        v2GetLikesByUserChronoRequest(
+          userUrn.toString,
           Some(
             v2ChronoParams(
               direction = v2ChronoParams.Direction.DESC,
               limit = Some(pagination.pageSize),
               cursor = pagination.cursor
             )
-          )
-        ).flatMap(toCollection)
-
-      case false =>
-        likesClient
-          .getLikesByUserChrono(request)
-          .flatMap(toCollection)
-    }
+          ),
+          Seq(v2likesCollection.TRACKS)
+        )
+      )
+      .flatMap(toCollection)
   }
 
   def userPlaylistsLikes(
@@ -228,43 +203,4 @@ class LikesService(
     }
   }
 
-  private def getV2ChronoResponse(
-      request: GetLikesByUserChronoRequest,
-      v2ChronoParams: Option[v2ChronoParams]
-  ): Future[GetLikesByUserChronoResponse] = {
-    v2LikesClient
-      .getLikesByUserChrono(
-        v2GetLikesByUserChronoRequest(request.userUrn, v2ChronoParams, Seq(v2likesCollection.TRACKS))
-      )
-      .map(convertV2ChronoResponseToGetLikesByUserChronoResponse)
-  }
-
-  private def convertV2ChronoResponseToGetLikesByUserChronoResponse(
-      response: v2ChronoResponse
-  ): GetLikesByUserChronoResponse = {
-    val items = response.items.map { item =>
-      GetLikesChronoResponseItem(
-        timestamp = convertTimestampToString(item.timestamp),
-        `type` = item.`type`,
-        userUrn = item.userUrn,
-        targetUrn = item.targetUrn,
-        cursor = item.cursor
-      )
-    }
-    GetLikesByUserChronoResponse(items)
-  }
-
-  // We can receive timestamps with our without the milliseconds, and occasionally also with
-  // nanoseconds from likes v2 service. So formatting it to return a unified timestamp.
-  private val formatter: DateTimeFormatter =
-    DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").withZone(ZoneOffset.UTC)
-
-  private def convertTimestampToString(timestamp: Option[Timestamp]): String = {
-    val seconds = timestamp.fold(0L)(_.seconds)
-    val nanos = timestamp.fold(0)(_.nanos)
-
-    formatter.format(
-      Instant.ofEpochSecond(seconds, nanos)
-    )
-  }
 }

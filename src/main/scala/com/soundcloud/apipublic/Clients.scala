@@ -217,10 +217,8 @@ class Clients(
     )
 
   val likedTracksService = new LikedTracksService(
-    likesTwirpClient,
     v2LikesTwirpAWSClient,
-    exceptionCollector,
-    rolloutClient
+    exceptionCollector
   )
 
   val tracksService = new TrackRepresentationsService(
@@ -265,8 +263,7 @@ class Clients(
       likesTwirpClient,
       v2LikesTwirpAWSClient,
       likeTracksTwirpClient,
-      likesPlaylistsTwirpClient,
-      rolloutClient
+      likesPlaylistsTwirpClient
     )
   val userPlaylistsService = new UserPlaylistsService(playlistService, okidokiClient)
 

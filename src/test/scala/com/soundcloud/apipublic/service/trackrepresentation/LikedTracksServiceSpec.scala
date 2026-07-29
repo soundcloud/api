@@ -1,10 +1,10 @@
 package com.soundcloud.apipublic.service.trackrepresentation
 
 import com.soundcloud.apipublic.test.UnitSpecification
-import com.soundcloud.jvmkit.module.rollout.{Rollout, RolloutFeature}
 import com.soundcloud.jvmkit.module.telemetry.exceptions.ExceptionCollector
 import com.soundcloud.jvmkit.module.util.Urn
 import com.soundcloud.jvmkit.module.util.session.UserSessionBuilder
+import com.soundcloud.periskop.client.Severity.Info
 import com.twitter.util.{Await, Future}
 import org.mockito.Mockito.when
 import proto.soundcloud.likes.api.v2.{
@@ -12,18 +12,14 @@ import proto.soundcloud.likes.api.v2.{
   AreTargetsLikedByUserResponse,
   LikesService => v2LikesClientProtobuf
 }
-import proto.soundcloud.likes.api.{IsTargetLikedBatchRequest, IsTargetLikedBatchResponse, LikesClientProtobuf}
 
 class LikedTracksServiceSpec extends UnitSpecification {
-  private def likesV2Rollout = RolloutFeature("likes-v2")
   trait Context extends Scope {
-    val likesService = smartMock[LikesClientProtobuf]
     val v2likesService = mock[v2LikesClientProtobuf]
     val exceptionCollector = mock[ExceptionCollector]
-    val rollout = mock[Rollout]
 
     val service =
-      new LikedTracksService(likesService, v2likesService, exceptionCollector, rollout, 2)
+      new LikedTracksService(v2likesService, exceptionCollector, 2)
 
     val trackUrn1 = Urn("soundcloud", "tracks", "1")
     val trackUrn2 = Urn("soundcloud", "tracks", "2")
@@ -31,21 +27,6 @@ class LikedTracksServiceSpec extends UnitSpecification {
     lazy val userUrn = Urn("soundcloud", "users", "1")
     lazy val session = new UserSessionBuilder().setUser(userUrn).build()
     val trackUrns = Seq(trackUrn1, trackUrn2, trackUrn3)
-    def mockLikes(tracksRequest: Seq[String], tracksResponse: Seq[String]) =
-      when(
-        likesService.isTargetLikedBatch(
-          IsTargetLikedBatchRequest(
-            sourceUrn = userUrn.toString,
-            targetUrns = tracksRequest
-          )
-        )
-      ).thenReturn(
-        Future.value(
-          IsTargetLikedBatchResponse(
-            tracksResponse
-          )
-        )
-      )
 
     def mockLikesV2(tracksRequest: Seq[String], tracksResponse: Seq[String]) =
       when(
@@ -66,27 +47,8 @@ class LikedTracksServiceSpec extends UnitSpecification {
     lazy val result = Await.result(service.getLikedTracks(session, trackUrns))
   }
 
-  trait RolloutV2EnabledContext extends Context {
-    rollout.isActive(likesV2Rollout) returns Future.value(true)
-  }
-
-  trait RolloutV2DisabledContext extends Context {
-    rollout.isActive(likesV2Rollout) returns Future.value(false)
-  }
-
   "getLikedTracks" >> {
-    "returns a map with the tracks that are liked and not liked by the user" in new Context
-      with RolloutV2DisabledContext {
-      mockLikes(Seq(trackUrn1.toString, trackUrn2.toString), Seq(trackUrn1.toString))
-      mockLikes(Seq(trackUrn3.toString), Seq.empty)
-
-      result ==== Map(trackUrn1 -> true, trackUrn2 -> false, trackUrn3 -> false)
-      there was no(v2likesService).areTargetsLikedByUser(any)
-    }
-
-    "use likesV2Client when rollout is active" in new Context with RolloutV2EnabledContext {
-      mockLikes(Seq(trackUrn1.toString, trackUrn2.toString), Seq(trackUrn1.toString))
-      mockLikes(Seq(trackUrn3.toString), Seq.empty)
+    "returns a map with the tracks that are liked and not liked by the user" in new Context {
       mockLikesV2(Seq(trackUrn1.toString, trackUrn2.toString), Seq(trackUrn1.toString))
       mockLikesV2(Seq(trackUrn3.toString), Seq.empty)
 
@@ -100,27 +62,32 @@ class LikedTracksServiceSpec extends UnitSpecification {
       )
     }
 
-    "returns an empty map if there is the session is anonymous" in new Context with RolloutV2DisabledContext {
+    "returns an empty map if there is the session is anonymous" in new Context {
       override lazy val session = new UserSessionBuilder().build()
 
       result ==== Map.empty
-      there was no(likesService).isTargetLikedBatch(any)
+      there was no(v2likesService).areTargetsLikedByUser(any)
     }
 
-    "returns an empty map if likes request fails and reports the exception" in new Context
-      with RolloutV2DisabledContext {
-      when(likesService.isTargetLikedBatch(any)).thenReturn(Future.exception(new RuntimeException("request failed")))
+    "returns an all-false map if likes request fails and reports the exception" in new Context {
+      when(v2likesService.areTargetsLikedByUser(any))
+        .thenReturn(Future.exception(new RuntimeException("request failed")))
 
-      result ==== Map.empty
-      there were two(exceptionCollector).add(any, any, any, any)
+      result ==== Map(trackUrn1 -> false, trackUrn2 -> false, trackUrn3 -> false)
+      there were two(exceptionCollector).addMessage(
+        "v2likes_areTargetsLikedByUser",
+        "error fetching from likes v2",
+        Info,
+        collectRequestBody = true
+      )
     }
 
-    "batches the requests to likes" in new Context with RolloutV2DisabledContext {
-      mockLikes(Seq(trackUrn1.toString, trackUrn2.toString), Seq.empty)
-      mockLikes(Seq(trackUrn3.toString), Seq(trackUrn3.toString))
+    "batches the requests to likes" in new Context {
+      mockLikesV2(Seq(trackUrn1.toString, trackUrn2.toString), Seq.empty)
+      mockLikesV2(Seq(trackUrn3.toString), Seq(trackUrn3.toString))
 
       result ==== Map(trackUrn1 -> false, trackUrn2 -> false, trackUrn3 -> true)
-      there were two(likesService).isTargetLikedBatch(any)
+      there were two(v2likesService).areTargetsLikedByUser(any)
     }
   }
 }
