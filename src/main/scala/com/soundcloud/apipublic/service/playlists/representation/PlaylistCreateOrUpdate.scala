@@ -38,7 +38,7 @@ case class PlaylistCreateOrUpdate(
       purchaseUrl = mapNullableStringToOption(this.purchase_url),
       release = mapNullableStringToOption(this.release),
       releaseDate = mapNullableStringToOption(this.release_date),
-      setType = mapNullableStringToOption(this.set_type),
+      setType = mapSetTypeToOption(this.set_type),
       tagList = mapNullableStringToOption(this.tag_list),
       title = mapNullableStringToOption(this.title),
       tracks = this.tracks match {
@@ -69,6 +69,13 @@ case class PlaylistCreateOrUpdate(
       case Value(value) => Some(value)
       case NullValue => Some("")
       case MissingValue => None
+    }
+  }
+
+  private def mapSetTypeToOption(nullableValue: NullableValue[String]): Option[String] = {
+    nullableValue match {
+      case Value(v) if "playlist".equalsIgnoreCase(v) => Some("")
+      case other => mapNullableStringToOption(other)
     }
   }
 

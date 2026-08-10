@@ -1,7 +1,7 @@
 # API Public Release Notes
 
-## Sort parameter for user tracks
+## Playlist creation accepts documented `set_type=playlist`
 
-- **GET /users/{user_urn}/tracks** and **GET /me/tracks** now accept an optional `sort` query parameter (`asc` or `desc`) to control upload-date order. Newest-first (`desc`) remains the default. `direction` and `order` are accepted as aliases.
+- **POST /playlists**, **POST /me/playlists**, and playlist update endpoints now accept `set_type=playlist` as documented. 
 
 <!--- Remove everything below and start over --->

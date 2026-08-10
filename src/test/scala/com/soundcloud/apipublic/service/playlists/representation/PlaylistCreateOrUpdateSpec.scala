@@ -55,6 +55,20 @@ class PlaylistCreateOrUpdateSpec extends Specification {
       result mustEqual ProtoPlaylistCreateOrUpdate()
     }
 
+    "maps set_type to empty string in proto when set_type is playlist (case-insensitive)" in new Scope {
+      PlaylistCreateOrUpdate(title = Value("title"), set_type = Value("playlist")).toProto.setType must beSome("")
+      PlaylistCreateOrUpdate(title = Value("title"), set_type = Value("PLAYLIST")).toProto.setType must beSome("")
+    }
+
+    "passes set_type album through to proto" in new Scope {
+      val playlistCreateOrUpdate = PlaylistCreateOrUpdate(
+        title = Value("title"),
+        set_type = Value("album")
+      )
+
+      playlistCreateOrUpdate.toProto.setType must beSome("album")
+    }
+
     "correctly maps null values to proto" in new Scope {
       val playlistCreateOrUpdate = PlaylistCreateOrUpdate(
         description = NullValue,
