@@ -69,3 +69,6 @@ properties:
         description: When false (quiet mode), comments are hidden.
       isrc:
         type: string
+      metadata_artist:
+        type: string
+        description: Optional artist name, when different from user. Use this field in JSON PUT requests (or track[metadata_artist] in multipart PUT requests); use track[artist] in multipart POST uploads.

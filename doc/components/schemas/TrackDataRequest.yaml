@@ -2,6 +2,9 @@ type: object
 properties:
   track[title]:
     type: string
+  track[artist]:
+    type: string
+    description: Optional artist name for the track. Returned as metadata_artist in track responses. Do not use track[metadata_artist] on upload.
   track[asset_data]:
     title: Only for uploading
     type: string
