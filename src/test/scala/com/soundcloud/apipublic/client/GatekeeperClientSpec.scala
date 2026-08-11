@@ -16,11 +16,12 @@ class GatekeeperClientSpec extends UnitSpecification {
     implicit val session = mock[UserSession]
     val client = new GatekeeperClient(service)
     val userId = 123
+    val userUrn = Urn("soundcloud", "users", userId.toString)
     val featureName = "featureName"
   }
 
   trait LoggedInUserContext extends Context {
-    session.getUser returns Urn("soundcloud", "users", userId.toString)
+    session.getUser returns userUrn
     session.isAnonymous returns false
   }
 
@@ -28,6 +29,14 @@ class GatekeeperClientSpec extends UnitSpecification {
     session.getUser returns null
     session.isAnonymous returns true
   }
+
+  def featureResponse(features: String*) =
+    Future(
+      JsonResponseBuilder()
+        .status(Status.Ok)
+        .body(JsArray(features.map(JsString.apply)).toString)
+        .build
+    )
 
   "#featuresFor" >> {
     "returns list of feature names for current logged in user" in new LoggedInUserContext {
@@ -54,39 +63,33 @@ class GatekeeperClientSpec extends UnitSpecification {
   }
 
   "#isFeatureAccessible" >> {
-    "returns true for 200 when accessible for current logged in user" in new LoggedInUserContext {
-      service.head(session, Path() / "users" / userId / "features" / featureName, Params.empty, Headers.empty, None) returns
-        Future(JsonResponseBuilder().status(Status.Ok).build)
+    "returns true when the feature is listed for the current logged in user" in new LoggedInUserContext {
+      service.getWithSession(session, Path() / "users" / userUrn.toString / "features", Params.empty, Headers.empty) returns
+        featureResponse("otherFeature", featureName)
+
       Await.result(client.isFeatureAccessible(session, featureName)) ==== true
+
+      there was no(service).head(any, any, any, any, any)
     }
 
-    "returns false for 404 when not accessible for current logged in user" in new LoggedInUserContext {
-      service.head(session, Path() / "users" / userId / "features" / featureName, Params.empty, Headers.empty, None) returns
-        Future(JsonResponseBuilder().status(Status.NotFound).build)
+    "returns false when the feature is not listed for the current logged in user" in new LoggedInUserContext {
+      service.getWithSession(session, Path() / "users" / userUrn.toString / "features", Params.empty, Headers.empty) returns
+        featureResponse("otherFeature")
+
       Await.result(client.isFeatureAccessible(session, featureName)) ==== false
     }
 
-    "returns true for 200 when accessible for anonymous session" in new AnonymousUserContext {
-      service.head(
-        session,
-        Path() / "users" / "anonymous" / "features" / featureName,
-        Params.empty,
-        Headers.empty,
-        None
-      ) returns
-        Future(JsonResponseBuilder().status(Status.Ok).build)
+    "returns true when the feature is listed for an anonymous session" in new AnonymousUserContext {
+      service.getWithSession(session, Path() / "users" / "anonymous" / "features", Params.empty, Headers.empty) returns
+        featureResponse(featureName)
+
       Await.result(client.isFeatureAccessible(session, featureName)) ==== true
     }
 
-    "returns false for 404 when not accessible for anonymous session" in new AnonymousUserContext {
-      service.head(
-        session,
-        Path() / "users" / "anonymous" / "features" / featureName,
-        Params.empty,
-        Headers.empty,
-        None
-      ) returns
-        Future(JsonResponseBuilder().status(Status.NotFound).build)
+    "returns false when the feature is not listed for an anonymous session" in new AnonymousUserContext {
+      service.getWithSession(session, Path() / "users" / "anonymous" / "features", Params.empty, Headers.empty) returns
+        featureResponse("otherFeature")
+
       Await.result(client.isFeatureAccessible(session, featureName)) ==== false
     }
   }

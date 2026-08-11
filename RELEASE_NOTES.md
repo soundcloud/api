@@ -1,7 +1,7 @@
 # API Public Release Notes
 
-## Playlist creation accepts documented `set_type=playlist`
+## Fixed track storefront updates
 
-- **POST /playlists**, **POST /me/playlists**, and playlist update endpoints now accept `set_type=playlist` as documented. 
+- Fixed an issue that prevented eligible creators from updating track storefronts.
 
 <!--- Remove everything below and start over --->
