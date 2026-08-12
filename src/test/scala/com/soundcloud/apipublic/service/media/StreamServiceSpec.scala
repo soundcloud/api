@@ -284,28 +284,25 @@ class StreamServiceSpec extends UnitSpecification {
     "existing track with new trancodings two bitrates: returns multiple stream urls and one snippet url" in new Context {
       override lazy val transcodings: List[Transcoding] =
         List(mp3ProgressiveAndHlsTranscoding, aac160kTranscoding, aac96kTranscoding)
-      val a = "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/http"
       val b = "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/hls"
       val aac160k = "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/aac-160-uuid/hls"
       val aac96k = "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/aac-96-uuid/hls"
       val f = "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/http-preview"
 
       tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns (Future.value(
-        GetMediaStreamResponse(a, "audio/mpeg")
+        GetMediaStreamResponse(b, "audio/mpeg")
       ),
-      Future.value(GetMediaStreamResponse(b, "audio/mpeg")),
       Future.value(GetMediaStreamResponse(aac160k, """audio/mp4; codecs="mp4a.40.2"""")),
       Future.value(GetMediaStreamResponse(aac96k, """audio/mp4; codecs="mp4a.40.2"""")))
 
       val result = Await.result(service.fetchTranscodingUrls(session, trackUrn, secretToken))
-      result ==== MediaStreamUrls(Some(a), Some(b), Some(aac96k), Some(aac160k), Some(f)).good
+      result ==== MediaStreamUrls(Some(b), Some(aac96k), Some(aac160k), Some(f)).good
     }
 
     "existing track with new trancodings two bitrates: returns multiple stream urls and one snippet url and keeps secret" in new Context {
       override lazy val secretToken: Option[String] = Some("secret")
       override lazy val transcodings: List[Transcoding] =
         List(mp3ProgressiveAndHlsTranscoding, aac160kTranscoding, aac96kTranscoding)
-      val a = "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/http?secret_token=secret"
       val b = "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/hls?secret_token=secret"
       val aac160k =
         "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/aac-160-uuid/hls?secret_token=secret"
@@ -315,65 +312,58 @@ class StreamServiceSpec extends UnitSpecification {
         "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/http-preview?secret_token=secret"
 
       tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns (Future.value(
-        GetMediaStreamResponse(a, "audio/mpeg")
+        GetMediaStreamResponse(b, "audio/mpeg")
       ),
-      Future.value(GetMediaStreamResponse(b, "audio/mpeg")),
       Future.value(GetMediaStreamResponse(aac160k, """audio/mp4; codecs="mp4a.40.2"""")),
       Future.value(GetMediaStreamResponse(aac96k, """audio/mp4; codecs="mp4a.40.2"""")))
 
       val result = Await.result(service.fetchTranscodingUrls(session, trackUrn, secretToken))
-      result ==== MediaStreamUrls(Some(a), Some(b), Some(aac96k), Some(aac160k), Some(f)).good
+      result ==== MediaStreamUrls(Some(b), Some(aac96k), Some(aac160k), Some(f)).good
     }
 
     "existing track with new trancodings with 160k bitrate only: returns multiple stream urls and one snippet url" in new Context {
       override lazy val transcodings: List[Transcoding] =
         List(mp3ProgressiveAndHlsTranscoding, aac160kTranscoding)
-      val a = "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/http"
       val b = "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/hls"
       val aac160k = "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/aac-160-uuid/hls"
       val f = "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/http-preview"
 
       tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns (Future.value(
-        GetMediaStreamResponse(a, "audio/mpeg")
+        GetMediaStreamResponse(b, "audio/mpeg")
       ),
-      Future.value(GetMediaStreamResponse(b, "audio/mpeg")),
       Future.value(GetMediaStreamResponse(aac160k, """audio/mp4; codecs="mp4a.40.2"""")))
 
       val result = Await.result(service.fetchTranscodingUrls(session, trackUrn, secretToken))
-      result ==== MediaStreamUrls(Some(a), Some(b), None, Some(aac160k), Some(f)).good
+      result ==== MediaStreamUrls(Some(b), None, Some(aac160k), Some(f)).good
     }
 
     "existing track with new trancodings wtih 96k bitrate only: returns multiple stream urls and one snippet url" in new Context {
       override lazy val transcodings: List[Transcoding] =
         List(mp3ProgressiveAndHlsTranscoding, aac96kTranscoding)
-      val a = "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/http"
       val b = "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/hls"
       val aac96k = "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/aac-96-uuid/hls"
       val f = "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/http-preview"
 
       tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns (Future.value(
-        GetMediaStreamResponse(a, "audio/mpeg")
+        GetMediaStreamResponse(b, "audio/mpeg")
       ),
-      Future.value(GetMediaStreamResponse(b, "audio/mpeg")),
       Future.value(GetMediaStreamResponse(aac96k, """audio/mp4; codecs="mp4a.40.2"""")))
 
       val result = Await.result(service.fetchTranscodingUrls(session, trackUrn, secretToken))
-      result ==== MediaStreamUrls(Some(a), Some(b), Some(aac96k), None, Some(f)).good
+      result ==== MediaStreamUrls(Some(b), Some(aac96k), None, Some(f)).good
     }
 
     "existing track without new transcodings: returns multiple stream urls and one snippet url" in new Context {
       override lazy val transcodings: List[Transcoding] = List(mp3ProgressiveAndHlsTranscoding)
-      val a = "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/http"
       val b = "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/hls"
       val f = "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/http-preview"
 
-      tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns (Future.value(
-        GetMediaStreamResponse(a, "audio/mpeg")
-      ),
-      Future.value(GetMediaStreamResponse(b, "audio/mpeg")))
+      tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns Future.value(
+        GetMediaStreamResponse(b, "audio/mpeg")
+      )
 
       val result = Await.result(service.fetchTranscodingUrls(session, trackUrn, secretToken))
-      result ==== MediaStreamUrls(Some(a), Some(b), None, None, Some(f)).good
+      result ==== MediaStreamUrls(Some(b), None, None, Some(f)).good
     }
 
     "track with legacy hls transcodings and two bitrates: returns multiple stream urls and one snippet url" in new Context {
@@ -390,7 +380,7 @@ class StreamServiceSpec extends UnitSpecification {
       )
 
       val result = Await.result(service.fetchTranscodingUrls(session, trackUrn, secretToken))
-      result ==== MediaStreamUrls(None, Some(b), Some(aac96k), Some(aac160k), Some(f)).good
+      result ==== MediaStreamUrls(Some(b), Some(aac96k), Some(aac160k), Some(f)).good
     }
 
     // Question: How to provide preview URLs when we have only aac
@@ -405,7 +395,7 @@ class StreamServiceSpec extends UnitSpecification {
       )
 
       val result = Await.result(service.fetchTranscodingUrls(session, trackUrn, secretToken))
-      result ==== MediaStreamUrls(None, None, Some(aac96k), Some(aac160k), None).good
+      result ==== MediaStreamUrls(None, Some(aac96k), Some(aac160k)).good
     }
 
     "new track without legacy transcodings and 160k bitrate only: returns multiple stream urls and one snippet url" in new Context {
@@ -417,7 +407,7 @@ class StreamServiceSpec extends UnitSpecification {
       )
 
       val result = Await.result(service.fetchTranscodingUrls(session, trackUrn, secretToken))
-      result ==== MediaStreamUrls(None, None, None, Some(aac160k), None).good
+      result ==== MediaStreamUrls(None, None, Some(aac160k)).good
     }
 
     "new track without legacy transcodings and 96k bitrate only: returns multiple stream urls and one snippet url" in new Context {
@@ -429,24 +419,23 @@ class StreamServiceSpec extends UnitSpecification {
       )
 
       val result = Await.result(service.fetchTranscodingUrls(session, trackUrn, secretToken))
-      result ==== MediaStreamUrls(None, None, Some(aac96k), None, None).good
+      result ==== MediaStreamUrls(None, Some(aac96k), None).good
     }
 
-    "returns multiple snippet urls if policy is SNIP" in new Context {
+    "returns HLS snippet url if policy is SNIP" in new Context {
       override lazy val policy = ContentPolicy.SNIP
-      val a = "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/http-preview"
       val b = "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/hls-preview"
+      val f = "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/http-preview"
 
       tracksMediaTwirpClient.getMediaPreview(any[GetMediaStreamRequest]) returns (
-        Future.value(GetMediaStreamResponse(a, "audio/mpeg")),
         Future.value(GetMediaStreamResponse(b, "audio/mpeg"))
       )
 
       val result: Outcome[MediaStreamUrls] = Await.result(service.fetchTranscodingUrls(session, trackUrn, secretToken))
       result match {
         case Good(urls) =>
-          urls.httpMp3 ==== Some(a)
           urls.hlsMp3 ==== Some(b)
+          urls.httpPreviewMp3 ==== Some(f)
         case Bad(_) =>
           failure("Expected Good result")
       }
@@ -471,23 +460,21 @@ class StreamServiceSpec extends UnitSpecification {
 
       val result: Outcome[MediaStreamUrls] = Await.result(service.fetchTranscodingUrls(session, trackUrn, secretToken))
       result ====
-        MediaStreamUrls(None, None, None, None, Some(a)).good
+        MediaStreamUrls(None, None, None, Some(a)).good
     }
 
-    "returns only MP3 urls if Opus transcoding is missing" in new Context {
+    "returns only MP3 HLS url if Opus transcoding is missing" in new Context {
       override lazy val transcodings = List(mp3ProgressiveAndHlsTranscoding)
 
-      val a = "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/http"
       val b = "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/hls"
       val c = "https://api-test.soundcloud.com/tracks/soundcloud:tracks:2/streams/mp3-uuid/http-preview"
 
-      tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns (Future.value(
-        GetMediaStreamResponse(a, "audio/mpeg")
-      ),
-      Future.value(GetMediaStreamResponse(b, "audio/mpeg")))
+      tracksMediaTwirpClient.getMediaStream(any[GetMediaStreamRequest]) returns Future.value(
+        GetMediaStreamResponse(b, "audio/mpeg")
+      )
 
       val result = Await.result(service.fetchTranscodingUrls(session, trackUrn, secretToken))
-      result ==== MediaStreamUrls(Some(a), Some(b), None, None, Some(c)).good
+      result ==== MediaStreamUrls(Some(b), None, None, Some(c)).good
     }
   }
 

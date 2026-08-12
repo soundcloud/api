@@ -1,5 +1,4 @@
 value:
-  http_mp3_128_url: https://api.soundcloud.com/tracks/urn/streams/uuid/
   hls_aac_160_url: https://api.soundcloud.com/tracks/urn/streams/uuid/
   hls_mp3_128_url: https://api.soundcloud.com/tracks/urn/streams/uuid/
   preview_mp3_128_url: https://api.soundcloud.com/tracks/urn/streams/uuid/

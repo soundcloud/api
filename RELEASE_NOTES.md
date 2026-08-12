@@ -1,7 +1,7 @@
 # API Public Release Notes
 
-## Fixed track storefront updates
+## Progressive download URL removed from GET /tracks/{track_urn}/streams
 
-- Fixed an issue that prevented eligible creators from updating track storefronts.
+- **GET /tracks/{track_urn}/streams** no longer returns `http_mp3_128_url`. HLS stream URLs and `preview_mp3_128_url` (for snippets) are unchanged.
 
 <!--- Remove everything below and start over --->

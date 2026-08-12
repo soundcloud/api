@@ -101,7 +101,6 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
         s"${method.toString} $path" in new MediaServiceContext {
           streamService.fetchTranscodingUrls(session, trackUrn, None) returns Future.value(
             MediaStreamUrls(
-              Some(httpMp3),
               Some(hlsMp3),
               Some(aac96k),
               Some(aac160k),
@@ -114,7 +113,6 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
           response.statusCode ==== 200
           if (method == Method.Get) {
             Json.parse(response.getContentString) ==== Json.obj(
-              "http_mp3_128_url" -> httpMp3,
               "hls_aac_160_url" -> aac160k,
               "hls_aac_96k_url" -> aac96k,
               "hls_mp3_128_url" -> hlsMp3,
@@ -126,7 +124,7 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
 
     "does not records access to just streams" in new MediaServiceContext {
       streamService.fetchTranscodingUrls(session, trackUrn, None) returns Future.value(
-        MediaStreamUrls(Some(httpMp3), Some(hlsMp3), Some(aac96k), Some(aac160k), Some(httpPreviewMp3)).good
+        MediaStreamUrls(Some(hlsMp3), Some(aac96k), Some(aac160k), Some(httpPreviewMp3)).good
       )
 
       get("/tracks/soundcloud:tracks:5/streams")
@@ -158,17 +156,14 @@ class TrackStreamsHandlerSpec extends UnitSpecification {
     "for /streams" >> {
       trait WithoutSecretTokenContext extends MediaServiceContext {
         streamService.fetchTranscodingUrls(session, trackUrn, None) returns Future.value(
-          MediaStreamUrls(
-            httpMp3 = Some(httpMp3),
-            hlsMp3 = Some(hlsMp3)
-          ).good
+          MediaStreamUrls(hlsMp3 = Some(hlsMp3)).good
         )
       }
 
       s"should return 200" in new WithoutSecretTokenContext {
         val resp = get(s"/tracks/${trackUrn.toString}/streams")
         resp.status ==== Status.Ok
-        resp.contentString ==== "{\"http_mp3_128_url\":\"http://mp3-progressive\",\"hls_mp3_128_url\":\"http://mp3-hls\"}"
+        resp.contentString ==== "{\"hls_mp3_128_url\":\"http://mp3-hls\"}"
       }
     }
   }

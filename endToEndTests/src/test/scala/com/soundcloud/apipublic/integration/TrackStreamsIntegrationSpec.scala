@@ -15,28 +15,18 @@ class TrackStreamsIntegrationSpec extends IntegrationTest {
 
       response.status === 200
 
-      (response.json \ "http_mp3_128_url").as[String] mustEqual "https://api.soundcloud.com/tracks/soundcloud:tracks:405325995/streams/4bb26bce-8ade-4a47-91e0-6134582c1c10/http"
+      (response.json \ "http_mp3_128_url").asOpt[String] must beNone
       (response.json \ "hls_mp3_128_url").as[String] mustNotEqual empty
       (response.json \ "preview_mp3_128_url").as[String] mustEqual "https://api.soundcloud.com/tracks/soundcloud:tracks:405325995/streams/4bb26bce-8ade-4a47-91e0-6134582c1c10/http-preview"
       (response.json \ "hls_aac_160_url").as[String] mustEqual "https://api.soundcloud.com/tracks/soundcloud:tracks:405325995/streams/9dbd6985-4bc9-475b-85c3-8d70a0282ca9/hls"
 
     }
 
-    "should return URLs for a high-tier track" in new TrackStreamContext {
+    "should not return progressive download URL for a high-tier track" in new TrackStreamContext {
       val response = server.get(path(highTierTrackId), authenticatedUSHeaders)
 
       response.status === 200
-
-      val json = response.json
-      (json \ "preview_mp3_128_url").asOpt[String] must beSome.which(_ must contain("http-preview"))
-
-      (json \ "http_mp3_128_url").asOpt[String] match {
-        case Some(httpMp3) =>
-          httpMp3 must contain("http-preview")
-          (json \ "hls_mp3_128_url").asOpt[String] must beSome.which(_ mustNotEqual empty)
-        case None =>
-          ok
-      }
+      (response.json \ "http_mp3_128_url").asOpt[String] must beNone
     }
 
     "should return an error for a track with api_streamable=false" in new TrackStreamContext {

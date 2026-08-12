@@ -66,9 +66,9 @@ class StreamService(
     streamNotAllowed(track) || track.access.contains(Access.Preview)
 
   /**
-    * Supply-chain catalogue tracks keep only `preview_mp3_128_url` on GET /streams — not `http_mp3_128_url` / AAC HLS
-    * fields (those suggest full stream tiers). Other Preview access (e.g. high tier) still receives the multi-field
-    * response with snippet endpoints on each URL field; SNIP behaves the same way.
+    * Supply-chain catalogue tracks keep only `preview_mp3_128_url` on GET /streams — not full AAC HLS fields (those
+    * suggest full stream tiers). Other Preview access (e.g. high tier) still receives the multi-field response with
+    * snippet endpoints on each URL field; SNIP behaves the same way.
     */
   private def listResponsesWithOnlyPartialPreviewField(track: VisibleTrack): Boolean =
     track.supplyChainStatus.exists(_ == TrackVisibilityService.SUPPLY_CHAIN_STATUS_SUPPLY_CHAIN)
@@ -126,8 +126,6 @@ class StreamService(
   }
 
   private def fetchTranscodingUrls(track: VisibleTrack): Future[MediaStreamUrls] = {
-    val progressiveProtocol =
-      if (usePreviewOnlyStreamEndpoints(track)) PROTOCOL_PREVIEW_PROGRESSIVE else PROTOCOL_PROGRESSIVE
     val hlsProtocol = if (usePreviewOnlyStreamEndpoints(track)) PROTOCOL_PREVIEW_HLS else PROTOCOL_HLS
     val secretTokenParam = if (track.secretToken.isDefined) s"?secret_token=${track.secretToken.get}" else ""
 
@@ -145,14 +143,8 @@ class StreamService(
             protocol.forall(t.protocols.contains) &&
             preset.forall(t.preset == _)
         )
-        .map(t =>
-          buildStreamUrl(
-            t,
-            if (protocol.contains(protoProgressive)) progressiveProtocol else hlsProtocol
-          )
-        )
+        .map(t => buildStreamUrl(t, hlsProtocol))
 
-    val httpStream = findTranscoding(mp3MimeType, Some(protoProgressive))
     val legacyHlsStream = findTranscoding(mp3MimeType, Some(protoHls))
     val hls160kStream = findTranscoding(aacMimeType, preset = Some(aac160kPreset))
     val hls96kStream = findTranscoding(aacMimeType, preset = Some(aac96kPreset))
@@ -163,7 +155,6 @@ class StreamService(
     val urls =
       if (listResponsesWithOnlyPartialPreviewField(track))
         MediaStreamUrls(
-          httpMp3 = None,
           hlsMp3 = None,
           hlsAac96k = None,
           hlsAac160k = None,
@@ -171,11 +162,10 @@ class StreamService(
         )
       else
         MediaStreamUrls(
-          httpStream,
           legacyHlsStream,
           hls96kStream,
           hls160kStream,
-          mp3Preview
+          httpPreviewMp3 = mp3Preview
         )
 
     Future.value(urls)
