@@ -2761,9 +2761,6 @@ components:
       properties:
         hls_aac_160_url:
           type: string
-        http_mp3_128_url:
-          type: string
-          deprecated: true
         hls_mp3_128_url:
           type: string
         preview_mp3_128_url:
@@ -3123,7 +3120,6 @@ components:
         $ref: '#/components/examples/Playlist/value'
     Streams:
       value:
-        http_mp3_128_url: 'https://api.soundcloud.com/tracks/urn/streams/uuid/'
         hls_aac_160_url: 'https://api.soundcloud.com/tracks/urn/streams/uuid/'
         hls_mp3_128_url: 'https://api.soundcloud.com/tracks/urn/streams/uuid/'
         preview_mp3_128_url: 'https://api.soundcloud.com/tracks/urn/streams/uuid/'
