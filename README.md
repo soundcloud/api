@@ -52,7 +52,7 @@ Add **`--remote`** for SSH, CI, or headless sign-in (pairing code instead of a l
 Please also subscribe to our `@SoundCloudDev` on [X](https://x.com/SoundCloudDev) or [Bluesky](https://bsky.app/profile/soundcloud.dev) or our [Backstage Blog] for API Announcements
 
 ### How can I update my app's `redirect_uri`?
-Our Support Team will be happy to help you with your URI's redirects. Please fill out a ticket [here] under "I need help with something else" and they will get back to you as soon as they can.
+Just head over to https://soundcloud.com/you/apps
 
 ### My app disappeared from `https://soundcloud.com/you/apps`, what should I do?
 If you registered an app with Soundcloud and now cannot find it, it's possible your API keys were revoked as unused for some time.
