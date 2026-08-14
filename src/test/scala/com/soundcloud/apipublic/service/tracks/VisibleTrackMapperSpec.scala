@@ -9,6 +9,7 @@ import org.joda.time.{DateTimeZone, LocalDateTime}
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import proto.soundcloud.tracks.api.{
+  AudioAnalysis,
   DownloadMetadata,
   Metadata,
   ContentAuthorization => ProtoContentAuthorization,
@@ -206,6 +207,56 @@ class VisibleTrackMapperSpec extends Specification {
         )
         val visibleTrack = mapper(track, session)
         visibleTrack.transcodings.head.quality ==== "unknown"
+      }
+    }
+
+    "audio analysis" >> {
+      "prefers audio_analysis bpm and key over deprecated metadata fields" in new Context {
+        val metadata = Some(
+          protoTrack.metadata.get.copy(
+            bpm = Some(125.0),
+            keySignature = Some("Cmaj")
+          )
+        )
+        val track = protoTrack.copy(
+          metadata = metadata,
+          audioAnalysis = Some(AudioAnalysis(key = "Emaj", bpm = Some(128.1)))
+        )
+        val visibleTrack = mapper(track, session)
+
+        visibleTrack.bpm ==== Some(128.1)
+        visibleTrack.keySignature ==== Some("Emaj")
+      }
+
+      "falls back to deprecated metadata fields when audio_analysis is absent" in new Context {
+        val metadata = Some(
+          protoTrack.metadata.get.copy(
+            bpm = Some(125.0),
+            keySignature = Some("Cmaj")
+          )
+        )
+        val track = protoTrack.copy(metadata = metadata)
+        val visibleTrack = mapper(track, session)
+
+        visibleTrack.bpm ==== Some(125.0)
+        visibleTrack.keySignature ==== Some("Cmaj")
+      }
+
+      "falls back to metadata when audio_analysis has no bpm or key" in new Context {
+        val metadata = Some(
+          protoTrack.metadata.get.copy(
+            bpm = Some(125.0),
+            keySignature = Some("Cmaj")
+          )
+        )
+        val track = protoTrack.copy(
+          metadata = metadata,
+          audioAnalysis = Some(AudioAnalysis(key = "", bpm = None))
+        )
+        val visibleTrack = mapper(track, session)
+
+        visibleTrack.bpm ==== Some(125.0)
+        visibleTrack.keySignature ==== Some("Cmaj")
       }
     }
 

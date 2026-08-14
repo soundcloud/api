@@ -102,9 +102,9 @@ class VisibleTrackMapper {
       waveformUrls = track.waveformUrls
         .map(wfu => WaveformUrl(WaveformType.parse(wfu.waveformType), Url(wfu.json), Url(wfu.png)))
         .toList,
-      bpm = metadata.bpm,
+      bpm = track.audioAnalysis.flatMap(_.bpm).orElse(metadata.bpm),
       release = metadata.release,
-      keySignature = metadata.keySignature,
+      keySignature = track.audioAnalysis.map(_.key).filter(_.nonEmpty).orElse(metadata.keySignature),
       access = None,
       counts = VisibleTrackCounts(
         track.counts.flatMap(_.plays),

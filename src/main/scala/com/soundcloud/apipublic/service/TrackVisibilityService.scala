@@ -127,7 +127,8 @@ object TrackVisibilityService {
       Track.WAVEFORM_URLS_FIELD_NUMBER,
       Track.COUNTS_FIELD_NUMBER,
       Track.DOWNLOAD_METADATA_FIELD_NUMBER,
-      Track.PUBLISHER_METADATA_FIELD_NUMBER
+      Track.PUBLISHER_METADATA_FIELD_NUMBER,
+      Track.AUDIO_ANALYSIS_FIELD_NUMBER
     )
   )
 
@@ -142,7 +143,8 @@ object TrackVisibilityService {
     Set(
       Track.METADATA_FIELD_NUMBER,
       Track.AUTHORIZATION_FIELD_NUMBER,
-      Track.COUNTS_FIELD_NUMBER
+      Track.COUNTS_FIELD_NUMBER,
+      Track.AUDIO_ANALYSIS_FIELD_NUMBER
     )
   )
 
