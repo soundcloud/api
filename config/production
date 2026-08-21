@@ -56,7 +56,7 @@ TIMELINE_SRV_RECORD="dnssrv!http.api.prod.timeline.srv.${ZONE}.s-cloud.net."
 LIKES_SRV_RECORD="dnssrv!http.api.prod.likes.srv.${ZONE}.s-cloud.net."
 LIKES_CLIENT_REQUEST_TIMEOUT_MILLIS=2500
 
-LIKES_V2_HTTP_ENDPOINT=http://likes-api.api-core.euc1.aws.s-cloud.net:8000
+LIKES_V2_HTTP_ENDPOINT=http://likes-api-eks.api-core.euc1.aws.s-cloud.net
 FAN_MONETIZATION_HTTP_ENDPOINT=http://fan-monetization.api-core.euc1.aws.s-cloud.net:8000
 
 SYSTEM_PLAYLISTS_SRV_RECORD="dnssrv!http.api.prod.system-playlists.srv.${ZONE}.s-cloud.net."
