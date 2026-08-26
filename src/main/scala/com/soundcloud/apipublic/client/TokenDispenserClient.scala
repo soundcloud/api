@@ -2,8 +2,11 @@ package com.soundcloud.apipublic.client
 
 import com.soundcloud.apipublic.client.TokenDispenserClient.AccessToken
 import com.soundcloud.jvmkit.module.http.client.{JsonClient, Params}
+import com.soundcloud.jvmkit.module.outcome._
 import com.soundcloud.jvmkit.module.util.http.Headers
+import com.soundcloud.jvmkit.module.util.session.UserSession
 import com.soundcloud.jvmkit.module.util.{Path, Urn}
+import com.twitter.finagle.http.Status
 import com.twitter.util.{Future, Return, Throw, Try}
 import play.api.libs.json.{JsValue, Json}
 
@@ -56,6 +59,33 @@ class TokenDispenserClient(jsonClient: JsonClient) {
   private def tokenFromJson(tokenResponse: JsValue): String = {
     (tokenResponse \ "attributes" \ "access_token").as[String]
   }
+
+  def invalidateTokensForApplication(userSession: UserSession, application: Urn): OutcomeF[Unit] =
+    jsonClient
+      .postWithSession(
+        userSession,
+        Path("/users") / userSession.getUser / "invalidate-tokens" / application,
+        Params.empty,
+        Headers.empty(),
+        None
+      )
+      .map { response =>
+        response.status match {
+          case Status.Successful(_) => Good(())
+          case _ =>
+            Bad(
+              UnexpectedError(
+                new IllegalStateException(
+                  s"Unexpected response with status ${response.statusCode} from token dispenser: ${response.contentString}"
+                )
+              )
+            )
+        }
+      }
+      .rescue {
+        case e: Throwable => Future.value(Bad(UnexpectedError(e)))
+      }
+      .outcomeF
 
 }
 

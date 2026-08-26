@@ -123,6 +123,10 @@ object Routing {
       route(Method.Post, "/me/apps", clientApplicationsHandler.createUserApplication)
   }
 
+  def forDisconnectHandler(disconnectHandler: DisconnectHandler): List[(Method, String, Handler)] = {
+    route(Method.Post, "/disconnect", disconnectHandler.disconnect)
+  }
+
   def forSearchHandler(searchHandler: SearchHandler): List[(Method, String, Handler)] = {
     route(Method.Get, "/tracks", searchHandler.searchTracks) :::
       route(Method.Get, "/users", searchHandler.searchUsers) :::

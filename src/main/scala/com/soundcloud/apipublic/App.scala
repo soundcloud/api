@@ -101,6 +101,7 @@ object App {
           forConnectHandler(handlers.connectHandler),
           forWebProfilesHandler(handlers.webProfilesHandler),
           forClientApplicationsHandler(handlers.clientApplicationsHandler),
+          forDisconnectHandler(handlers.disconnectHandler),
           forMuzookaWebhookHandler(handlers.muzookaWebhookHandler),
           forDummyHandler()
         )

@@ -5,6 +5,7 @@ const fs = require('fs');
 var responseStash = {};
 var skipDeprecatedTransactionIds = [
     "POST (200) /sign-out", // this is a virtual endpoint mapped through Tyk
+    "POST (204) /disconnect", // requires an application-issued OAuth token; not satisfiable in the e2e stack
     "GET (200) /users/soundcloud%3Ausers%3A948745750/followings/soundcloud%3Ausers%3A25219981",
     "GET (200) /users/soundcloud%3Ausers%3A948745750/followers/soundcloud%3Ausers%3A743372812",
     "GET (200) /me/followers/soundcloud%3Ausers%3A743372812",

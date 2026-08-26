@@ -124,6 +124,12 @@ class Handlers(
     exceptionCollector
   )
 
+  val disconnectHandler = new DisconnectHandler(
+    userAuthentication,
+    tokenDispenserClient,
+    exceptionCollector
+  )
+
   val imageDownloader = new ImageDownloader()
 
   val muzookaWebhookHandler =
