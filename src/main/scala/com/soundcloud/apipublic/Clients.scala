@@ -6,6 +6,7 @@ import com.soundcloud.apipublic.client.applications.{
   ClientApplicationsClient,
   CreatorSubscriptionsClient
 }
+import com.soundcloud.apipublic.client.gatewayadmin.GatewayAdminClient
 import com.soundcloud.apipublic.client.cloudrun.{CloudRunAuthenticationProxy, CloudRunCredentialsProvider}
 import com.soundcloud.apipublic.client.comments.CommentsTwirpClient
 import com.soundcloud.apipublic.client.fanmonetization.FanMonetizationTwirpClient
@@ -393,7 +394,15 @@ class Clients(
 
   val clientApplicationsClient = new ClientApplicationsClient(jsonClient("client_applications"))
   val clientApplicationMetadataClient = new ClientApplicationMetadataClient(jsonClient("clientapplication_metadata"))
+  val gatewayAdminClient = new GatewayAdminClient(jsonHttpEndpointClient("GATEWAY_ADMIN"))
   val creatorSubscriptionsClient = new CreatorSubscriptionsClient(submarineJsonClient)
+
+  private def jsonHttpEndpointClient(name: String): JsonClient = {
+    val endpointValue = config.get(s"${name}_HTTP_ENDPOINT", DataSensitivity.NON_SENSITIVE)
+    val httpEndpoint = HttpEndpoint(endpointValue, allowNonLocalEndpoint = true)
+    val clientConfig = HttpClientConfig(config.getApplicationName, ResourceName(name), httpEndpoint)
+    JsonClient(clientConfig, telemetry)
+  }
 
   private def twirpAWSClient(name: String): (finagle.Service[Request, Response], ClientTelemetry) = {
     val endpointValue = config.get(s"${name}_HTTP_ENDPOINT", DataSensitivity.NON_SENSITIVE)

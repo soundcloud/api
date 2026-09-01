@@ -124,6 +124,12 @@ object App {
             router
           )
         ),
+        new ModifyingEndpointSubscriptionFilter(
+          clients.userAuthentication,
+          clients.gatewayAdminClient,
+          clients.creatorSubscriptionsClient,
+          router
+        ),
         new ExceptionForAuthorizationAndRatelimiting(
           new ClientApplicationActivityTelemetryFilter(clients.userAuthentication, telemetry, router)
         ),
