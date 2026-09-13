@@ -20,15 +20,6 @@
             "type": "node-terminal"
         },
         {
-            "name": "Attach by Process ID",
-            "processId": "${command:PickProcess}",
-            "request": "attach",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "type": "node"
-        },
-        {
             "address": "TCP/IP address of process to be debugged",
             "localRoot": "${workspaceFolder}",
             "name": "Attach to Remote",
@@ -39,12 +30,6 @@
                 "<node_internals>/**"
             ],
             "type": "node"
-        },
-        {
-            "command": "npm start",
-            "name": "Run npm start",
-            "request": "launch",
-            "type": "node-terminal"
         },
         {
             "type": "node",
