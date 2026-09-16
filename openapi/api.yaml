@@ -30,6 +30,8 @@ tags:
       client_credentials flows.
   - name: playlists
     description: Playlists Endpoints.
+  - name: system-playlists
+    description: 'System Playlists Endpoints (e.g. track stations, artist stations).'
   - name: tracks
     description: Tracks Endpoints.
   - name: users
@@ -775,6 +777,23 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+  '/system-playlists/{id}':
+    get:
+      summary: Returns a system playlist.
+      tags:
+        - system-playlists
+      parameters:
+        - $ref: '#/components/parameters/system_playlist_id'
+        - $ref: '#/components/parameters/access'
+      responses:
+        '200':
+          $ref: '#/components/responses/SystemPlaylist'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /resolve:
     get:
       summary: >-
@@ -1124,6 +1143,25 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+  /disconnect:
+    post:
+      summary: Revokes OAuth access for the calling application.
+      description: >
+        Invalidates access tokens for the client application that issued the
+        current access token.
+
+        Returns 400 if disconnect is not supported for the current token.
+      tags:
+        - oauth
+      responses:
+        '204':
+          description: Tokens invalidated successfully.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          description: Internal Server Error
   /sign-out:
     post:
       summary: invalidates session associated with current token
@@ -1297,7 +1335,10 @@ components:
       required: true
       schema:
         type: string
-      description: SoundCloud URL
+      description: >
+        SoundCloud URL to resolve. Supports track, playlist, user, and system
+        playlist permalinks (e.g.
+        `https://soundcloud.com/discover/sets/track-stations:2287580618`).
       example: 'https://soundcloud.com/user-434241656'
     linked_partitioning:
       in: query
@@ -1403,6 +1444,17 @@ components:
         type: string
       description: SoundCloud User id to denote a Following of a user
       example: 'soundcloud:users:25219981'
+    system_playlist_id:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+      description: >
+        System playlist URN or identifier. Accepts a full URN (e.g.
+        `soundcloud:system-playlists:track-stations:2287580618`) or the
+        identifier portion (e.g. `track-stations:2287580618`).
+      example: 'soundcloud:system-playlists:track-stations:2287580618'
     playlist_urn:
       in: path
       name: playlist_urn
@@ -2137,6 +2189,14 @@ components:
         website_title:
           description: a custom title for the website
           type: string
+        station_urn:
+          description: >
+            URN of the user's artist station system playlist, when available.
+            Uses the `system-playlists` collection (e.g.
+            `soundcloud:system-playlists:artist-stations:{id}`). Omitted or null
+            when the user has no public tracks or no station.
+          type: string
+          nullable: true
         subscriptions:
           description: a list subscriptions associated with the user
           deprecated: true
@@ -2468,6 +2528,14 @@ components:
             Whether comments are visible. When false (quiet mode), comments are
             hidden.
           type: boolean
+        station_urn:
+          description: >
+            URN of the track's station system playlist, when available. Uses the
+            `system-playlists` collection (e.g.
+            `soundcloud:system-playlists:track-stations:{id}`). Omitted or null
+            for non-public tracks and tracks without a station.
+          type: string
+          nullable: true
         secret_uri:
           description: Secret URL.
           type: string
@@ -2605,6 +2673,51 @@ components:
           description: Tags.
           type: string
           nullable: true
+    SystemPlaylist:
+      type: object
+      description: 'SoundCloud system playlist object (e.g. track station, artist station).'
+      properties:
+        kind:
+          description: Type of object (system-playlist).
+          type: string
+        urn:
+          description: System playlist URN.
+          type: string
+        title:
+          description: Playlist title.
+          type: string
+        description:
+          description: Playlist description.
+          type: string
+        playlist_type:
+          description: Playlist type.
+          type: string
+        permalink:
+          description: System playlist permalink slug.
+          type: string
+        permalink_url:
+          description: Permalink URL on soundcloud.com.
+          type: string
+        last_updated:
+          description: Last updated timestamp.
+          type: string
+          nullable: true
+        tracking_feature_name:
+          description: Tracking feature name.
+          type: string
+          nullable: true
+        track_count:
+          description: Number of visible tracks in the playlist.
+          type: integer
+        query_urn:
+          description: 'Query URN used to generate the playlist, when available.'
+          type: string
+          nullable: true
+        tracks:
+          description: Visible tracks in the playlist.
+          type: array
+          items:
+            $ref: '#/components/schemas/Track'
     Playlists:
       type: object
       properties:
@@ -2924,6 +3037,15 @@ components:
           examples:
             default:
               $ref: '#/components/examples/Playlist'
+    SystemPlaylist:
+      description: Success
+      content:
+        application/json; charset=utf-8:
+          schema:
+            $ref: '#/components/schemas/SystemPlaylist'
+          examples:
+            default:
+              $ref: '#/components/examples/SystemPlaylist'
     Playlists:
       description: Success
       content:
@@ -3109,6 +3231,21 @@ components:
         user:
           $ref: '#/components/examples/User/value'
         user_id: 1234
+    SystemPlaylist:
+      value:
+        kind: system-playlist
+        urn: 'soundcloud:system-playlists:track-stations:2287580618'
+        title: Track station
+        description: Related tracks
+        playlist_type: PLAYLIST
+        permalink: 'track-stations:2287580618'
+        permalink_url: 'https://soundcloud.com/discover/sets/track-stations:2287580618'
+        last_updated: 2017-06-29T20:54:22.000Z
+        tracking_feature_name: track-stations
+        track_count: 1
+        query_urn: 'soundcloud:queries:abc'
+        tracks:
+          - $ref: '#/components/examples/Track/value'
     Playlists:
       value:
         collection:
@@ -3170,6 +3307,7 @@ components:
         access: playable
         reveal_stats: true
         reveal_comments: true
+        station_urn: 'soundcloud:system-playlists:track-stations:1234'
     Tracks:
       value:
         collection:
@@ -3202,6 +3340,7 @@ components:
         playlist_count: 3
         public_favorites_count: 20
         reposts_count: 0
+        station_urn: 'soundcloud:system-playlists:artist-stations:12345'
         subscriptions:
           - product:
               id: some-id
