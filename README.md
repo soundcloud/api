@@ -10,7 +10,7 @@ Please check the [releases] page.
 * [API documentation] 
 * [Developer portal]
 * [OpenAPI spec](openapi/) — YAML for client generation
-* [API credentials CLI](https://github.com/soundcloud/api-public-auth-cli) — obtain a `client_id` from the command line
+* [API credentials CLI](scripts/sc-api-auth.mjs) — obtain a `client_id` from the command line
 * [Cursor Agent Skills](.cursor/skills/README.md) — skills for AI-assisted API integration
 * [Agents.md](Agents.md) — agent integration guide
 * [Backstage blog]
