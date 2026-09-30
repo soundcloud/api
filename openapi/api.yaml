@@ -37,7 +37,7 @@ tags:
   - name: users
     description: SoundCloud Users Endpoints.
   - name: likes
-    description: Liking Tracks & Playlists.
+    description: 'Liking Tracks, Playlists & System Playlists (stations).'
   - name: reposts
     description: Reposting Tracks & Playlists.
   - name: miscellaneous
@@ -165,6 +165,21 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/Playlists'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /me/likes/system-playlists:
+    get:
+      summary: >-
+        Returns a list of liked system playlists (stations) of the authenticated
+        user.
+      tags:
+        - me
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/linked_partitioning'
+      responses:
+        '200':
+          $ref: '#/components/responses/SystemPlaylists'
         '401':
           $ref: '#/components/responses/Unauthorized'
   /me/followings:
@@ -987,6 +1002,24 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+  '/users/{user_urn}/likes/system-playlists':
+    get:
+      summary: Returns a list of user's liked system playlists (stations).
+      tags:
+        - users
+      parameters:
+        - $ref: '#/components/parameters/user_urn'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/linked_partitioning'
+      responses:
+        '200':
+          $ref: '#/components/responses/SystemPlaylists'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   '/users/{user_urn}/reposts/tracks':
     get:
       summary: Returns a list of user's track reposts.
@@ -1059,7 +1092,7 @@ paths:
           $ref: '#/components/responses/NotFound'
   '/likes/playlists/{playlist_urn}':
     post:
-      summary: Likes a playlist.
+      summary: Likes a playlist or system playlist (station).
       tags:
         - likes
       parameters:
@@ -1076,7 +1109,7 @@ paths:
         '429':
           $ref: '#/components/responses/TooManyRequests'
     delete:
-      summary: Unlikes a playlist.
+      summary: Unlikes a playlist or system playlist (station).
       tags:
         - likes
       parameters:
@@ -1086,6 +1119,8 @@ paths:
           $ref: '#/components/responses/Success'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   '/reposts/tracks/{track_urn}':
@@ -1461,7 +1496,16 @@ components:
       required: true
       schema:
         type: string
-      description: SoundCloud playlist id
+      description: >
+        User playlist URN or system playlist (station) URN.
+
+
+        Examples:
+
+        - User playlist: `soundcloud:playlists:1212781357`
+
+        - System playlist (station):
+        `soundcloud:system-playlists:track-stations:2287580618`
       example: 'soundcloud:playlists:1212781357'
     fake_playlist_urn:
       in: path
@@ -2718,6 +2762,20 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Track'
+    SystemPlaylists:
+      type: object
+      properties:
+        collection:
+          type: array
+          items:
+            $ref: '#/components/schemas/SystemPlaylist'
+        next_href:
+          type: string
+    SystemPlaylistsArray:
+      deprecated: true
+      type: array
+      items:
+        $ref: '#/components/schemas/SystemPlaylist'
     Playlists:
       type: object
       properties:
@@ -3046,6 +3104,19 @@ components:
           examples:
             default:
               $ref: '#/components/examples/SystemPlaylist'
+    SystemPlaylists:
+      description: Success
+      content:
+        application/json; charset=utf-8:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/SystemPlaylists'
+              - $ref: '#/components/schemas/SystemPlaylistsArray'
+          examples:
+            default:
+              $ref: '#/components/examples/SystemPlaylists'
+            systemPlaylistsArray:
+              $ref: '#/components/examples/SystemPlaylistsArray'
     Playlists:
       description: Success
       content:
@@ -3246,6 +3317,15 @@ components:
         query_urn: 'soundcloud:queries:abc'
         tracks:
           - $ref: '#/components/examples/Track/value'
+    SystemPlaylists:
+      value:
+        collection:
+          $ref: '#/components/examples/SystemPlaylist/value'
+        next_href: 'https://api.soundcloud.com/collection?page_size=10&cursor=1234567'
+    SystemPlaylistsArray:
+      description: 'Deprecated, use SystemPlaylists instead.'
+      value:
+        $ref: '#/components/examples/SystemPlaylist/value'
     Playlists:
       value:
         collection:
