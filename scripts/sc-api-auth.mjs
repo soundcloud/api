@@ -46,6 +46,15 @@ const UPDATE_REDIRECT_ERROR_MESSAGES = {
   application_redirect_not_allowed: "This redirect URI is not allowed.",
 };
 
+const CREDENTIAL_OPERATION_ERROR_MESSAGES = {
+  max_active_credentials_per_application:
+    "This application already has the maximum of 3 active credentials.",
+  cannot_revoke_last_application_credential:
+    "You must keep at least one active credential for your application.",
+  application_creation_not_available:
+    "Cloning credentials requires an Artist Pro subscription on the application owner account.",
+};
+
 /** Public SoundCloud sign-in app for this CLI (OAuth + PKCE token exchange). Scoped to this tool only. */
 const BUNDLED_CLIENT_ID = "nXIZT4VQQYkgHs75vpIYbnINQciCkV5Y";
 
@@ -99,6 +108,12 @@ function updateRedirectUserMessage({ code, error_message: apiMessage }) {
   if (apiMessage) return apiMessage;
   if (code && UPDATE_REDIRECT_ERROR_MESSAGES[code]) return UPDATE_REDIRECT_ERROR_MESSAGES[code];
   return "Could not update redirect URI.";
+}
+
+function credentialOperationUserMessage({ code, error_message: apiMessage }, fallback) {
+  if (apiMessage) return apiMessage;
+  if (code && CREDENTIAL_OPERATION_ERROR_MESSAGES[code]) return CREDENTIAL_OPERATION_ERROR_MESSAGES[code];
+  return fallback;
 }
 
 function validateAppRedirectUri(redirectUri) {
@@ -319,10 +334,11 @@ function listAppPublicFields(app) {
   const fields = {};
   for (const [key, value] of [
     ["client_id", app.client_id],
+    ["client_secret", app.client_secret],
+    ["redirect_uri", app.redirect_uri],
     ["name", app.name],
     ["description", app.description],
     ["website", app.url],
-    ["redirect_uri", app.redirect_uri],
   ]) {
     if (value !== undefined && value !== null && value !== "") {
       fields[key] = value;
@@ -391,6 +407,11 @@ function pairingActivateUrl(code) {
 
 function appRegUrl(path) {
   return new URL(path, APP_REGISTRATION_API);
+}
+
+/** Credentials URNs contain colons; encode for use as a single path segment. */
+function credentialsUrnPathSegment(urn) {
+  return encodeURIComponent(urn);
 }
 
 function appRegUrlWithParams(path, searchParams = {}) {
@@ -552,9 +573,30 @@ async function runRemotePairingFlow({ clientId, appName, appDescription, appWebs
   });
 }
 
+async function resolveSelectedAppCredentials({ clientId, remote, targetClientId }) {
+  const tokens = remote ? await authenticateRemote({ clientId }) : await authenticateLocal({ clientId });
+  const page = await listUserApps({ accessToken: tokens.access_token });
+  let app;
+  try {
+    app = selectAppForUpdate(page, { clientId: targetClientId });
+  } catch (e) {
+    if (e.message.includes("update-redirect")) {
+      throw new Error("No registered application found. Run the default command first to register one.");
+    }
+    throw e;
+  }
+  const urn = credentialsUrn(app);
+  if (!urn) {
+    throw new Error(
+      "Credentials URN missing from API response (expected app.credentials as a string, e.g. soundcloud:credentials:…)."
+    );
+  }
+  return { accessToken: tokens.access_token, app, urn };
+}
+
 async function updateAppRedirectUri({ accessToken, urn, redirectUri, app }) {
   const body = { redirect_uri: redirectUri };
-  const endpoint = appRegUrl(`/me/apps/${urn}`).toString();
+  const endpoint = appRegUrl(`/me/apps/${credentialsUrnPathSegment(urn)}`).toString();
   const { res, text } = await soundcloudApiRequest({
     accessToken,
     endpoint,
@@ -584,23 +626,93 @@ async function runListAppsFlow({ clientId, remote }) {
   return appsFromPage(page).map(listAppPublicFields);
 }
 
-async function runUpdateRedirectFlow({ clientId, redirectUri, remote, targetClientId }) {
-  const tokens = remote ? await authenticateRemote({ clientId }) : await authenticateLocal({ clientId });
-  const page = await listUserApps({ accessToken: tokens.access_token });
-  const app = selectAppForUpdate(page, { clientId: targetClientId });
-  const urn = credentialsUrn(app);
-  if (!urn) {
-    throw new Error(
-      "Credentials URN missing from API response (expected app.credentials as a string, e.g. soundcloud:credentials:…)."
-    );
+async function cloneAppCredential({ accessToken, urn }) {
+  const endpoint = appRegUrl(`/me/apps/${credentialsUrnPathSegment(urn)}/clone`).toString();
+  const { res, text } = await soundcloudApiRequest({
+    accessToken,
+    endpoint,
+    method: "POST",
+    body: {},
+  });
+  if (!res.ok) {
+    const apiError = parseStructuredApiError(text);
+    const userMessage = apiError
+      ? credentialOperationUserMessage(apiError, "Could not clone credential.")
+      : null;
+    throw new Error(userMessage || `Clone credential failed: ${res.status} ${apiErrorDetail(text)}`);
   }
+  return JSON.parse(text);
+}
+
+async function revokeAppCredential({ accessToken, urn }) {
+  const endpoint = appRegUrl(`/me/apps/${credentialsUrnPathSegment(urn)}/revoke`).toString();
+  const { res, text } = await soundcloudApiRequest({
+    accessToken,
+    endpoint,
+    method: "POST",
+    body: {},
+  });
+  if (res.status === 204) {
+    return;
+  }
+  if (!res.ok) {
+    const apiError = parseStructuredApiError(text);
+    const userMessage = apiError
+      ? credentialOperationUserMessage(apiError, "Could not revoke credential.")
+      : null;
+    throw new Error(userMessage || `Revoke credential failed: ${res.status} ${apiErrorDetail(text)}`);
+  }
+}
+
+function credentialsFromCloneResponse(data, app) {
+  return {
+    client_id: data.client_id,
+    client_secret: data.client_secret,
+    redirect_uri: data.redirect_uri,
+    name: app.name,
+    description: app.description,
+    website: app.url,
+  };
+}
+
+async function runCloneCredentialFlow({ clientId, remote, targetClientId }) {
+  const { accessToken, app, urn } = await resolveSelectedAppCredentials({
+    clientId,
+    remote,
+    targetClientId,
+  });
+  const data = await cloneAppCredential({ accessToken, urn });
+  return {
+    credentials: credentialsFromCloneResponse(data, app),
+    notice: "Cloned credential.",
+  };
+}
+
+async function runRevokeCredentialFlow({ clientId, remote, targetClientId }) {
+  const { accessToken, app, urn } = await resolveSelectedAppCredentials({
+    clientId,
+    remote,
+    targetClientId,
+  });
+  await revokeAppCredential({ accessToken, urn });
+  return {
+    notice: `Revoked credential for client_id=${app.client_id ?? "(unknown)"}.`,
+  };
+}
+
+async function runUpdateRedirectFlow({ clientId, redirectUri, remote, targetClientId }) {
+  const { accessToken, app, urn } = await resolveSelectedAppCredentials({
+    clientId,
+    remote,
+    targetClientId,
+  });
 
   if (app.redirect_uri === redirectUri) {
     return { credentials: credentialsFromApp(app), updated: false };
   }
 
   const updatedRedirectUri = await updateAppRedirectUri({
-    accessToken: tokens.access_token,
+    accessToken,
     urn,
     redirectUri,
     app,
@@ -662,11 +774,15 @@ function printRegisterHelp() {
   console.log(`Usage: ${SCRIPT_NAME} [options]
        ${SCRIPT_NAME} list-apps [options]
        ${SCRIPT_NAME} update-redirect [options]
+       ${SCRIPT_NAME} clone [options]
+       ${SCRIPT_NAME} revoke [options]
 
 Commands:
   (default)         Sign in and register or fetch your API application
-  list-apps         Sign in and list your API applications (no client_secret)
+  list-apps         Sign in and list your API applications
   update-redirect   Sign in and update your application's OAuth redirect URI
+  clone             Sign in and clone a credential (credential rotation)
+  revoke            Sign in and revoke a credential (credential rotation)
 
 Register options:
   --name            Required. App name for POST /me/apps
@@ -716,11 +832,47 @@ Options:
 `);
 }
 
+function printCredentialRotationHelp({ command, description }) {
+  console.log(`Usage: ${SCRIPT_NAME} ${command} [options]
+
+  ${description}
+
+Options:
+  --client-id       Required when you have multiple credentials; use list-apps to find it
+  --remote          Use pairing code sign-in instead of a local callback server
+  -h, --help        Print usage and exit
+
+  Sign-in uses a fixed local callback (${BUNDLED_REDIRECT_URI}) or, with
+  --remote, ${PAIRING_ACTIVATE_BASE}/<code>.
+
+  With npm: npm start -- ${command}
+  Multiple credentials: npm start -- ${command} --client-id "…"
+`);
+}
+
+function printCloneCredentialHelp() {
+  printCredentialRotationHelp({
+    command: "clone",
+    description:
+      "Sign in and create a new client_id and client_secret for the same application " +
+      "(credential rotation). Each application may have at most 3 active credentials. " +
+      "Requires Artist Pro on the application owner account.",
+  });
+}
+
+function printRevokeCredentialHelp() {
+  printCredentialRotationHelp({
+    command: "revoke",
+    description:
+      "Sign in and revoke a credential. At least one active credential must remain " +
+      "for the application. Revoke does not require Artist Pro.",
+  });
+}
+
 function printListAppsHelp() {
   console.log(`Usage: ${SCRIPT_NAME} list-apps [options]
 
-  Signs you in to SoundCloud, then calls GET /me/apps and prints your API
-  applications as JSON. client_secret is never included.
+  Sign in and print your API applications as JSON (including client_secret when present).
 
 Options:
   --remote          Use pairing code sign-in instead of a local callback server
@@ -848,7 +1000,38 @@ function printCredentialResult(result) {
   process.stdout.write(formatCredentialOutput(result.credentials));
 }
 
-const CLI_SUBCOMMANDS = new Set(["list-apps", "update-redirect"]);
+const CLI_SUBCOMMANDS = new Set(["list-apps", "update-redirect", "clone", "revoke"]);
+
+function runCredentialSubcommandFlow({
+  helpArg,
+  remoteArg,
+  targetClientIdArg,
+  positionals,
+  helpPrinter,
+  runFlow,
+  onSuccess = printCredentialResult,
+}) {
+  if (positionals.length > 0) {
+    console.error(`Unexpected extra argument(s): ${positionals.map((p) => JSON.stringify(p)).join(" ")}`);
+    process.exit(1);
+  }
+
+  if (helpArg) {
+    helpPrinter();
+    process.exit(0);
+  }
+
+  runFlow({
+    clientId: BUNDLED_CLIENT_ID,
+    remote: remoteArg,
+    targetClientId: targetClientIdArg,
+  })
+    .then(onSuccess, (e) => {
+      console.error("Error:", e?.message || e);
+      process.exit(1);
+    })
+    .then(() => process.exit(0));
+}
 
 function runCli() {
   const rawArgs = process.argv.slice(2);
@@ -896,6 +1079,63 @@ function runCli() {
         }
       )
       .then(() => process.exit(0));
+    return;
+  }
+
+  if (subcommand === "clone") {
+    const {
+      values: { "client-id": targetClientIdArg, remote: remoteArg, help: helpArg },
+      positionals,
+    } = parseCliArgs({
+      args: argsToParse,
+      options: {
+        "client-id": { type: "string" },
+        remote: { type: "boolean" },
+        help: { type: "boolean", short: "h" },
+      },
+      strict: true,
+      allowPositionals: true,
+    });
+
+    runCredentialSubcommandFlow({
+      helpArg,
+      remoteArg,
+      targetClientIdArg,
+      positionals,
+      helpPrinter: printCloneCredentialHelp,
+      runFlow: runCloneCredentialFlow,
+    });
+    return;
+  }
+
+  if (subcommand === "revoke") {
+    const {
+      values: { "client-id": targetClientIdArg, remote: remoteArg, help: helpArg },
+      positionals,
+    } = parseCliArgs({
+      args: argsToParse,
+      options: {
+        "client-id": { type: "string" },
+        remote: { type: "boolean" },
+        help: { type: "boolean", short: "h" },
+      },
+      strict: true,
+      allowPositionals: true,
+    });
+
+    runCredentialSubcommandFlow({
+      helpArg,
+      remoteArg,
+      targetClientIdArg,
+      positionals,
+      helpPrinter: printRevokeCredentialHelp,
+      runFlow: runRevokeCredentialFlow,
+      onSuccess: (result) => {
+        if (result.notice) {
+          console.error(result.notice);
+        }
+      },
+    });
     return;
   }
 
