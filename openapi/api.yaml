@@ -414,6 +414,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TrackCreationLimited'
   /playlists:
     get:
       summary: Performs a playlist search based on a query
@@ -2151,6 +2153,23 @@ components:
           properties:
             spam_warning_urn:
               type: string
+    TrackCreationLimited:
+      allOf:
+        - $ref: '#/components/schemas/Error'
+        - type: object
+          properties:
+            error_code:
+              type: string
+              enum:
+                - track_creation_limit_reached
+              description: >-
+                Identifies a per-uploader track creation limit, as opposed to an
+                app rate limit.
+            resume_at:
+              type: string
+              nullable: true
+              description: 'When track creation will be allowed again, null when unknown.'
+              example: '2026/11/17 12:00:00 +0000'
     User:
       type: object
       nullable: true
@@ -3031,6 +3050,22 @@ components:
               $ref: '#/components/examples/TooManyRequests'
           schema:
             $ref: '#/components/schemas/TooManyRequests'
+    TrackCreationLimited:
+      description: The uploader has reached a track creation limit.
+      headers:
+        Retry-After:
+          description: >-
+            Seconds until track creation will be allowed again. Omitted when
+            unknown.
+          schema:
+            type: integer
+      content:
+        application/json:
+          examples:
+            default:
+              $ref: '#/components/examples/TrackCreationLimited'
+          schema:
+            $ref: '#/components/schemas/TrackCreationLimited'
     User:
       description: Success
       content:
@@ -3514,6 +3549,15 @@ components:
         message: 'Detailed message of errors, when available'
         spam_warning_urn: 'soundcloud:spam-warnings:1'
         link: 'https://developers.soundcloud.com/docs/api/rate-limits#errors'
+    TrackCreationLimited:
+      value:
+        code: 429
+        message: >-
+          Track creation limit reached, try again after 2026/11/17 12:00:00
+          +0000
+        link: 'https://developers.soundcloud.com/docs/api/rate-limits#errors'
+        error_code: track_creation_limit_reached
+        resume_at: '2026/11/17 12:00:00 +0000'
     OK:
       value:
         status: Status(200) - OK
